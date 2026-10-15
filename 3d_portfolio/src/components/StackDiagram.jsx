@@ -167,46 +167,62 @@ const Node = ({ node, index, flow, platform, compact, onDefine, onPin, shown }) 
       <div className={`${compact ? "mt-1.5 pt-1.5" : "mt-2 pt-2"} border-t border-line/60`}>
         {cloud ? (
           roles.length ? (
-            <ul className="list-none space-y-[3px]">
-              {roles.map((r, i) => (
-                /* ONE LINE PER ROLE, not two. Stacked, `Object store` over
-                   `Blob Storage` made the store node twelve lines deep and
-                   the cloud view 1,626px tall. The cards are wider now, so
-                   the pair fits on one line, which halves it. */
-                <li
-                  key={r.role}
-                  /* `items-start`, and the role never wraps. Reported:
-                     "catalog & governance is sticking to the other new line".
-                     With both halves wrapping freely the role broke mid-phrase
-                     and the service name climbed into the gap, so neither read
-                     as one thing. The role is now unbreakable and the service
-                     wraps under itself. */
-                  className="cloud-in flex items-start gap-x-2 leading-[1.45]"
-                  style={{ "--i": i }}
-                >
-                  {/* The ROLE is the dotted term, not the service: it is the
-                      part that stays true when a vendor renames a product,
-                      and one definition then covers all four columns. It
-                      brings its own mark, so every row has a symbol in every
-                      platform — which is as close to logos as this can
-                      honestly get. */}
-                  <TagTerm
-                    name={r.role}
-                    flow
-                    dense
-                    onDefine={onDefine}
-                    onPin={onPin}
-                    active={shown?.name === r.role}
-                  />
-                  <span
-                    className="min-w-0 flex-1 text-right font-mono text-micro leading-[1.5]"
-                    style={{ color: `rgb(var(${platTint(platform)}))` }}
-                  >
-                    {r[platform]}
+            compact ? (
+              /* COMPACT DROPS THE ROLE COLUMN AND FLOWS THE SERVICES.
+                 The cloud view's height is set by its ROW COUNT -- 33 roles,
+                 one line each -- and the old compact mode only trimmed the
+                 description lines, so it saved 104px on a view that was 591px
+                 over. The control promised "fit to screen" and did not fit,
+                 which is worse than not offering it.
+                 Flowed, a six-service node is two lines instead of six. The
+                 roles are still there in full detail, which is the trade the
+                 button is for. */
+              <p className="cloud-in flex flex-wrap gap-x-2 gap-y-0 font-mono text-micro leading-[1.5]">
+                {roles.map((r, i) => (
+                  <span key={r.role}>
+                    {i > 0 && <span className="text-faint opacity-40">· </span>}
+                    <span style={{ color: `rgb(var(${platTint(platform)}))` }}>
+                      {r[platform]}
+                    </span>
                   </span>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </p>
+            ) : (
+              <ul className="list-none space-y-[3px]">
+                {roles.map((r, i) => (
+                  <li
+                    key={r.role}
+                    /* `items-start`, and the role never wraps. Reported:
+                       "catalog & governance is sticking to the other new
+                       line". With both halves wrapping freely the role broke
+                       mid-phrase and the service climbed into the gap, so
+                       neither read as one thing. */
+                    className="cloud-in flex items-start gap-x-2 leading-[1.45]"
+                    style={{ "--i": i }}
+                  >
+                    {/* The ROLE is the dotted term, not the service: it is
+                        the part that stays true when a vendor renames a
+                        product, so one definition covers all four columns. It
+                        brings its own mark, so every row has a symbol on
+                        every platform. */}
+                    <TagTerm
+                      name={r.role}
+                      flow
+                      dense
+                      onDefine={onDefine}
+                      onPin={onPin}
+                      active={shown?.name === r.role}
+                    />
+                    <span
+                      className="min-w-0 flex-1 text-right font-mono text-micro leading-[1.5]"
+                      style={{ color: `rgb(var(${platTint(platform)}))` }}
+                    >
+                      {r[platform]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )
           ) : (
             /* NOT A GAP — a finding. Federated training, the classical model,
                the interface and the language it is written in have no managed

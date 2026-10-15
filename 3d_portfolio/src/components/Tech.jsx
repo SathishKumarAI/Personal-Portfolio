@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { stackGroups, TERM_HINT } from "../constants";
+import {
+  stackGroups,
+  TERM_HINT,
+  systemPlanes,
+  systemSubstrate,
+  platformMatrix,
+} from "../constants";
 import { fadeIn } from "../utils/motion";
 import Reveal from "./Reveal";
 import { SectionWrapper } from "../hoc";
@@ -16,6 +22,36 @@ const STACK_META = `${stackGroups.length} areas · ${
 } tools`;
 
 const stageNo = (i) => String(i + 1).padStart(2, "0");
+
+/**
+ * WHERE A TERM SITS IN THE SYSTEM — the extra line the panel now carries.
+ *
+ * Derived, never typed: a tool is looked up in the planes that already own it
+ * and a role in the matrix that already places it. Writing this by hand would
+ * be a third list of the same 47 strings, which is the drift this section
+ * already has a test for.
+ */
+const PLACE = (() => {
+  const at = {};
+  for (const plane of systemPlanes) {
+    for (const node of plane.nodes) {
+      for (const it of node.items) at[it] = `${plane.title} · ${node.title}`;
+    }
+  }
+  for (const node of systemSubstrate.nodes) {
+    for (const it of node.items) at[it] = `${systemSubstrate.title} · ${node.title}`;
+  }
+  for (const r of platformMatrix) {
+    at[r.role] = r.mine ? `${r.plane} plane · filled here by ${r.mine}` : `${r.plane} plane · no tool of mine in this slot`;
+  }
+  return at;
+})();
+
+/* A search URL rather than an article URL, and that is the honest choice.
+   Guessing 80 exact Wikipedia titles would ship dead links; a search never
+   404s and lands the reader on the article or on a list containing it. */
+const wikiSearch = (name) =>
+  `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(name)}`;
 
 /**
  * Owns, the one place a tool's definition is read.
@@ -37,54 +73,71 @@ const stageNo = (i) => String(i + 1).padStart(2, "0");
  */
 const DefinitionPanel = ({ entry, pinned, compact }) => (
   <div
-    /* OPAQUE. `bg-tertiary/40` was the first attempt and it is the very
-       fault this panel exists to fix: a translucent surface carrying prose
-       lets whatever is behind it bleed into the words. The old popover was
-       `rgba(255 255 255 / 0.62)` and unreadable for exactly that reason. */
-    className={`hidden md:flex h-full ${compact ? "min-h-[6rem] p-3" : "min-h-[9rem] p-4"} flex-col rounded-2xl border border-line bg-tertiary`}
-    // Announced, but politely: the reader asked for this by pointing at a
-    // chip, so it is a result, not an alert.
+    /* WIDER AND SHORTER, as asked. It was a 9rem-tall box in a 24rem column —
+       a tall narrow well that wrapped a one-sentence definition over four
+       lines and then left air underneath. The column is 32rem now and the
+       reserved height is 6.5rem: the same sentence lands in two lines, so the
+       box is shorter because the text got wider, not because anything was cut.
+
+       It still RESERVES its height. A panel that grows on hover would move
+       the diagram under it on every pointer crossing. */
+    /* NO `h-full`. Stretching made it as tall as the heading column, which
+       is the opposite of what was asked — it is meant to be a wide short
+       strip, and it can only be short if it stops matching a tall neighbour. */
+    className={`hidden md:flex ${
+      compact ? "min-h-[5rem] p-3" : "min-h-[6.5rem] p-4"
+    } flex-col rounded-2xl border border-line bg-tertiary`}
     aria-live="polite"
   >
     {entry ? (
       <>
-        <p className="flex items-baseline gap-2">
+        <p className="flex flex-wrap items-baseline gap-x-2">
           <span className="font-display text-[15px] font-semibold text-white-100 tracking-[-0.01em]">
             {entry.name}
           </span>
+          {entry.full && entry.full !== entry.name && (
+            <span className="font-mono text-label text-faint">{entry.full}</span>
+          )}
           {pinned && (
             <span className="font-mono text-micro uppercase tracking-[0.12em] text-accent-ink">
               pinned
             </span>
           )}
         </p>
-        {entry.full && entry.full !== entry.name && (
-          <p className="mt-0.5 font-mono text-label text-faint">{entry.full}</p>
-        )}
-        <p className="mt-2 font-sans text-data text-secondary leading-snug">
+        <p className="mt-1 font-sans text-data text-secondary leading-snug">
           {entry.def}
         </p>
-        {entry.link && (
+        {/* THE SECOND POINT: where this sits in the system. It is the thing a
+            definition cannot say on its own — "a vector index stores
+            embeddings" is the what, "Model plane, filled here by Pinecone" is
+            the where — and it is derived from the diagram rather than typed. */}
+        {entry.place && (
+          <p className="mt-1.5 font-mono text-micro uppercase tracking-[0.08em] text-faint">
+            {entry.place}
+          </p>
+        )}
+        <p className="mt-auto flex flex-wrap items-baseline gap-x-4 pt-2 font-mono text-chip">
+          {entry.link && (
+            <a
+              href={entry.link}
+              target="_blank"
+              rel="noreferrer"
+              className="text-accent-ink hover:underline"
+            >
+              Learn more ↗
+            </a>
+          )}
           <a
-            href={entry.link}
+            href={wikiSearch(entry.full || entry.name)}
             target="_blank"
             rel="noreferrer"
-            className="mt-auto pt-2 font-mono text-chip text-accent-ink hover:underline"
+            className="text-faint hover:text-accent-ink hover:underline"
           >
-            Learn more ↗
+            Wikipedia ↗
           </a>
-        )}
+        </p>
       </>
     ) : (
-      /* The resting state says what the slot is FOR. An empty bordered box
-         reads as something that failed to load.
-
-         It is also the ONLY place the instruction is given now. There used to
-         be a separate hint line under the intro -- "Dotted terms have a
-         plain-English definition, tap one" -- which is the same sentence this
-         panel was already saying, 400px away from it, and both were desktop
-         only so a desktop reader got it twice. `TERM_HINT` moved in here
-         rather than being retyped, so there is still one string. */
       <p className="m-auto text-center font-serif italic text-faint text-label leading-[1.5]">
         {TERM_HINT}
         <br />
@@ -94,39 +147,24 @@ const DefinitionPanel = ({ entry, pinned, compact }) => (
   </div>
 );
 
-/**
- * The offer, and it is phrased as an offer on purpose.
- *
- * The owner's instruction was to let the reader choose rather than deciding
- * for them: "let's give the chance to the user instead of just ourselves
- * deciding to either to show stacks or like system diagram". A segmented
- * control labelled "Tools / System" would be a setting; a question is an
- * invitation, and the second option is the one most readers will not know is
- * there.
- *
- * Both options stay rendered as real buttons rather than one button whose
- * label flips. A control that says "See the system diagram" and then says
- * "Back to the list" is two different controls in one position, and a reader
- * who looks away loses track of which state they are in. Two buttons with the
- * current one marked never has that problem, and `aria-pressed` says the same
- * thing to a screen reader that the fill says to an eye.
- *
- * `lg`, matching StackDiagram itself. Offering a view that the viewport will
- * refuse to render is worse than not offering it.
- */
 const ViewToggle = ({ view, onChange }) => (
-  <div className="hidden lg:flex items-center gap-3">
-    {/* The invitation is only an invitation while the answer is still no.
-        Asking "would you like to see this as a system diagram?" beside a
-        system diagram the reader is already looking at reads as a control that
-        has not noticed its own state. It also does not fit: in the diagram
-        view this sits at the end of a row that already carries the `?`, the
-        platform picker and the note, and the question alone is ~300px. */}
-    {view !== "diagram" && (
-      <span className="font-serif italic text-faint text-label">
-        Would you like to see this as a system diagram?
-      </span>
-    )}
+  /* IDENTICAL IN BOTH VIEWS, which it was not. In the list it carried the
+     invitation "Would you like to see this as a system diagram?" and sat in
+     the header's right column; in the diagram it dropped the question and
+     moved to the end of the controls row. Reported: "it looks different when
+     I click on system diagram — try to get them into the same thing always."
+     Right. A control that changes its words, its width and its position
+     depending on what it last did is a different control each time, and the
+     reader has to find it again after every click.
+
+     The invitation went rather than the label, because an invitation is the
+     half that cannot be state-neutral: asking "would you like to see this as
+     a system diagram?" beside a system diagram reads as a control that has
+     not noticed its own state. The two buttons say what they do. */
+  <div className="hidden lg:flex shrink-0 items-center gap-3">
+    <span className="font-mono text-micro uppercase tracking-[0.12em] text-faint">
+      View
+    </span>
     <div
       role="group"
       aria-label="Stack view"
@@ -141,13 +179,6 @@ const ViewToggle = ({ view, onChange }) => (
           type="button"
           onClick={() => onChange(id)}
           aria-pressed={view === id}
-          /* A DIFFERENT KIND OF CONTROL, so it should not look like the
-             platform picker beside it. Both were filled with the brand accent
-             and read as one group of five buttons. This one switches the VIEW;
-             the other one switches the DATA inside a view. The view toggle is
-             now structural — a solid ink fill, the page's "selected" rather
-             than its "look here" — and the accent is spent only on the
-             platform chips, where the colour also carries which platform. */
           className={`rounded-full px-3 py-1 font-mono text-micro uppercase tracking-[0.12em] transition-colors ${
             view === id
               ? "bg-white-100 text-primary font-semibold"
@@ -179,7 +210,8 @@ const Tech = () => {
    */
   const [hovered, setHovered] = useState(null);
   const [pinned, setPinned] = useState(null);
-  const shown = pinned ?? hovered;
+  const withPlace = (e) => (e ? { ...e, place: PLACE[e.name] } : e);
+  const shown = withPlace(pinned ?? hovered);
 
   /**
    * Which reading of the stack is on screen. Defaults to the list, and that
@@ -239,7 +271,7 @@ const Tech = () => {
           section. Dropped to the baseline of the header it sits directly above
           the columns, and the slack moves up beside the display-size heading,
           where open space reads as intent rather than as a gap. */}
-      <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:gap-x-12 md:items-stretch">
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] md:gap-x-12 md:items-start">
         <div className="min-w-0">
           <SectionHead title="Stack" meta={STACK_META} />
 
@@ -249,7 +281,12 @@ const Tech = () => {
             // argument for them is three lines the reader scrolls past.
             className={`${
               view === "diagram" && compact ? "hidden" : "hidden md:block"
-            } mt-4 max-w-[46rem] font-sans text-secondary text-body leading-[1.65]`}
+            } mt-4 min-h-[5rem] max-w-[46rem] font-sans text-secondary text-body leading-[1.65]`}
+            // RESERVED HEIGHT, so the controls below do not move when the view
+            // changes. The two intros are different lengths -- three lines in
+            // the list, two in the diagram -- which shifted the whole control
+            // strip 26px on every toggle. A control that jumps when you use it
+            // is the same complaint as one that changes shape.
           >
             {view === "diagram" ? (
               /* VIEW-SPECIFIC, and not as a trick to save height -- though it
@@ -293,11 +330,6 @@ const Tech = () => {
               which is where it was asked to go and where its siblings are.
               Both positions are right-aligned and directly above the content,
               so the control does not travel far when the view changes. */}
-          {view === "list" && (
-            <div className="hidden md:flex justify-end">
-              <ViewToggle view={view} onChange={setView} />
-            </div>
-          )}
         </div>
       </div>
 
@@ -311,10 +343,16 @@ const Tech = () => {
       {/* The diagram's own controls: `?`, platform, and the view toggle at
           the end. Rendered only for the view they act on — a vendor picker
           above a tool list would be a control with nothing to change. */}
-      {view === "diagram" && (
-        <div className="mt-6 hidden md:block">
-          <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
-            <div className="min-w-0 flex-1">
+      {/* ONE STRIP, ALWAYS, so the toggle never moves. In the list view it
+          holds the toggle alone; in the diagram the `?`, the platform picker
+          and the fit control take the left and the toggle keeps the right.
+          It costs the list view ~54px, which it can now afford — the section
+          is 0.87 screens — and it buys a control that is in the same place
+          before and after every click. */}
+      <div className="mt-6 hidden md:block">
+        <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
+          <div className="min-w-0 flex-1">
+            {view === "diagram" && (
               <DiagramControls
                 why={why}
                 onWhy={() => setWhy((v) => !v)}
@@ -323,11 +361,11 @@ const Tech = () => {
                 compact={compact}
                 onCompact={() => setCompact((v) => !v)}
               />
-            </div>
-            <ViewToggle view={view} onChange={setView} />
+            )}
           </div>
+          <ViewToggle view={view} onChange={setView} />
         </div>
-      )}
+      </div>
 
       <div className="mt-6">
         {/* phone: six labelled rows of flowing terms, no card and no chips.
