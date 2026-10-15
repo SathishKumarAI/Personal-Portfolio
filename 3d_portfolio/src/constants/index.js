@@ -260,6 +260,26 @@ export const glossary = {
   Neo4j: { def: "A graph database: stores data as nodes and the relationships between them, which makes connected questions cheap to ask.", link: "https://neo4j.com/", full: "Neo4j graph database" },
   Azure: { def: "Microsoft's cloud platform, the servers, storage and managed services an app runs on.", link: "https://azure.microsoft.com/", full: "Microsoft Azure" },
   Databricks: { def: "A platform for large-scale data and ML work, built around Apache Spark.", link: "https://www.databricks.com/", full: "Databricks Lakehouse Platform" },
+  // Added 2026-10-15. The six groups had drifted behind the work: the LLM area
+  // named no model hub and no serving runtime, and the data areas named no
+  // notebook and no chart library, which are the tools the day is actually
+  // spent in. Every entry here is a thing with a definition a non-specialist
+  // can read, same as the rest of this map -- a tool nobody can define is a
+  // badge, and this section's own copy argues against badges.
+  "Hugging Face": { def: "The main public hub for open models and datasets: where you find, download, and publish them.", link: "https://huggingface.co/", full: "Hugging Face Hub" },
+  Transformers: { def: "The model architecture behind nearly every modern AI system, and the Hugging Face library that runs them.", link: "https://huggingface.co/docs/transformers/index" },
+  "Fine-tuning": { def: "Taking a general pre-trained model and training it further on your own data so it fits your task.", link: "https://huggingface.co/docs/transformers/training" },
+  vLLM: { def: "A serving engine that runs open LLMs fast enough for real traffic.", link: "https://docs.vllm.ai/", full: "vLLM inference engine" },
+  Airflow: { def: "Schedules and monitors data pipelines, so each step runs in order and failures are visible.", link: "https://airflow.apache.org/", full: "Apache Airflow" },
+  DuckDB: { def: "An in-process analytics database: SQL over local files, no server to run.", link: "https://duckdb.org/" },
+  Polars: { def: "A dataframe library like pandas, built for speed on larger-than-memory data.", link: "https://pola.rs/" },
+  Jupyter: { def: "The notebook where analysis is actually done: code, charts, and notes in one document.", link: "https://jupyter.org/", full: "Project Jupyter" },
+  Plotly: { def: "Builds interactive charts you can zoom and hover, rather than a flat image.", link: "https://plotly.com/python/" },
+  "Weights & Biases": { def: "Tracks training runs and their metrics, so two experiments can be compared instead of remembered.", link: "https://wandb.ai/", full: "Weights & Biases" },
+  DVC: { def: "Git for datasets and models: versions the large files code alone cannot.", link: "https://dvc.org/", full: "Data Version Control" },
+  Pydantic: { def: "Validates incoming data against a declared shape, so bad input fails at the edge instead of deep inside.", link: "https://docs.pydantic.dev/" },
+  pytest: { def: "The standard Python testing framework.", link: "https://docs.pytest.org/" },
+  Streamlit: { def: "Turns a Python script into a shareable web app, which is how a model gets in front of someone.", link: "https://streamlit.io/" },
 };
 
 // Said once per section. The affordance used to be announced on every single
@@ -321,7 +341,7 @@ export const stackGroups = [
     dot: "bg-cat-data",
     tint: "--c-cat-data",
     primary: ["PySpark", "SQL"],
-    items: ["PySpark", "ETL pipelines", "PostgreSQL", "DynamoDB", "S3", "SQL"],
+    items: ["PySpark", "Airflow", "ETL pipelines", "PostgreSQL", "DynamoDB", "DuckDB", "S3", "SQL"],
   },
   {
     title: "Data science",
@@ -329,15 +349,15 @@ export const stackGroups = [
     dot: "bg-cat-science",
     tint: "--c-cat-science",
     primary: ["pandas", "scikit-learn"],
-    items: ["pandas", "NumPy", "scikit-learn", "Evaluation", "Exploratory analysis"],
+    items: ["pandas", "Polars", "NumPy", "scikit-learn", "Jupyter", "Plotly", "Evaluation", "Exploratory analysis"],
   },
   {
     title: "LLM / RAG",
     note: "Grounded answers with citations, offline-first.",
     dot: "bg-cat-llm",
     tint: "--c-cat-llm",
-    primary: ["LangChain", "LangGraph"],
-    items: ["LangChain", "LangGraph", "Ollama", "Claude", "Pinecone", "Embeddings"],
+    primary: ["Hugging Face", "LangChain"],
+    items: ["Hugging Face", "Transformers", "LangChain", "LangGraph", "Fine-tuning", "vLLM", "Ollama", "Claude", "Pinecone", "Embeddings"],
   },
   {
     title: "Computer vision",
@@ -353,7 +373,7 @@ export const stackGroups = [
     dot: "bg-cat-mlops",
     tint: "--c-cat-mlops",
     primary: ["MLflow", "Docker"],
-    items: ["MLflow", "Docker", "GitHub Actions", "Kubernetes", "Helm"],
+    items: ["MLflow", "Weights & Biases", "DVC", "Docker", "GitHub Actions", "Kubernetes", "Helm"],
   },
   {
     title: "Backend & apps",
@@ -361,7 +381,7 @@ export const stackGroups = [
     dot: "bg-cat-backend",
     tint: "--c-cat-backend",
     primary: ["Python", "FastAPI"],
-    items: ["Python", "FastAPI", "Next.js", "React", "TypeScript", "Tauri"],
+    items: ["Python", "FastAPI", "Pydantic", "pytest", "Streamlit", "Next.js", "React", "TypeScript", "Tauri"],
   },
 ];
 

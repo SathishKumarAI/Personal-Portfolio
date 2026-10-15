@@ -36,16 +36,27 @@ const MAP = {
   // several large corporate logos over trademark policy. Absent upstream is a
   // better reason to show nothing than any substitute would be.
   DynamoDB: null,
+  DuckDB: "duckdb",
+  Airflow: "apacheairflow",
   S3: null,
   SQL: null,
   "ETL pipelines": null,
   // science
   pandas: "pandas",
+  Polars: "polars",
+  Jupyter: "jupyter",
+  Plotly: "plotly",
   NumPy: "numpy",
   "scikit-learn": "scikitlearn",
   Evaluation: null,
   "Exploratory analysis": null,
   // llm
+  "Hugging Face": "huggingface",
+  // No `transformers` slug upstream, and no `fine-tuning` either: both are
+  // drawn in conceptIcons.js, which is where things without a company go.
+  Transformers: null,
+  "Fine-tuning": null,
+  vLLM: "vllm",
   LangChain: "langchain",
   LangGraph: "langgraph",
   Ollama: "ollama",
@@ -64,6 +75,8 @@ const MAP = {
   Vision: null,
   // mlops
   MLflow: "mlflow",
+  "Weights & Biases": "weightsandbiases",
+  DVC: "dvc",
   Docker: "docker",
   "GitHub Actions": "githubactions",
   Kubernetes: "kubernetes",
@@ -72,6 +85,9 @@ const MAP = {
   // backend and apps
   Python: "python",
   FastAPI: "fastapi",
+  Pydantic: "pydantic",
+  pytest: "pytest",
+  Streamlit: "streamlit",
   "Next.js": "nextdotjs",
   React: "react",
   TypeScript: "typescript",

@@ -84,6 +84,17 @@ export const CONCEPT_ICONS = {
   // Key-value store: a table whose rows are a key and its value, which is the
   // one structural thing that separates it from the SQL cylinder above.
   DynamoDB: { d: "M3.5 5.5h17v13h-17z M3.5 9.5h17 M10 9.5v9 M6.3 13h.01 M14.2 13h.01 M6.3 16h.01 M14.2 16h.01", s: 1 },
+  /* The two terms added with the 2026-10-15 skills pass that have no upstream
+     mark. `transformers` and `fine-tuning` are not companies, so simple-icons
+     has nothing for them and never will -- which puts them squarely in this
+     file's own remit rather than in the exception below. */
+  // Attention: three tokens on a line, and the one in the middle reaching back
+  // to both of the others. That reaching IS the architecture.
+  Transformers: { d: "M5 19.5v-3 M12 19.5v-7 M19 19.5v-4 M5 16.5Q8.5 8 12 12.5 M19 15.5Q15.5 8 12 12.5", s: 1 },
+  // Two sliders at different settings. A dial was the first draft and it read
+  // as MLOps' loop at 14px; sliders share no silhouette with anything here.
+  "Fine-tuning": { d: "M4 9h16 M4 15h16 M9.5 7v4 M15 13v4", s: 1 },
+
   // Vector index: a query point and the neighbours it returns. Embeddings
   // above is the vector itself; this is the search over many of them.
   Pinecone: { d: "M12 12h.01 M12 12l4.5-3.5 M12 12l-5 2.5 M12 12l3 5 M12 12m-7.5 0a7.5 7.5 0 1 0 15 0 7.5 7.5 0 1 0-15 0", s: 1 },

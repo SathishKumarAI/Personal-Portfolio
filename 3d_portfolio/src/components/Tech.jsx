@@ -76,9 +76,16 @@ const DefinitionPanel = ({ entry, pinned }) => (
       </>
     ) : (
       /* The resting state says what the slot is FOR. An empty bordered box
-         reads as something that failed to load. */
+         reads as something that failed to load.
+
+         It is also the ONLY place the instruction is given now. There used to
+         be a separate hint line under the intro -- "Dotted terms have a
+         plain-English definition, tap one" -- which is the same sentence this
+         panel was already saying, 400px away from it, and both were desktop
+         only so a desktop reader got it twice. `TERM_HINT` moved in here
+         rather than being retyped, so there is still one string. */
       <p className="m-auto text-center font-serif italic text-faint text-label leading-[1.5]">
-        Point at any tool to read what it does.
+        {TERM_HINT}
         <br />
         Tap one to keep it here.
       </p>
@@ -153,27 +160,6 @@ const Tech = () => {
             and easy to hand off.
           </motion.p>
 
-          {/* The hint is an instruction about the interface, not part of the
-              argument the intro is making, so it gets its own line, its own
-              voice (serif italic, the reading face) and a mark. The info glyph
-              is inline rather than in icons.js: that module owns brand marks
-              and off-site destinations, not one-off affordances. */}
-          <motion.p
-            variants={fadeIn("", "", 0.18, 1)}
-            className="hidden md:flex mt-3 items-start gap-2 font-serif italic text-faint text-label leading-[1.5]"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              aria-hidden="true"
-              className="mt-[3px] shrink-0"
-            >
-              <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2a8 8 0 110 16 8 8 0 010-16zm-1 3h2v2h-2V7zm0 4h2v6h-2v-6z" />
-            </svg>
-            {TERM_HINT}
-          </motion.p>
         </div>
 
         <DefinitionPanel entry={shown} pinned={Boolean(pinned)} />
@@ -186,7 +172,7 @@ const Tech = () => {
           description to earn its place. Each row and each card still reveals on
           its own viewport entry, so the section animates as the reader arrives
           at it rather than all at once. */}
-      <div className="mt-6 sm:mt-8">
+      <div className="mt-6">
         {/* phone: six labelled rows of flowing terms, no card and no chips.
             Boxed, this was thirty-three bordered rectangles about 50px tall — a
             form, not a vocabulary, and most of a screen per group. Bare terms
@@ -242,30 +228,19 @@ const Tech = () => {
             Reveal stays the motion wrapper and the card is a plain child of it,
             so the pointermove handler writes --mx/--my to an element that
             framer-motion is not also writing a style attribute to. */}
-        {/* THE PATH, SAID ONCE.
-            This was a segmented rail: six tinted bars with "raw data" and
-            "running product" at the ends. It was drawn when the areas were a
-            3x2 grid of cards, which states six categories and throws the
-            ordering away -- the rail had to put the ordering back.
+        {/* THE PATH RULE CAME OUT, and it was the fourth statement of one fact.
 
-            The columns ARE the ordering now. They run left to right, they are
-            numbered 01-06, and each carries its own tint bar. The rail was
-            therefore saying the same thing a third time, which is why it read
-            as decoration nobody could interpret: "what does RAW DATA mean
-            here?" is the right question to ask of a label with no sentence
-            around it.
+           It was a segmented rail of six tinted bars, then a line reading
+           "FROM RAW DATA ---- TO A RUNNING PRODUCT". The columns already run
+           left to right, they are already numbered 01-06, they already carry
+           their own tint bar, and the intro paragraph directly above already
+           says "grouped by where it sits on the path from raw data to a
+           running product" -- the same words. A label with no sentence around
+           it is what made "what does RAW DATA mean here?" a fair question;
+           the sentence that answers it was always three lines up.
 
-            What survives is the part the columns genuinely cannot say -- where
-            the path starts and where it ends -- written as the two halves of a
-            sentence rather than as two bare labels. */}
-        <Reveal
-          delay={0.1}
-          className="hidden md:flex items-baseline justify-between gap-4 mt-10 font-mono text-micro text-faint uppercase tracking-[0.14em]"
-        >
-          <span>from raw data</span>
-          <span aria-hidden="true" className="h-px flex-1 bg-line" />
-          <span>to a running product</span>
-        </Reveal>
+           It also cost 41px of a section under a one-screen budget that now
+           carries 47 terms. Measured: 897px to 856px, 1.02 screens to 0.97. */}
 
         {/* SIX COLUMNS, ONE ROW — the pipeline IS the layout.
             A 3x2 grid of cards states six categories and throws the ordering
@@ -334,7 +309,7 @@ const Tech = () => {
                     Bare, a long name simply wraps as text, and the tier is
                     carried by weight and colour the way the rest of the page
                     carries emphasis. */}
-                <div className="mt-3 flex flex-col items-start gap-y-1">
+                <div className="mt-3 flex flex-col items-start gap-y-0.5">
                   {g.items.map((it) => (
                     <TagTerm
                       key={it}
