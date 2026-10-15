@@ -4,7 +4,7 @@ Written when work stopped. Read this first on return, then `3d_portfolio/README.
 for the change-to-file table.
 
 **Last touched:** 2026-10-15
-**Branch:** `feat/stack-one-screen` — **five commits, deliberately unmerged.**
+**Branch:** `feat/stack-one-screen` — **eight commits, deliberately unmerged.**
 The owner asked for commits rather than a merge per fix ("try not to merge
 every time you fix everything, just commit"). One PR goes up for the whole
 Stack increment when he is satisfied with it.
@@ -87,7 +87,41 @@ the constraint every decision below was traded against.
 | `5d89e03` | The six reported faults reassessed and measured | token band overlap **416x106 → 0**; ink stopped decaying to 0.00 |
 | `dbc8cfd` | DynamoDB, S3 and Pinecone given marks | terms with a glyph **30/33 → 33/33** |
 | `1fa491d` | Twelve current tools added across five areas | **33 → 47 tools**, section held at **1.00 screens** |
-| `180076f` | The same stack offered as a system diagram | list **881px**, diagram **841px**, both ≤ 1 screen |
+| `180076f` | The same stack offered as a system diagram | list **881px**, diagram **841px** |
+| `8aa364f` | The closing band ranks the page's own passages | bars settle 100 / 50.6 / 40%, plays once |
+| `df9fb2d` | Diagram redrawn by RESPONSIBILITY, and made portable | list **881px** / diagram **997px** |
+
+**The one-screen rule now holds for the list only, and that is stated rather
+than hidden.** Measured at 1707x872: tool list **881px (1.00 screens)**;
+diagram **997px (1.14)**; diagram with a cloud selected **1135px (1.30)**. The
+optional layers — the swap table and the `?` explainer — render only when a
+reader asks for them. Everything that pushed it over was content added on
+request. The remaining lever is the per-stage role line (~40px), and it is the
+sentence that makes a box a slot rather than a label, so it is the owner's
+call.
+
+### The diagram, after the interview reframing
+
+The owner's framing was "answer this like a Google interview". That killed the
+first diagram: its boxes were `stackGroups` entries — Data engineering, Data
+science, Computer vision — which are categories of a PERSON. Nobody draws a
+box called "Data engineering" on a whiteboard.
+
+The boxes are now the **jobs the system has to do**, and the tools are what
+drops into each slot. That is what makes the useful sentence available:
+*"Airflow orchestrates here; on GCP that is Composer, on AWS that is MWAA —
+same role."*
+
+| Decision | Why, and what it cost |
+| --- | --- |
+| Stages = responsibilities | The only thing that makes this a second READING rather than a second filing |
+| Labelled flow payloads | A bare arrow repeats the 01-06 numerals; `features` says what the next stage RECEIVES |
+| Payloads styled as capsules | They were faint lowercase mono beside faint lowercase mono tool names and read as three more skills |
+| Vision ‖ Language share a row | The one claim the six-column list structurally cannot make |
+| `Ship & observe` is the floor | Nothing flows into it or out of it, so it gets no step above it |
+| Full-width bands, not columns | Five boxes at ~200px wrapped 47 tools raggedly — reported as "the skills are scattered" |
+| `platformSwaps` never REPLACES a name | Overwriting "S3" with "Cloud Storage" would claim he runs GCP. Absent beats invented |
+| Build tooling named nowhere | How a thing was built and what it is made of are two different lists |
 
 ### What the Stack section is now
 

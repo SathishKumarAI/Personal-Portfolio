@@ -54,17 +54,44 @@ const stageById = Object.fromEntries(systemStages.map((s) => [s.id, s]));
 const FORK = ["vision", "language"];
 const stageNo = (i) => String(i + 1).padStart(2, "0");
 
-/* The step between bands, and the label is the payload. A bare arrow says
-   "and then", which the list's 01-06 numerals already said; an arrow labelled
-   `features` says what the next stage RECEIVES, which is the thing no
-   arrangement of a list can express. */
+/**
+ * WHAT MOVES between two stages -- and it has to look nothing like a tool.
+ *
+ * This was a lowercase word in faint mono sitting between two hairlines, which
+ * is the exact typographic treatment the tool names beside it use. Reported,
+ * correctly: "I don't see a differentiate between the diagram and the tables,
+ * the feature, they are looking the same kind of skills here." A reader
+ * scanning the column saw `Airflow`, `PySpark`, `tables`, `pandas` and had no
+ * way to know one of those is not a tool he uses.
+ *
+ * So the payload now carries every signal a tool name does not: a downward
+ * arrowhead, a dashed capsule rather than a bare word, uppercase with wide
+ * tracking, and the accent ink that nothing in the term list uses. A dashed
+ * outline is also the convention for a thing in transit rather than a thing
+ * that exists, which is what these are.
+ */
 const Step = ({ label }) => (
-  <div className="flex items-center justify-center gap-2 py-0.5">
-    <span aria-hidden="true" className="h-3 w-px bg-line" />
-    <span className="font-mono text-micro lowercase tracking-[0.08em] text-faint">
-      {label}
+  <div className="flex flex-col items-center">
+    <span aria-hidden="true" className="h-1.5 w-px bg-line" />
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-accent/45 px-2.5 py-[3px]">
+      <svg
+        width="8"
+        height="8"
+        viewBox="0 0 8 8"
+        aria-hidden="true"
+        className="shrink-0 fill-accent-ink"
+      >
+        <path d="M4 8 0 0h8z" />
+      </svg>
+      {/* The screen-reader text says what the capsule means, because the
+          arrow and the dashes are the only thing carrying that meaning for a
+          sighted reader and neither survives being read aloud. */}
+      <span className="sr-only">passes to the next stage: </span>
+      <span className="font-mono text-micro uppercase tracking-[0.16em] text-accent-ink">
+        {label}
+      </span>
     </span>
-    <span aria-hidden="true" className="h-3 w-px bg-line" />
+    <span aria-hidden="true" className="h-1.5 w-px bg-line" />
   </div>
 );
 
@@ -84,10 +111,18 @@ const Band = ({ stage, index, narrow, onDefine, onPin, shown }) => (
   >
     <div className={`shrink-0 ${narrow ? "w-[8.5rem]" : "w-[13rem]"}`}>
       <h3 className="flex items-baseline gap-2 font-display text-[14px] font-semibold leading-tight tracking-[-0.01em] text-white-100">
+        {/* A ringed node, not a numeral in the heading. The list view already
+            prints `01`-`06` as plain figures beside its column titles, so a
+            plain figure here said "same thing again"; a ring says "node in a
+            graph", which is the only claim this view is making that the list
+            is not. */}
         <span
           aria-hidden="true"
-          className="stack-index font-mono text-[12px] font-medium"
-          style={{ "--cat": `var(${stage.tint})` }}
+          className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border font-mono text-[10px] font-semibold leading-none"
+          style={{
+            borderColor: `rgb(var(${stage.tint}))`,
+            color: `rgb(var(${stage.tint}))`,
+          }}
         >
           {stageNo(index)}
         </span>

@@ -11,7 +11,10 @@ Thirty files. Read the table, not the directory.
 | Portrait, lede, the three proven claims, availability card | `About.jsx` |
 | Roles and degrees, the card deck, date alignment | `Experience.jsx` |
 | Stack: the header, the view toggle, and the six-column tool list | `Tech.jsx` |
-| Stack read as a system: the pipeline, the parallel fork, the platform band | `StackDiagram.jsx` |
+| Stack read as a system: stage bands, flow payloads, the `?` explainer | `StackDiagram.jsx` |
+| The stages, what each one is responsible for, and what flows out of it | `systemStages` in `../constants/index.js` |
+| Which tools have a managed equivalent on AWS / GCP / Azure | `platformSwaps` in `../constants/index.js` |
+| What the closing band retrieves, and the questions it offers | `RetrievalRank.jsx` |
 | Which tools exist, and their plain-English definitions | `stackGroups` and `glossary` in `../constants/index.js` |
 | Which tools get the filled chip, and each dot's colour | `stackGroups` in `../constants/index.js` |
 | Project cards, and the drawings on them | `Works.jsx` |
@@ -82,10 +85,25 @@ A few boundaries worth knowing before editing:
   nearest-neighbour cluster), never as a recalled brand mark: a brand mark from
   memory is a claim about someone else's identity and is simply right or wrong.
 - **Stack has two views over one dataset.** `Tech.jsx` owns the list and the
-  toggle; `StackDiagram.jsx` owns the system reading. Both map `stackGroups`
-  and both call the same `setHovered`/`pinTerm`, so a term is defined in one
-  place and pinning survives a view switch. A diagram holding its own copy of
-  the stack would be stale within a month.
+  toggle; `StackDiagram.jsx` owns the system reading. Both resolve the same 47
+  terms and both call the same `setHovered`/`pinTerm`, so a term is defined in
+  one place and pinning survives a view switch. The two filings are separate
+  constants — `stackGroups` by skill area, `systemStages` by responsibility —
+  and `utils/stages.test.mjs` fails if they stop covering the same set.
+- **The diagram's boxes are RESPONSIBILITIES, not skill areas.** That is the
+  only reason the second view exists: a box called "Data engineering" is a
+  category of a person, and redrawing the list with arrows added is not a
+  second reading of anything. If a change starts making the stages look like
+  `stackGroups` again, the view has lost its justification.
+- **Anything in the diagram that is not a tool must not look like one.** The
+  flow payloads (`tables`, `features`) were lowercase faint mono sitting
+  beside lowercase faint mono tool names, and read as three more skills. They
+  are now dashed accent capsules with an arrowhead and wide uppercase
+  tracking. Measured: payload ink `rgb(155,20,20)`, uppercase, 1.92px
+  tracking, against a tool at `rgb(17,17,19)`, no transform, normal tracking.
+- **Build tooling is not the stack, and is not named anywhere.** How a thing
+  was built and what it is made of are two different lists, and this page
+  carries only the second.
 - **Never "optimise" an SVG path with a regex.** Rounding coordinates with
   `/\d*\.\d+/g` corrupted every mark using compact arc syntax: in
   `a5.5 5.5 0 01.5.5` the two arc FLAGS and the next number are written `01.5`,

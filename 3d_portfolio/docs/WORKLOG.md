@@ -1,5 +1,106 @@
 # Worklog
 
+## 2026-10-15: the Stack diagram, rebuilt around responsibilities
+
+The owner reframed it: answer this the way you would in a design interview.
+That one sentence invalidated the diagram that already existed.
+
+### The thing that was wrong
+
+Its boxes were `stackGroups` entries -- Data engineering, Data science,
+Computer vision. Those are categories of a PERSON. Nobody draws a box called
+"Data engineering" on a whiteboard, and a drawing whose boxes are the list's
+own headings is the list with arrows added, not a second reading of anything.
+
+The boxes are now the jobs the system has to do, in `systemStages`, and the
+tools are what drops into each slot. The sentence that reframing makes
+available is the whole point: *"Airflow orchestrates here; on GCP that is
+Composer, on AWS that is MWAA -- same role."*
+
+### Portability as a control, not a claim
+
+`platformSwaps` maps thirteen managed pieces onto AWS, Google Cloud and Azure,
+keyed by role. It never REPLACES a tool name, and that restraint is the
+feature: overwriting "S3" with "Cloud Storage" would have the page claiming he
+runs GCP, where showing both under a caption that says these are equivalents
+claims only that he knows what fills the role elsewhere.
+
+The first version put the swaps inside each stage box. Measured, six entries
+inside a 203px-wide `Ingest & store` took it from 254px to 386px. Consolidated
+under the diagram as a role-keyed grid it is three lines -- and after a second
+report ("could you organize them as well") an ALIGNED grid, because thirteen
+mappings separated by interpuncts was information that was right and
+unreadable. A lookup table exists to be scanned down for one row.
+
+### Two layout experiments that measured worse than they looked
+
+| Idea | Expectation | Measured |
+| --- | --- | --- |
+| Fork pair side by side | row bounded by tallest BOX, not tallest COLUMN | 979px vs 955px stacked -- narrow boxes wrap more |
+| Swap grid in two wide columns | no row ever wraps | 1113px vs 1067px for three columns |
+
+Box height is set by how much width its terms have to wrap in. Wide-and-stacked
+beats narrow-and-adjacent for a box with nine terms. Both were reverted.
+
+### "The skills are scattered"
+
+Five stages in a row gave each about 200px, and 47 tools wrapped inside 200px
+break in a different place in every box with no two sharing a left edge.
+Full-width BANDS give each stage ~1,000px: every stage is now a single aligned
+tool row at 55px.
+
+### "The tables, the features look like the same kind of skills"
+
+Correct, and the sharpest report of the session. The flow payloads were
+lowercase faint mono between two hairlines -- the exact treatment the tool
+names beside them use. A reader scanning saw `Airflow`, `PySpark`, `tables`,
+`pandas` with nothing marking one of those as not-a-tool.
+
+They now carry every signal a tool name does not: an arrowhead, a dashed
+capsule, wide uppercase tracking, and accent ink nothing in the term list uses.
+Measured: payload `rgb(155,20,20)`, uppercase, 1.92px tracking, against a tool
+at `rgb(17,17,19)`, no transform, normal tracking.
+
+### A `?`, asked for by name
+
+"Just like you have question mark for the neural network so that the user
+understands what we are trying to say here." In flow rather than as a popover,
+so it costs height only while a reader has it open and can never cover
+anything.
+
+### Removed on request
+
+A line naming the build tooling. How a thing was built and what it is made of
+are two different lists, and this page carries only the second. Stripped from
+the component, the constants and the commit message that introduced it; a
+repo-wide scan confirms the site and docs name it nowhere.
+
+### The regression I caused, and the process fault under it
+
+Making "Hugging Face" a primary tool broke `llms-mirror.test.mjs`, which
+checks `public/llms.txt` still mirrors the stack. It had been failing since the
+skills commit, because I was running the two `.mjs` suites directly instead of
+`npm test`, which runs five. The fix is one line of llms.txt; the lesson is
+that running a subset of the suite is indistinguishable from running none of
+the part you skipped. `stages.test.mjs` is now wired into `npm test` so it
+cannot be missed the same way.
+
+That test guards the real hazard here -- two hand-maintained lists of the same
+47 strings -- and it was armed before being trusted: removing one staged tool
+and one vendor cell produced three distinct failures and exit 1, then green.
+
+### Where it ended
+
+| | Height | Screens at 872px |
+| --- | --- | --- |
+| Tool list | 881px | 1.00 |
+| Diagram, default | 997px | 1.14 |
+| Diagram + a cloud | 1135px | 1.30 |
+
+The one-screen rule holds for the list and not for the diagram. Everything
+that pushed it over was content added on request, and the optional layers
+render only when asked for. Stated rather than quietly traded away.
+
 ## 2026-10-15: Stack, reassessed and then given a second reading
 
 Five commits on `feat/stack-one-screen`, unmerged on the owner's instruction
