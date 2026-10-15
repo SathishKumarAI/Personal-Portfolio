@@ -56,7 +56,12 @@ const FieldLegend = () => {
       ref={wrap}
       // Bottom-left, beside where the INPUT label lands. `fixed`, like the two
       // docks it describes, so it does not scroll away from them.
-      className="hidden rail:block fixed left-2 xl:left-4 bottom-4 z-40"
+      /* `bottom-20`, not `bottom-4`. The field's own layer labels sit at
+         bottom 22px and stand 43px tall, so at bottom-4 this button sat on top
+         of the INPUT caption -- measured, a 14 x 18px overlap with the words
+         "ways to reach me". 80px clears that block with air to spare, and the
+         popover still opens upward into empty hero. */
+      className="hidden rail:block fixed left-2 xl:left-4 bottom-20 z-40"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >

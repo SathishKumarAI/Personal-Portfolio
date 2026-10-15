@@ -774,6 +774,17 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
   }
 }
 
+/* HELD until the block is on screen.
+   The hero's claims stream at page load, where a fixed delay is exactly right.
+   About's claims are a screen down: by the time the reader arrives the
+   animation would have finished unwatched, and they would simply be there.
+   Pausing the animation rather than re-timing it means one stylesheet rule and
+   no second code path — the delays stay as written and only start counting
+   when the section says so. */
+[data-tok="wait"] .tok {
+  animation-play-state: paused;
+}
+
 /* The words still have to be there, and still have to be readable, for anyone
    who asked for less motion. They simply arrive already resolved. */
 @media (prefers-reduced-motion: reduce) {
@@ -1144,6 +1155,51 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
    so it looks lit from above, a coloured ambient shadow so the accent glows
    into the ground instead of sitting on it, and a hairline inner highlight on
    the top edge. The hover lifts rather than dims. */
+/* The page's one primary action.
+   -------------------------------------------------------------------------
+   It used to be `.btn-accent`: a hot accent fill with a matching accent GLOW
+   around it and black label text. At button size that combination reads as an
+   alert rather than an invitation -- a saturated red rectangle with a red halo
+   is the shape of a destructive confirm, and it was reported exactly that way.
+
+   The ink fill is the theme's own `--c-chip-solid`, already used for the
+   primary tool chips, so this introduces no new colour. White on it measures
+   far past AA, and the shadow is neutral rather than tinted, which is most of
+   what removes the siren quality.
+
+   The accent is not lost; it is FREED. It can go on being the page's one
+   highlight -- "real-world impact", the claim rules, the live dot -- instead
+   of competing with a button for the same job. */
+.btn-primary {
+  background: rgb(var(--c-chip-solid));
+  color: rgb(var(--c-chip-solid-ink));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 1px 2px rgb(var(--c-strong) / 0.3),
+    0 10px 24px -12px rgb(var(--c-strong) / 0.45);
+  transition: box-shadow 220ms ease, transform 220ms ease;
+}
+
+.btn-primary:hover {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 1px 2px rgb(var(--c-strong) / 0.3),
+    0 16px 34px -14px rgb(var(--c-strong) / 0.55);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,
+  .btn-primary:hover,
+  .btn-primary:active {
+    transform: none;
+  }
+}
+
 .btn-accent {
   background: linear-gradient(
     180deg,
