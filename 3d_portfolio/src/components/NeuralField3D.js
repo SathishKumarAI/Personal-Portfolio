@@ -219,7 +219,18 @@ export const start = () => {
     )].filter(shown).map(centre);
     const outputs = [...document.querySelectorAll('nav[aria-label="Sections"] a')]
       .filter(shown).map(centre);
-    if (!inputs.length || !outputs.length) { disposeGraph(); layers = []; return; }
+    // `labelLayers()` BEFORE the return, not after it. This guard used to exit
+    // straight out, which disposed the graph and left the four labels standing:
+    // at 882px both docks are `display:none`, so there is no network at all and
+    // "INPUT 4" and "HIDDEN 1 8" were still painted across the bottom of the
+    // page, captioning nothing. The other two sat at left:987px and left:1458px
+    // on an 882px viewport — off the side of the screen entirely.
+    if (!inputs.length || !outputs.length) {
+      disposeGraph();
+      layers = [];
+      labelLayers();
+      return;
+    }
 
     const x0 = inputs[0].x, x1 = outputs[0].x;
     const spread = h * 0.44;
@@ -346,13 +357,27 @@ export const start = () => {
   };
 
   // --- loop -----------------------------------------------------------------
+  /**
+   * The breakpoint is checked HERE, not upstream.
+   *
+   * The two docks this module is wired to are `hidden rail:flex` — they do not
+   * exist below 1024px, so there is nothing to anchor to and nothing worth
+   * drawing. `NeuralField` looks like it already handles that, and does not:
+   * its `start()` opens with `if (handed) return`, which fires before its own
+   * `if (!wide.matches) return stop()`. Once this module has taken the canvas,
+   * nothing upstream can ever tell it to stand down, so a window dragged narrow
+   * kept a WebGL render loop alive at phone widths for a scene with no nodes in
+   * it. Owning the test here needs no protocol between the two files.
+   */
+  const wide = window.matchMedia("(min-width: 1024px)");
+
   let raf = 0, last = 0, poll = 0, onScreen = true, hidden = false, fade = 1;
 
   const frame = (ts) => {
     raf = requestAnimationFrame(frame);
     const dt = last ? Math.min((ts - last) / 1000, 0.05) : 0;
     last = ts;
-    if (!onScreen || hidden) return;
+    if (!onScreen || hidden || !wide.matches) return;
 
     // A longer tail on the easing, so the camera drifts to the pointer rather
     // than tracking it.
@@ -392,6 +417,11 @@ export const start = () => {
   const onResize = () => {
     w = window.innerWidth;
     h = window.innerHeight;
+    // Hidden rather than left holding its last frame. `frame()` stops rendering
+    // below the breakpoint, and a stopped renderer does not clear what it
+    // already drew — so without this the narrow window kept a frozen lattice
+    // painted over the mobile hero.
+    canvas.style.display = wide.matches ? "" : "none";
     fit();
     build();
   };
@@ -401,11 +431,14 @@ export const start = () => {
   const themeWatch = new MutationObserver(paintTheme);
   themeWatch.observe(root, { attributes: true, attributeFilter: ["data-theme", "data-scheme"] });
 
-  fit();
-  build();
+  // `onResize()` rather than `fit(); build();` — it is the same two calls plus
+  // the breakpoint's canvas visibility, and starting through it means a tab
+  // opened already narrow takes the same path as one dragged narrow later.
+  onResize();
   onScroll();
   poll = window.setInterval(build, 500);
   window.addEventListener("resize", onResize);
+  wide.addEventListener("change", onResize);
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("pointermove", onPointer, { passive: true });
   document.addEventListener("visibilitychange", onVisibility);
@@ -416,6 +449,7 @@ export const start = () => {
     clearInterval(poll);
     themeWatch.disconnect();
     window.removeEventListener("resize", onResize);
+    wide.removeEventListener("change", onResize);
     window.removeEventListener("scroll", onScroll);
     window.removeEventListener("pointermove", onPointer);
     document.removeEventListener("visibilitychange", onVisibility);

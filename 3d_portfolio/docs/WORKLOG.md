@@ -1,5 +1,50 @@
 # Worklog
 
+## 2026-10-15: the hero field kept its captions after its subject left
+
+Below the `rail` breakpoint (1024px) both docks are `display:none`, so the field
+has nothing to anchor to and correctly disposes its graph. It did not dispose
+its **labels**.
+
+Measured at 882px: no docks, no network, and `INPUT 4` and `HIDDEN 1 8` still
+painted across the bottom of the page captioning nothing. The other two were at
+`left:987px` and `left:1458px` on an 882px viewport — off the side of the
+screen.
+
+### Two causes, both "the guard returns before the cleanup"
+
+`build()` exits at `if (!inputs.length || !outputs.length)` and that return sat
+**above** the `labelLayers()` call at the bottom of the function. Moving the
+call into the guard is the whole fix for the labels.
+
+The second one is the more interesting failure. `NeuralField3D` had no
+breakpoint test of its own, because `NeuralField` appears to have one:
+
+```js
+const start = () => {
+  if (handed) return;              // <- fires first, every time
+  if (!wide.matches) return stop();
+```
+
+Once the 3D module has taken the canvas, `handed` is `true` forever, so the
+breakpoint test below it is unreachable **for exactly the case it was written
+for**. Nothing upstream could ever tell the module to stand down, and a window
+dragged narrow kept a WebGL render loop alive at phone widths over a scene with
+no nodes in it.
+
+The module now owns the test itself, which needs no protocol between the two
+files — and the canvas is hidden rather than left holding its last frame, since
+a stopped renderer does not clear what it already drew.
+
+| At 882px | Before | After |
+| --- | ---: | ---: |
+| Layer labels in the DOM | 4 | **0** |
+| GL canvas `display` | `block` | **`none`** |
+| Render loop | running | **stopped** |
+
+Recovers on the way back up: at 1512px, 4 labels and a 1892x1127 canvas.
+
+
 ## 2026-10-15: the gutter was inside the cap, so four blocks indented past every section
 
 `styles.paddingX` is the page's gutter. `SectionWrapper` puts it on the
