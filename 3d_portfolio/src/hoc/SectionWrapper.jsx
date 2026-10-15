@@ -33,12 +33,10 @@ import { staggerContainer } from "../utils/motion";
    drawing that the reader is trying to take in at once. The grounds still
    alternate, so the scenes stay visibly separated on less of it.
 
-   ASYMMETRIC, and the top half is load-bearing rather than decorative. Stack's
-   token ribbon lives in the section's TOP PADDING -- that band is the only
-   place on this page an ambient canvas can run without crossing something.
-   Trimming the padding evenly moved the content up under the ribbon and put a
-   measured 466x44px of canvas behind the definition panel. The bottom stays
-   tight; the top keeps enough room for the band it is carrying. */
+   SYMMETRIC AGAIN. It was briefly asymmetric because the token ribbon lived
+   in the top padding and needed the room; the ribbon has since moved down
+   beside the heading, into the band the definition card used to block, so the
+   padding went back to tight and gave 44px back. */
 const SectionWrapper = (Component, idName, { wide = false, tight = false } = {}) =>
   function HOC() {
     return (
@@ -76,7 +74,7 @@ const SectionWrapper = (Component, idName, { wide = false, tight = false } = {})
         // alternate, so the gap is doing real work — and gives 160px back
         // across the five of them. Desktop is untouched: 9vw passes 4rem at
         // 712px wide, well below any screen that reads the clamp differently.
-        className={`scene ${styles.paddingX} ${tight ? "pt-[clamp(3.25rem,7vw,7rem)] pb-[clamp(2rem,5vw,4.25rem)]" : "py-[clamp(3rem,9vw,8rem)]"} relative z-0 isolate`}
+        className={`scene ${styles.paddingX} ${tight ? "py-[clamp(2rem,5vw,4.25rem)]" : "py-[clamp(3rem,9vw,8rem)]"} relative z-0 isolate`}
       >
         <span className="hash-span" id={idName}>
           &nbsp;

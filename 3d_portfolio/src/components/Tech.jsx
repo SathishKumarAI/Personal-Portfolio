@@ -71,52 +71,50 @@ const wikiSearch = (name) =>
  * appears and disappears would move the rail and the heading beside it on
  * every hover, and the fix for a jumpy section is not a jumpier one.
  */
-const DefinitionPanel = ({ entry, pinned, compact }) => (
+/**
+ * ONE LINE, UNDER THE CONTROLS, ABOVE THE TOOLS.
+ *
+ * It was a bordered card in the header's right column, and the owner's reading
+ * of that was correct: it left the whole band beside the heading and the intro
+ * doing nothing. A definition is one sentence and some links — it does not
+ * need a 512x104 card to hold it, and the card was reserving a column that the
+ * animation could use instead.
+ *
+ * Flattened to a rule and a line of text, it sits directly above the terms it
+ * describes rather than diagonally across from them, and the right half of the
+ * header is free for the token stream to run through.
+ *
+ * It still RESERVES its height. A strip that appears on hover would move every
+ * tool under it on each pointer crossing, which is the fault the card was
+ * built to avoid; that reasoning did not change when the shape did.
+ */
+const DefinitionStrip = ({ entry, pinned }) => (
   <div
-    /* WIDER AND SHORTER, as asked. It was a 9rem-tall box in a 24rem column —
-       a tall narrow well that wrapped a one-sentence definition over four
-       lines and then left air underneath. The column is 32rem now and the
-       reserved height is 6.5rem: the same sentence lands in two lines, so the
-       box is shorter because the text got wider, not because anything was cut.
-
-       It still RESERVES its height. A panel that grows on hover would move
-       the diagram under it on every pointer crossing. */
-    /* NO `h-full`. Stretching made it as tall as the heading column, which
-       is the opposite of what was asked — it is meant to be a wide short
-       strip, and it can only be short if it stops matching a tall neighbour. */
-    className={`hidden md:flex ${
-      compact ? "min-h-[5rem] p-3" : "min-h-[6.5rem] p-4"
-    } flex-col rounded-2xl border border-line bg-tertiary`}
+    className="hidden md:block min-h-[2.75rem] border-t border-line pt-2"
     aria-live="polite"
   >
     {entry ? (
-      <>
-        <p className="flex flex-wrap items-baseline gap-x-2">
-          <span className="font-display text-[15px] font-semibold text-white-100 tracking-[-0.01em]">
-            {entry.name}
-          </span>
-          {entry.full && entry.full !== entry.name && (
-            <span className="font-mono text-label text-faint">{entry.full}</span>
-          )}
-          {pinned && (
-            <span className="font-mono text-micro uppercase tracking-[0.12em] text-accent-ink">
-              pinned
-            </span>
-          )}
-        </p>
-        <p className="mt-1 font-sans text-data text-secondary leading-snug">
-          {entry.def}
-        </p>
-        {/* THE SECOND POINT: where this sits in the system. It is the thing a
-            definition cannot say on its own — "a vector index stores
-            embeddings" is the what, "Model plane, filled here by Pinecone" is
-            the where — and it is derived from the diagram rather than typed. */}
-        {entry.place && (
-          <p className="mt-1.5 font-mono text-micro uppercase tracking-[0.08em] text-faint">
-            {entry.place}
-          </p>
+      <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="font-display text-[14px] font-semibold tracking-[-0.01em] text-white-100">
+          {entry.name}
+        </span>
+        {entry.full && entry.full !== entry.name && (
+          <span className="font-mono text-micro text-faint">{entry.full}</span>
         )}
-        <p className="mt-auto flex flex-wrap items-baseline gap-x-4 pt-2 font-mono text-chip">
+        {pinned && (
+          <span className="font-mono text-micro uppercase tracking-[0.12em] text-accent-ink">
+            pinned
+          </span>
+        )}
+        <span className="min-w-0 flex-1 font-sans text-data leading-snug text-secondary">
+          {entry.def}
+        </span>
+        {entry.place && (
+          <span className="shrink-0 font-mono text-micro uppercase tracking-[0.08em] text-faint">
+            {entry.place}
+          </span>
+        )}
+        <span className="shrink-0 font-mono text-chip">
           {entry.link && (
             <a
               href={entry.link}
@@ -126,22 +124,20 @@ const DefinitionPanel = ({ entry, pinned, compact }) => (
             >
               Learn more ↗
             </a>
-          )}
+          )}{" "}
           <a
             href={wikiSearch(entry.full || entry.name)}
             target="_blank"
             rel="noreferrer"
-            className="text-faint hover:text-accent-ink hover:underline"
+            className="ml-2 text-faint hover:text-accent-ink hover:underline"
           >
             Wikipedia ↗
           </a>
-        </p>
-      </>
+        </span>
+      </p>
     ) : (
-      <p className="m-auto text-center font-serif italic text-faint text-label leading-[1.5]">
-        {TERM_HINT}
-        <br />
-        Tap one to keep it here.
+      <p className="font-serif italic text-label leading-[1.5] text-faint">
+        {TERM_HINT} Tap one to keep it here.
       </p>
     )}
   </div>
@@ -271,7 +267,10 @@ const Tech = () => {
           section. Dropped to the baseline of the header it sits directly above
           the columns, and the slack moves up beside the display-size heading,
           where open space reads as intent rather than as a gap. */}
-      <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] md:gap-x-12 md:items-start">
+      {/* ONE COLUMN. The second held the definition card; with that gone the
+          whole right of the header is free, which is what the token stream
+          now runs through. */}
+      <div>
         <div className="min-w-0">
           <SectionHead title="Stack" meta={STACK_META} />
 
@@ -319,8 +318,7 @@ const Tech = () => {
             the row also gives a long definition more room before it has to
             wrap, which is the only thing that was ever cramped about it. */}
         <div className="flex flex-col gap-3">
-          <DefinitionPanel entry={shown} pinned={Boolean(pinned)} compact={view === "diagram" && compact} />
-          {/* LIST VIEW ONLY, and it is free here. The right column holds a
+            {/* LIST VIEW ONLY, and it is free here. The right column holds a
               144px panel against a 229px left column, so a 30px control fits
               in the slack and the section does not grow. Given its own strip
               below the header it cost a measured 54px — for a control that
@@ -365,6 +363,7 @@ const Tech = () => {
           </div>
           <ViewToggle view={view} onChange={setView} />
         </div>
+        <DefinitionStrip entry={shown} pinned={Boolean(pinned)} />
       </div>
 
       <div className="mt-6">

@@ -207,12 +207,18 @@ const TokenStream = () => {
          but y=161 at 1281px, because its question wrapped to two lines -- so
          the height had to be responsive to chase it.
 
-         The band sits in the section's TOP PADDING, which is the only strip
-         on this page where an ambient canvas crosses nothing by construction.
-         That is why Stack's padding is asymmetric: trimming it evenly moved
-         the content up under the ribbon and put a measured 466x44px of canvas
-         behind the definition panel. Band 52px + 52px = 104px of the ~112px
-         the padding gives it. Re-measure if either number is touched.
+         IT RUNS OUT OF THE HEADING NOW, which is where it was asked to be
+         from the start -- "start the animation from stack and flow it
+         right". It could not, while the definition card occupied the
+         header's right column: the only strip clear of everything was a
+         52px ribbon up in the section's padding. Flattening that card to a
+         line above the tools freed a band roughly 1,400x130px beside the
+         title, and the stream moved into it.
+
+         It stops ABOVE the intro paragraph rather than beside it. The intro
+         runs to ~46rem, so a band that cleared it horizontally would start
+         halfway across the page; stopping 12px short of its first line
+         keeps the full width instead. Re-measure both if the header changes.
 
          A long thin ribbon rather than a short wide block, and that is the
          right trade for this effect: the ask was for the stream to "take more
@@ -227,7 +233,7 @@ const TokenStream = () => {
          this was `left-[33%] right-0`: 416px wide instead of the ~1060px the
          insets implied, which put it straight back over the heading. The hero
          field hit the identical trap with `renderer.setSize(w, h, false)`. */
-      className="pointer-events-none absolute top-[3.25rem] left-[33%] w-[60%] -z-10 hidden rail:block h-[3.25rem] opacity-[0.95]"
+      className="pointer-events-none absolute top-[4.25rem] left-[26%] w-[71%] -z-10 hidden rail:block h-[7.5rem] opacity-[0.95]"
     />
   );
 };
