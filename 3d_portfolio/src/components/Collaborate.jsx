@@ -49,7 +49,14 @@ const Collaborate = () => (
             Open an issue or a PR
           </h3>
           <p className="mt-2 font-sans text-secondary text-body leading-[1.65]">
-            On any repo linked from this page. You do not need permission, and
+            On any of the{" "}
+            {/* The one on-page destination in this band. "linked from this
+                page" was a promise with nothing behind it: the repos are a
+                scroll away and the sentence did not say where. */}
+            <a href="#projects" className="text-accent-ink hover:underline underline-offset-4">
+              repos above
+            </a>
+            . You do not need permission, and
             you do not need to know the code. Questions count too: if you had to
             ask, the docs have a gap.
           </p>
@@ -84,23 +91,26 @@ const Collaborate = () => (
           href={`https://www.linkedin.com/${contact.linkedin}`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center min-h-11 sm:min-h-0 font-mono text-data text-accent-ink hover:underline"
+          className="group inline-flex items-center gap-1.5 min-h-11 sm:min-h-0 font-mono text-data text-accent-ink hover:underline underline-offset-4"
         >
-          LinkedIn, to talk ↗
+          LinkedIn, to talk
+          <span className="inline-block transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5">↗</span>
         </a>
         <a
           href={`mailto:${contact.email}`}
-          className="inline-flex items-center min-h-11 sm:min-h-0 font-mono text-data text-accent-ink hover:underline"
+          className="group inline-flex items-center gap-1.5 min-h-11 sm:min-h-0 font-mono text-data text-accent-ink hover:underline underline-offset-4"
         >
-          Email, for detail ↗
+          Email, for detail
+          <span className="inline-block transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5">↗</span>
         </a>
         <a
           href={SITE_REPO}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center min-h-11 sm:min-h-0 font-mono text-data text-secondary hover:text-accent-ink transition-colors"
+          className="group inline-flex items-center gap-1.5 min-h-11 sm:min-h-0 font-mono text-data text-secondary hover:text-accent-ink transition-colors"
         >
-          CONTRIBUTING.md ↗
+          CONTRIBUTING.md
+          <span className="inline-block transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5">↗</span>
         </a>
       </Reveal>
     </div>

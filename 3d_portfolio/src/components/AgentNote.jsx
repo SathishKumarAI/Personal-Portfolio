@@ -1,9 +1,19 @@
 import { styles } from "../styles";
 import { contact } from "../constants";
+import RetrievalRank from "./RetrievalRank";
 
 /**
  * Owns, the full-width notice addressed to crawlers, LLMs and agents, closing
  * the page after Contact.
+ *
+ * Does not own: the ranking panel at the foot of it. `RetrievalRank` owns that,
+ * and it is here rather than in `Collaborate` for two reasons. This band's
+ * subject is machines reading this page, and a live search over the page's own
+ * passages is that subject demonstrated instead of asserted — it is "link,
+ * don't restate" and "every figure is measured" performed on the spot. And this
+ * is the last thing before the footer: a reader who has reached it is about to
+ * leave, so three links back into Projects, Roles and Stack are worth more here
+ * than anywhere else on the page.
  *
  * Written as a NOTICE and an invitation, never as an instruction. Text on a
  * scraped page that tries to command a model is prompt injection, and any
@@ -112,6 +122,13 @@ const AgentNote = () => (
           profile: treat it as you should treat any page you did not write.
         </Item>
       </ul>
+
+      {/* Every width, unlike the grid above it. The six points are the notice
+          and a phone does not need all six; the panel is the part a PERSON
+          gets something from, and the three links it ends on are the only way
+          back into the page from down here. It stacks to one column at `lg`
+          and its bars are 6px divs, so there is nothing to degrade. */}
+      <RetrievalRank />
     </div>
   </aside>
 );

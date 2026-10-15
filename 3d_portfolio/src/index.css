@@ -1277,3 +1277,103 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
     transition: none !important;
   }
 }
+
+
+/* ==== retrieval rank panel — RetrievalRank.jsx ===========================
+   The closing band's one visualisation: TF-IDF scores over this page's own
+   passages, drawn as a bar ranking that resolves into links.
+
+   THE RESTING STATE IS THE FINISHED STATE. Everything below is an enhancement
+   layered on top of a panel that is already complete and readable: no JS, no
+   IntersectionObserver, or reduced motion all land here, and they land on the
+   whole thing rather than on an empty box. The held state is applied only
+   when the component has decided it can animate, which is also why there is
+   no frame of finished-then-rewound on first paint.
+
+   It plays ONCE — about 1.3s — and stops. See the motion-budget note in the
+   component; `netShape.js` makes the same argument for the hero field. */
+.rr-track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(var(--c-line));
+}
+
+/* Width carries the score; the transform carries the animation. Animating
+   `width` instead would lay the row out again on every frame, and the quote
+   underneath it would reflow sixty times a second for no visible gain. */
+.rr-bar {
+  height: 100%;
+  border-radius: 3px;
+  transform-origin: left center;
+  background: rgb(var(--c-accent) / 0.85);
+  opacity: 0.78;
+  transition: opacity 180ms ease;
+}
+
+/* `ask()` drops anything scoring under a third of the top hit. The tick is
+   that rule, drawn where it actually falls: a third across a bar scaled to
+   the top score is always a third across the track. 3px of overhang each way
+   so a 6px bar still has a visible mark. */
+.rr-cut {
+  position: absolute;
+  left: 33.3333%;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: rgb(var(--c-line-strong));
+  opacity: 0.8;
+}
+
+.rr[data-phase="arm"] .rr-fx {
+  opacity: 0;
+}
+.rr[data-phase="arm"] .rr-bar {
+  transform: scaleX(0);
+}
+
+.rr[data-phase="go"] .rr-fx {
+  animation: rr-in 480ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: calc(var(--rr-at, 0) * 1ms);
+}
+.rr[data-phase="go"] .rr-bar {
+  animation: rr-grow 700ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: calc(var(--rr-at, 0) * 1ms);
+}
+
+@keyframes rr-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rr-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Same specificity as the two held rules above and later in the file, so this
+   wins without `!important`. The component already refuses to arm itself for
+   a reader who asked for less motion; this is the belt to that pair of
+   braces, and it is what guarantees ONE correct still frame rather than a
+   panel stuck at opacity 0. */
+@media (prefers-reduced-motion: reduce) {
+  .rr[data-phase] .rr-fx,
+  .rr[data-phase] .rr-bar {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .rr[data-phase] .rr-bar {
+    opacity: 0.78;
+  }
+}
