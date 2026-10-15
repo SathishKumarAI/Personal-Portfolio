@@ -12,7 +12,7 @@ Thirty files. Read the table, not the directory.
 | Roles and degrees, the card deck, date alignment | `Experience.jsx` |
 | Stack: the header, the view toggle, and the six-column tool list | `Tech.jsx` |
 | Stack read as a system: stage bands, flow payloads, the `?` explainer | `StackDiagram.jsx` |
-| The stages, what each one is responsible for, and what flows out of it | `systemStages` in `../constants/index.js` |
+| The planes, their nodes, and what flows between them | `systemPlanes` / `systemSubstrate` in `../constants/index.js` |
 | Which tools have a managed equivalent on AWS / GCP / Azure | `platformSwaps` in `../constants/index.js` |
 | What the closing band retrieves, and the questions it offers | `RetrievalRank.jsx` |
 | Which tools exist, and their plain-English definitions | `stackGroups` and `glossary` in `../constants/index.js` |
@@ -95,6 +95,15 @@ A few boundaries worth knowing before editing:
   category of a person, and redrawing the list with arrows added is not a
   second reading of anything. If a change starts making the stages look like
   `stackGroups` again, the view has lost its justification.
+- **The category tints are a SCALE, not a set.** One hue at six intensities
+  with monotonic luminance; `--c-flow-1..3` alias three of them for the
+  diagram's planes and `--c-flow-off` is the substrate's neutral. If you
+  retune them, check luminance monotonicity by computing it — chroma rising
+  while lightness stays flat looks like a ramp and is not one.
+- **A figure has to be actionable, not merely measured.** "Every figure is
+  measured or absent" was satisfied by both a raw TF-IDF score and a
+  percentage that was always 100%, and both were wrong. If a reader cannot act
+  on the number, it is not finished.
 - **Anything in the diagram that is not a tool must not look like one.** The
   flow payloads (`tables`, `features`) were lowercase faint mono sitting
   beside lowercase faint mono tool names, and read as three more skills. They

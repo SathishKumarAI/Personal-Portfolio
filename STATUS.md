@@ -4,7 +4,7 @@ Written when work stopped. Read this first on return, then `3d_portfolio/README.
 for the change-to-file table.
 
 **Last touched:** 2026-10-15
-**Branch:** `feat/stack-one-screen` — **eight commits, deliberately unmerged.**
+**Branch:** `feat/stack-one-screen` — **fifteen commits.**
 The owner asked for commits rather than a merge per fix ("try not to merge
 every time you fix everything, just commit"). One PR goes up for the whole
 Stack increment when he is satisfied with it.
@@ -89,16 +89,60 @@ the constraint every decision below was traded against.
 | `1fa491d` | Twelve current tools added across five areas | **33 → 47 tools**, section held at **1.00 screens** |
 | `180076f` | The same stack offered as a system diagram | list **881px**, diagram **841px** |
 | `8aa364f` | The closing band ranks the page's own passages | bars settle 100 / 50.6 / 40%, plays once |
-| `df9fb2d` | Diagram redrawn by RESPONSIBILITY, and made portable | list **881px** / diagram **997px** |
+| `6a6274d` | Diagram redrawn by RESPONSIBILITY, and made portable | list **881px** / diagram **997px** |
+| `2f430d7` | Flow payloads stopped looking like tool names | payload accent/uppercase/1.92px vs tool near-black/normal |
+| `ca36f3c` | The crawler notice became points, as its docstring already claimed | 6 items, 15 points, 6 real nested lists |
+| `1140d11`, `8f837b6` | The retrieval figure, wrong twice, finally ranked not scored | `3.62` → `100%` → **"best match" / "51% as strong"** |
+| `52a3343` | The hole beside the heading closed; controls seated together | **710x127px** void filled; list back to 881px |
+| `42734ea` | Diagram layered into planes; colour became a measurement | 5 stages → **16 nodes**; luminance monotonic in 6 themes |
 
-**The one-screen rule now holds for the list only, and that is stated rather
-than hidden.** Measured at 1707x872: tool list **881px (1.00 screens)**;
-diagram **997px (1.14)**; diagram with a cloud selected **1135px (1.30)**. The
-optional layers — the swap table and the `?` explainer — render only when a
-reader asks for them. Everything that pushed it over was content added on
-request. The remaining lever is the per-stage role line (~40px), and it is the
-sentence that makes a box a slot rather than a label, so it is the owner's
-call.
+**The one-screen rule holds for the list only, and that is stated rather than
+hidden.** Measured at 1707x872: tool list **881px (1.00 screens)**; diagram
+**1207px (1.38)** with sixteen nodes. Everything that pushed it over was
+content added on request — role lines, labelled edges, the swap table, the
+`?` explainer, then the finer layering. The optional layers render only when a
+reader asks for them. Levers left, both the owner's call: collapse the
+substrate band, or drop the per-node role line (~40px), which is the sentence
+that makes a box a slot rather than a label.
+
+### The closing band now does something
+
+`RetrievalRank` runs **TF-IDF ranked retrieval over the page's own passages**,
+reusing `utils/answer.js` — the index the Ctrl-K palette already uses, so
+adding a project changes the ranking with no second list to maintain. Pick a
+question, it scores every passage, quotes the best three verbatim and links to
+where they live. It plays once and stops; the observer disconnects after the
+first hit.
+
+**Its figure was wrong twice, in opposite directions, and that is the lesson.**
+The raw TF-IDF score (`3.62`) was measured and useless — no units, no scale. A
+share of the top score was legible and misleading: a percentage reads as
+ABSOLUTE, so `100%` looked like "perfect match" when it only ever meant "this
+scored highest", and it said so on every result because the top row is 100% by
+construction. It now reads **"best match"** and **"51% as strong"** — a claim
+about the list, which is the only claim ranked retrieval supports. A figure
+being measured is not enough; it also has to be one a reader can act on.
+
+### The colour scale, and why the rainbow was wrong
+
+Reported as "AI slop", and the diagnosis is worth keeping: **the data is
+ordinal and the palette was categorical.** Six distinct hues say "six
+unrelated kinds"; these are positions on one path. Hue carries no inherent
+ranking — nobody can say whether olive precedes teal without a legend — so the
+one thing colour had to encode was the one thing it could not. The sweep also
+passed through a muddy yellow-olive midpoint, the `jet`-colormap failure.
+
+It is now **one hue at six intensities with strictly monotonic luminance**,
+which is the part that makes it a scale rather than six tints. The first
+attempt was NOT monotonic (step 2 at 0.254 against step 3 at 0.261 — chroma
+rose while lightness stayed flat) and that was caught by measuring, not by
+looking. Measured across all six themes: rising 0.151→0.281 on dark grounds,
+falling 0.284→0.092 on light, every step clearing 3:1 against its own ground.
+
+Meaning, in the page's own terms: **temperature.** Raw data arrives cold and
+undifferentiated, each plane commits to more, and what ships lands on the
+accent. The substrate is off the scale entirely, in neutral, because it is not
+a position on the path.
 
 ### The diagram, after the interview reframing
 
@@ -120,6 +164,9 @@ same role."*
 | Vision ‖ Language share a row | The one claim the six-column list structurally cannot make |
 | `Ship & observe` is the floor | Nothing flows into it or out of it, so it gets no step above it |
 | Full-width bands, not columns | Five boxes at ~200px wrapped 47 tools raggedly — reported as "the skills are scattered" |
+| Three planes + a substrate, 16 nodes | A single chain cannot say that part of an ML system is a FLOW and part is a SUBSTRATE. Docker and Python sit nowhere in the order; everything stands on them |
+| Model plane marked `alternatives` | Detection and retrieval are not sequential, and most projects use one or two. A connector would claim a dependency that is not there |
+| Vision split: detect vs federated | Different problems with different constraints — one is a model on a frame, the other a topology where data may not move |
 | `platformSwaps` never REPLACES a name | Overwriting "S3" with "Cloud Storage" would claim he runs GCP. Absent beats invented |
 | Build tooling named nowhere | How a thing was built and what it is made of are two different lists |
 

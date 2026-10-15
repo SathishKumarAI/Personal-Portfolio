@@ -1,5 +1,103 @@
 # Worklog
 
+## 2026-10-15 (later): planes, a colour scale, and a number that was wrong twice
+
+### The rainbow, diagnosed
+
+Reported as "AI slop". The six category tints were already a deliberate
+cool-to-warm sweep, so the fix was not "make them nicer" — it was naming what
+was actually broken: **the data is ordinal and the palette was categorical.**
+Six distinct hues assert six unrelated kinds; these are positions on one path,
+numbered. Hue has no inherent ranking, so the one thing colour needed to carry
+was the one thing it could not. The sweep also detoured through a muddy
+yellow-olive midpoint — the `jet`-colormap failure, non-monotonic lightness
+pretending to be a scale.
+
+Replaced with one hue at six intensities. The part that matters is that the
+LUMINANCE IS MONOTONIC, and the first attempt was not:
+
+| | step 1 | 2 | 3 | 4 | 5 | 6 |
+| --- | --- | --- | --- | --- | --- | --- |
+| first attempt (dark) | 0.302 | 0.254 | 0.261 | — | — | — |
+| shipped (dark) | 0.151 | 0.162 | 0.179 | 0.205 | 0.239 | 0.281 |
+| shipped (light) | 0.284 | 0.215 | 0.164 | 0.126 | 0.103 | 0.092 |
+
+Chroma had risen while lightness stayed flat, which makes a sequence of tints,
+not a scale. Caught by computing luminance, not by looking at it. Every step
+clears 3:1 against its own ground, and the direction is monotonic in all six
+themes.
+
+### Planes, because a chain was the wrong shape
+
+A single left-to-right sequence cannot say the thing that matters about an ML
+system: part of it is a FLOW and part of it is a SUBSTRATE. Airflow runs
+before pandas runs before FastAPI. Python, Docker and MLflow sit nowhere in
+that order — everything above stands on them. Drawn as one chain, the second
+kind looked like the first.
+
+It also collapsed genuinely separate work. "Computer vision" as one box hid
+that detection and federated training are different problems with different
+constraints: one is a model on a frame, the other a training topology where
+the data is not allowed to move.
+
+Five stages became **16 nodes in 3 planes plus a substrate**. The model plane
+is marked `alternatives` rather than drawn as a chain, because most projects
+use one or two of its nodes and a connector between object detection and
+retrieval would assert a dependency that does not exist.
+
+Colour and structure are the same idea: every node in a plane shares the
+plane's intensity, because identical intensity is a claim — "same depth" — and
+a categorical palette cannot make it.
+
+### The figure that was wrong twice
+
+The retrieval panel printed a number next to each hit. Both attempts failed,
+in opposite directions, and the pair is more instructive than either:
+
+1. **Raw TF-IDF score, `3.62`.** Measured and useless. No units, no scale,
+   nothing saying what a good one looks like; the only extractable fact was an
+   ordering the bar already drew.
+2. **Share of the top score, `100%`.** Legible and misleading. A percentage
+   reads as ABSOLUTE, so it looked like "perfect match" or "fully confident"
+   when it only ever meant "this one scored highest" — and it said so on every
+   result, because the top row is 100% by construction. A figure that cannot
+   vary carries no information and still invites a false reading.
+
+Now: **"best match"** on the top row, **"51% as strong"** beneath it. A claim
+about this list, which is the only claim ranked retrieval supports.
+
+The rule this repo already had — every figure is measured or absent — turned
+out to be insufficient on its own. Both bad versions were measured. The
+missing half: **it also has to be a figure a reader can act on.**
+
+### Smaller, same session
+
+- The flow payloads between planes were lowercase faint mono beside lowercase
+  faint mono tool names, so `tables` and `features` read as three more skills.
+  They now carry an arrowhead, a dashed capsule, uppercase tracking and accent
+  ink: measured `rgb(155,20,20)` / uppercase / 1.92px against a tool at
+  `rgb(17,17,19)` / none / normal.
+- A measured 710x127px void sat between the word "Stack" and the definition
+  panel. The view toggle moved into it, then — on a second report — to the end
+  of the diagram's control row, where its siblings are. In the list view it
+  rides in the header column's slack, because a strip of its own cost 54px.
+- The crawler notice became real `<ul>`/`<li>` points. Its own docstring
+  already claimed "points rather than prose"; the code had never caught up.
+- A commit shipped with an eslint error in it. `npm run build` and `npm test`
+  were green, eslint printed "1 problem", and it was committed in the same
+  breath without reading the line. Running a check and not looking at it is
+  the same as not running it.
+
+### Where it ended
+
+| | Height | Screens at 872px |
+| --- | --- | --- |
+| Tool list | 881px | 1.00 |
+| Diagram (16 nodes) | 1207px | 1.38 |
+
+The list holds the one-screen rule; the diagram does not, and every pixel over
+is content added on request.
+
 ## 2026-10-15: the Stack diagram, rebuilt around responsibilities
 
 The owner reframed it: answer this the way you would in a design interview.
