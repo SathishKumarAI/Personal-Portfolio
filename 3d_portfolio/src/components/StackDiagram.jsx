@@ -1,7 +1,7 @@
 import {
   systemPlanes,
   systemSubstrate,
-  platformSwaps,
+  platformMatrix,
   PLATFORMS,
   PLATFORM_NOTE,
   DIAGRAM_WHY,
@@ -179,105 +179,110 @@ const Plane = ({ plane, offset, onDefine, onPin, shown }) => (
   </section>
 );
 
-/* Buttons only. This used to carry `PLATFORM_NOTE` beside them, which put the
-   honesty line here AND an equivalent sentence in the swap block -- the same
-   claim twice, 20px apart, for 30px of height. */
-const PlatformPicker = ({ platform, onChange }) => (
-  <div
-    role="group"
-    aria-label="Platform"
-    className="flex shrink-0 items-center gap-1 rounded-full border border-line p-0.5"
-  >
-    {PLATFORMS.map((p) => (
-      <button
-        key={p.id}
-        type="button"
-        onClick={() => onChange(p.id)}
-        aria-pressed={platform === p.id}
-        className={`rounded-full px-2.5 py-1 font-mono text-micro uppercase tracking-[0.1em] transition-colors ${
-          platform === p.id
-            ? "bg-accent text-white-100"
-            : "text-faint hover:text-white-100"
-        }`}
-      >
-        {p.short}
-      </button>
-    ))}
-  </div>
-);
-
 /**
- * The portability story.
+ * THE CLOUD MATRIX, and why it is a table rather than a switch.
  *
- * Keyed by ROLE, in an aligned grid, because thirteen mappings separated by
- * interpuncts was four lines of unbroken mono text and was reported as
- * unreadable. A lookup table exists to be scanned DOWN for one row -- someone
- * asking "how do I orchestrate on GCP?" should not have to parse the other
- * twelve.
+ * It was a picker: choose AWS, and every row rewrote itself to AWS. That is
+ * compact and it hid the one thing the table exists to show. The claim being
+ * made is an EQUIVALENCE -- S3, Cloud Storage and Blob Storage are the same
+ * slot -- and a reader could only ever see one side of it at a time, then had
+ * to flip and hold the other in memory. Reported, and correct: the control was
+ * preventing the comparison it was built to enable.
  *
- * It never REPLACES a tool name. Overwriting "S3" with "Cloud Storage" would
- * have the page claiming he runs GCP; showing both, under a caption saying
- * these are equivalents, claims only that he knows what fills the role
- * elsewhere. That is the difference between a portfolio and a fabrication.
+ * All four columns are now on screen together, which is the whole point.
+ *
+ * It stays behind ONE disclosure, and the button is named rather than
+ * mysterious. Thirty-three rows by four columns is reference material; inline
+ * it would be ~130 cells sitting on top of the drawing that is actually the
+ * argument. A reader who wants the mapping opens it; a reader who does not is
+ * not made to scroll past it.
  */
-/* EXPORTED, and rendered by `Tech` rather than from inside the diagram.
-   The section's controls were in two places -- the view toggle up beside the
-   heading, the `?` and the platform picker down here -- so a reader met the
-   mode switch, then the drawing's own controls, 400px apart. They are all
-   controls over the same drawing and now share one strip, with the toggle
-   handed in as `trailing` so this row keeps ownership of its own layout. */
-export const DiagramControls = ({ platform, onChange, why, onWhy, trailing }) => {
-  const vendor = PLATFORMS.find((p) => p.id === platform);
+const MatrixTable = () => {
+  const planes = [...new Set(platformMatrix.map((r) => r.plane))];
   return (
-    <div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <WhyPanel open={why} onToggle={onWhy} />
-        <PlatformPicker platform={platform} onChange={onChange} />
-        {/* `trailing` is the view toggle, handed down so it can sit at the end
-            of this row rather than in a strip of its own. The row owns its own
-            layout, so the caller supplies the control and not its placement. */}
-        {platform === "oss" ? (
-          <p className="min-w-0 flex-1 font-serif italic text-label leading-[1.5] text-faint">
-            {PLATFORM_NOTE}
-          </p>
-        ) : (
-          <p className="font-mono text-micro uppercase tracking-[0.12em] text-secondary">
-            on {vendor.label}
-            <span className="normal-case tracking-normal text-faint opacity-70">
-              {" "}
-              — same roles, not deployments
-            </span>
-          </p>
-        )}
-        {trailing && <div className="ml-auto shrink-0">{trailing}</div>}
-      </div>
-      {platform !== "oss" && (
-        /* Three columns, not two. Two wide columns never wrapped a row but
-           needed seven of them: measured 1,113px against 1,067px for three
-           columns with two rows wrapping. No `truncate` on the mapping --
-           clipping hides the vendor name, which is the only reason the row
-           exists. */
-        <div className="mt-2 grid grid-cols-2 gap-x-8 gap-y-0.5 2xl:grid-cols-3">
-          {Object.entries(platformSwaps).map(([tool, s]) => (
-            <p
-              key={tool}
-              className="flex items-baseline gap-2 font-mono text-micro leading-[1.7]"
-            >
-              <span className="w-[8rem] shrink-0 text-faint opacity-70">
-                {s.role}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="text-faint">{tool}</span>
-                <span className="opacity-40"> → </span>
-                <span className="text-secondary">{s[platform]}</span>
-              </span>
-            </p>
-          ))}
-        </div>
-      )}
+    <div className="mt-3 overflow-x-auto rounded-lg border border-line">
+      <table className="w-full min-w-[56rem] border-collapse text-left">
+        <caption className="px-3 pt-3 text-left font-serif italic text-label leading-[1.5] text-faint">
+          {PLATFORM_NOTE}
+        </caption>
+        <thead>
+          <tr className="border-b border-line">
+            <th scope="col" className="px-3 py-2 font-mono text-micro uppercase tracking-[0.12em] text-faint">
+              Role
+            </th>
+            <th scope="col" className="px-3 py-2 font-mono text-micro uppercase tracking-[0.12em] text-secondary">
+              What I use
+            </th>
+            {PLATFORMS.filter((p) => p.id !== "oss").map((p) => (
+              <th
+                key={p.id}
+                scope="col"
+                className="px-3 py-2 font-mono text-micro uppercase tracking-[0.12em] text-faint"
+              >
+                {p.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        {planes.map((plane) => (
+          <tbody key={plane}>
+            <tr>
+              {/* The plane headings repeat the diagram's own grouping, so a
+                  reader who has just looked at the drawing meets the rows in
+                  the order the drawing put them. */}
+              <th
+                scope="colgroup"
+                colSpan={5}
+                className="border-y border-line bg-tertiary/40 px-3 py-1.5 text-left font-display text-[12px] font-semibold uppercase tracking-[0.1em] text-secondary"
+              >
+                {plane}
+              </th>
+            </tr>
+            {platformMatrix
+              .filter((r) => r.plane === plane)
+              .map((r) => (
+                <tr key={r.role} className="border-b border-line/50 last:border-b-0">
+                  <th scope="row" className="px-3 py-1.5 font-sans text-label font-medium text-white-100">
+                    {r.role}
+                  </th>
+                  <td className="px-3 py-1.5 font-mono text-micro text-secondary">
+                    {/* An em dash, not a blank. A blank reads as an oversight;
+                        a dash says the slot is real and unclaimed. */}
+                    {r.mine ?? <span className="text-faint opacity-60">—</span>}
+                  </td>
+                  {["aws", "gcp", "azure"].map((k) => (
+                    <td key={k} className="px-3 py-1.5 font-mono text-micro text-faint">
+                      {r[k]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+          </tbody>
+        ))}
+      </table>
     </div>
   );
 };
+
+export const DiagramControls = ({ why, onWhy, clouds, onClouds }) => (
+  <div>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <WhyPanel open={why} onToggle={onWhy} />
+      {/* NAMED, not a mystery button. It says what is behind it and how much
+          of it there is, so opening it is a decision rather than a gamble. */}
+      <button
+        type="button"
+        onClick={onClouds}
+        aria-expanded={clouds}
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-2.5 py-1 font-mono text-micro uppercase tracking-[0.1em] text-faint transition-colors hover:text-white-100"
+      >
+        <span aria-hidden="true">{clouds ? "−" : "+"}</span>
+        the same {platformMatrix.length} roles on AWS, GCP & Azure
+      </button>
+    </div>
+    {clouds && <MatrixTable />}
+  </div>
+);
 
 /**
  * The `?`, and it is the same affordance the hero field carries.

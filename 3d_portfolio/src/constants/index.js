@@ -647,30 +647,72 @@ export const PLATFORMS = [
  * the interface has to say which of the two it is showing.
  */
 export const PLATFORM_NOTE =
-  "Role stays, vendor changes. The open-source column is what actually runs; the rest are equivalents.";
+  "One row per job a production system has to do. “What I use” is the only column that is a claim about me; the rest is what fills that slot on each platform. An em dash means the slot is real and I am not claiming it.";
 
 /**
- * tool -> the role it fills, and the managed service that fills it elsewhere.
+ * THE CLOUD MATRIX: one row per role a production system has to fill, and what
+ * fills it on each platform.
  *
- * Only the tools that are genuinely vendor-specific are here. pandas, PyTorch
- * and FastAPI run the same everywhere, and inventing a "GCP equivalent" for
- * them would be noise that makes the real swaps harder to see.
+ * WHY IT IS NOT IN THE SKILL LIST, and must never be moved there. `mine` is
+ * the only column that is a claim about him; the other three are a claim about
+ * the platforms. Putting "Glue", "Dataflow" and "Purview" in `stackGroups`
+ * would turn a mapping anyone can verify into thirty assertions of experience
+ * nobody can. The owner drew that line himself -- "you don't need to show them
+ * in the skills stack, you can show them separate" -- and it is the right one.
+ *
+ * WHY ROLES WITH NO `mine`. A production system needs secrets, identity,
+ * monitoring, a queue and a cost story whether or not this person has a
+ * favourite tool for each. Dropping those rows would draw a system with holes
+ * in it; marking them with an em dash says "this slot is real, I am not
+ * claiming it", which is the same honesty the rest of the page runs on.
+ *
+ * GROUPED BY THE DIAGRAM'S OWN PLANES, so a reader who has just looked at the
+ * drawing finds the rows in the order the drawing put them.
  */
-export const platformSwaps = {
-  Airflow: { role: "Orchestration", aws: "MWAA", gcp: "Cloud Composer", azure: "Data Factory" },
-  PySpark: { role: "Batch compute", aws: "EMR", gcp: "Dataproc", azure: "Synapse Spark" },
-  S3: { role: "Object store", aws: "S3", gcp: "Cloud Storage", azure: "Blob Storage" },
-  PostgreSQL: { role: "Relational store", aws: "RDS", gcp: "Cloud SQL", azure: "Azure SQL" },
-  DynamoDB: { role: "Key-value store", aws: "DynamoDB", gcp: "Firestore", azure: "Cosmos DB" },
-  DuckDB: { role: "Analytics engine", aws: "Athena", gcp: "BigQuery", azure: "Synapse" },
-  Jupyter: { role: "Notebooks", aws: "SageMaker Studio", gcp: "Vertex AI Workbench", azure: "Azure ML Studio" },
-  Pinecone: { role: "Vector index", aws: "OpenSearch k-NN", gcp: "Vertex Vector Search", azure: "AI Search" },
-  Claude: { role: "Managed LLM", aws: "Bedrock", gcp: "Vertex AI", azure: "Azure OpenAI" },
-  vLLM: { role: "Model serving", aws: "SageMaker Endpoints", gcp: "Vertex AI Endpoints", azure: "ML Endpoints" },
-  MLflow: { role: "Experiment tracking", aws: "SageMaker Experiments", gcp: "Vertex AI Experiments", azure: "Azure ML" },
-  Kubernetes: { role: "Container runtime", aws: "EKS", gcp: "GKE", azure: "AKS" },
-  "GitHub Actions": { role: "CI/CD", aws: "CodePipeline", gcp: "Cloud Build", azure: "Azure Pipelines" },
-};
+export const platformMatrix = [
+  // --- data plane ---------------------------------------------------------
+  { plane: "Data", role: "Orchestration", mine: "Airflow", aws: "MWAA", gcp: "Cloud Composer", azure: "Data Factory" },
+  { plane: "Data", role: "Batch compute", mine: "PySpark", aws: "EMR", gcp: "Dataproc", azure: "Synapse Spark" },
+  { plane: "Data", role: "Managed ETL", mine: "ETL pipelines", aws: "Glue", gcp: "Dataflow", azure: "Data Factory flows" },
+  { plane: "Data", role: "Streaming & events", mine: null, aws: "Kinesis / MSK", gcp: "Pub/Sub", azure: "Event Hubs" },
+  { plane: "Data", role: "Object store", mine: "S3", aws: "S3", gcp: "Cloud Storage", azure: "Blob Storage" },
+  { plane: "Data", role: "Relational store", mine: "PostgreSQL", aws: "RDS", gcp: "Cloud SQL", azure: "Azure SQL" },
+  { plane: "Data", role: "Key-value store", mine: "DynamoDB", aws: "DynamoDB", gcp: "Firestore", azure: "Cosmos DB" },
+  { plane: "Data", role: "Warehouse", mine: "SQL", aws: "Redshift", gcp: "BigQuery", azure: "Synapse" },
+  { plane: "Data", role: "Query engine", mine: "DuckDB", aws: "Athena", gcp: "BigQuery", azure: "Synapse serverless" },
+  { plane: "Data", role: "Catalog & governance", mine: null, aws: "Glue Catalog / Lake Formation", gcp: "Dataplex", azure: "Purview" },
+  { plane: "Data", role: "Notebooks", mine: "Jupyter", aws: "SageMaker Studio", gcp: "Vertex AI Workbench", azure: "Azure ML Studio" },
+  // The owner's own example, and a fair one: Power BI is what an Azure shop
+  // actually puts in front of people, where this stack reaches for Plotly.
+  { plane: "Data", role: "BI & dashboards", mine: "Plotly", aws: "QuickSight", gcp: "Looker", azure: "Power BI" },
+
+  // --- model plane --------------------------------------------------------
+  { plane: "Model", role: "Training jobs", mine: "PyTorch", aws: "SageMaker Training", gcp: "Vertex AI Training", azure: "Azure ML Jobs" },
+  { plane: "Model", role: "Experiment tracking", mine: "MLflow", aws: "SageMaker Experiments", gcp: "Vertex AI Experiments", azure: "Azure ML" },
+  { plane: "Model", role: "Model registry", mine: "MLflow", aws: "SageMaker Model Registry", gcp: "Vertex AI Model Registry", azure: "Azure ML Registry" },
+  { plane: "Model", role: "ML pipelines", mine: null, aws: "SageMaker Pipelines", gcp: "Vertex AI Pipelines", azure: "Azure ML Pipelines" },
+  { plane: "Model", role: "Feature store", mine: null, aws: "SageMaker Feature Store", gcp: "Vertex AI Feature Store", azure: "Azure ML Feature Store" },
+  { plane: "Model", role: "Vector index", mine: "Pinecone", aws: "OpenSearch k-NN", gcp: "Vertex Vector Search", azure: "AI Search" },
+  { plane: "Model", role: "Managed LLM", mine: "Claude", aws: "Bedrock", gcp: "Vertex AI", azure: "Azure OpenAI" },
+  { plane: "Model", role: "Document & vision AI", mine: "OpenCV", aws: "Textract / Rekognition", gcp: "Document AI / Vision AI", azure: "AI Document Intelligence" },
+
+  // --- serving plane ------------------------------------------------------
+  { plane: "Serving", role: "Model serving", mine: "vLLM", aws: "SageMaker Endpoints", gcp: "Vertex AI Endpoints", azure: "Azure ML Endpoints" },
+  { plane: "Serving", role: "Serverless functions", mine: null, aws: "Lambda", gcp: "Cloud Run functions", azure: "Azure Functions" },
+  { plane: "Serving", role: "Containers on demand", mine: "Docker", aws: "ECS / Fargate", gcp: "Cloud Run", azure: "Container Apps" },
+  { plane: "Serving", role: "API gateway", mine: "FastAPI", aws: "API Gateway", gcp: "Apigee", azure: "API Management" },
+  { plane: "Serving", role: "Queue", mine: null, aws: "SQS", gcp: "Pub/Sub", azure: "Service Bus" },
+  { plane: "Serving", role: "Cache", mine: null, aws: "ElastiCache", gcp: "Memorystore", azure: "Cache for Redis" },
+
+  // --- substrate ----------------------------------------------------------
+  { plane: "Substrate", role: "Container runtime", mine: "Kubernetes", aws: "EKS", gcp: "GKE", azure: "AKS" },
+  { plane: "Substrate", role: "Container registry", mine: null, aws: "ECR", gcp: "Artifact Registry", azure: "ACR" },
+  { plane: "Substrate", role: "CI/CD", mine: "GitHub Actions", aws: "CodePipeline", gcp: "Cloud Build", azure: "Azure Pipelines" },
+  { plane: "Substrate", role: "Secrets", mine: null, aws: "Secrets Manager", gcp: "Secret Manager", azure: "Key Vault" },
+  { plane: "Substrate", role: "Identity & access", mine: null, aws: "IAM", gcp: "IAM", azure: "Entra ID" },
+  { plane: "Substrate", role: "Monitoring & logs", mine: null, aws: "CloudWatch", gcp: "Cloud Monitoring", azure: "Azure Monitor" },
+  { plane: "Substrate", role: "Cost & budgets", mine: null, aws: "Cost Explorer", gcp: "Billing / FinOps", azure: "Cost Management" },
+];
 
 /**
  * `out` is what LEAVES a stage, and it is the point of drawing this at all.

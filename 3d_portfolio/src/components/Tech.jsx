@@ -191,8 +191,8 @@ const Tech = () => {
   // Lifted out of StackDiagram because its CONTROL sits in the header, where
   // there is free vertical space, while the thing it controls sits below the
   // header. See PlatformPicker's own comment.
-  const [platform, setPlatform] = useState("oss");
   const [why, setWhy] = useState(false);
+  const [clouds, setClouds] = useState(false);
 
   // Shared by both views, so a term pinned in the list is still pinned when
   // the reader switches to the diagram. Written once rather than inline in
@@ -303,13 +303,17 @@ const Tech = () => {
           above a tool list would be a control with nothing to change. */}
       {view === "diagram" && (
         <div className="mt-6 hidden md:block">
-          <DiagramControls
-            platform={platform}
-            onChange={setPlatform}
-            why={why}
-            onWhy={() => setWhy((v) => !v)}
-            trailing={<ViewToggle view={view} onChange={setView} />}
-          />
+          <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
+            <div className="min-w-0 flex-1">
+              <DiagramControls
+                why={why}
+                onWhy={() => setWhy((v) => !v)}
+                clouds={clouds}
+                onClouds={() => setClouds((v) => !v)}
+              />
+            </div>
+            <ViewToggle view={view} onChange={setView} />
+          </div>
         </div>
       )}
 
