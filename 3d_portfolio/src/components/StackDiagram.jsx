@@ -1,198 +1,327 @@
-import { stackGroups } from "../constants";
+import { useState } from "react";
+import {
+  systemStages,
+  systemFloor,
+  platformSwaps,
+  PLATFORMS,
+  PLATFORM_NOTE,
+  DIAGRAM_WHY,
+} from "../constants";
 import Reveal from "./Reveal";
 import TagTerm from "./TagTerm";
 
 /**
- * Owns, the Stack section read as a system rather than as a vocabulary.
- * Does not own: the tools, or what any of them means. Both views render
- * `stackGroups` and both feed the same definition panel, so there is exactly
- * one list of tools in this repo and two ways of looking at it. A diagram
- * maintained as its own copy of the stack would be wrong within a month.
+ * Owns, the stack drawn the way it would be drawn on a whiteboard.
+ * Does not own: which tools exist, or what any of them means. Those are
+ * `systemStages` and `glossary` in `../constants`, and `utils/stages.test.mjs`
+ * fails if this diagram and the tool list stop covering the same 47 terms.
  *
- * WHY THIS EXISTS. A tool list answers "what does he know". It cannot answer
- * "does he know how they fit together", and the second question is the one
- * that separates someone who has shipped a system from someone who has
- * finished a course. The list is not wrong -- a recruiter scanning for a
- * keyword needs exactly that -- which is why this is offered ALONGSIDE it
- * rather than replacing it, and why the reader is the one who picks.
+ * WHY THE BOXES ARE NOT HIS SKILL AREAS
  *
- * WHY IT IS NOT A GENERIC ARCHITECTURE. "client to API to service to
- * database" appears on every system-design page ever drawn and says nothing
- * about this person. The shape here is the one the section's own sentence
- * already claims -- from raw data to a running product -- with his six areas
- * in the order they actually run: data is moved, then understood, then two
- * model tracks work in parallel on it, then something serves the result.
+ * The first version drew one box per `stackGroups` entry: Data engineering,
+ * Data science, Computer vision. It fit on a screen, it was tidy, and it was
+ * the tool list with arrows added -- because the boxes were still categories
+ * of a PERSON rather than parts of a SYSTEM.
+ *
+ * Nobody draws a box called "Data engineering" in a design interview. The
+ * boxes are the jobs the system has to do, and the tools are what drops into
+ * each slot. That reframing is what makes the useful sentence available:
+ * "Airflow orchestrates here; on GCP that is Composer, on AWS that is MWAA --
+ * same role." A list of skills cannot get near that sentence.
+ *
+ * WHY BANDS AND NOT COLUMNS
+ *
+ * Five boxes in a row gave each stage about 200px, and 47 tools wrapped inside
+ * 200px look exactly like what they were reported as: "all the skills are
+ * scattered... they are not looking like tool list." Ragged two- and
+ * three-word wraps, every box breaking in a different place, no two tools
+ * sharing a left edge.
+ *
+ * Full-width bands give every stage ~1,000px, so its tools sit on one line, in
+ * one row, aligned. The pipeline still reads top to bottom through the labelled
+ * arrows, which is how a layered system diagram is normally drawn anyway. The
+ * fork is the one place two bands sit side by side, because that is the claim.
  *
  * WHY NO MEASURED CONNECTORS. The obvious build anchors an SVG to the boxes
- * and redraws on resize. That is what NeuralField3D does for the hero and it
- * cost this repo its longest bug of the session: a canvas that measured
- * correctly and drew wrong, because a replaced element does not size the way
- * the insets say. Here the connectors are LAYOUT -- flex children sitting
- * between the nodes -- so there is nothing to measure, nothing to resync on
- * resize, and no second opinion about where a box is. An arrow cannot drift
- * from its boxes when it is their sibling.
+ * and redraws on resize. That is what the hero field does and what cost this
+ * repo its longest bug: a canvas that measured correctly and drew wrong,
+ * because a replaced element does not size the way its insets say. Here the
+ * connectors are LAYOUT, so there is nothing to measure and no second opinion
+ * about where a box is.
  */
 
-const byTitle = Object.fromEntries(stackGroups.map((g, i) => [g.title, { ...g, i }]));
+const stageById = Object.fromEntries(systemStages.map((s) => [s.id, s]));
+const FORK = ["vision", "language"];
 const stageNo = (i) => String(i + 1).padStart(2, "0");
 
-const PLATFORM = "MLOps & infra";
-
-/* THE TWO TERMINI CAME OUT, for the reason the path rule did.
-   They read "RAW DATA" and "A RUNNING PRODUCT" at the ends of the row, which
-   is the fifth time this section would have said one sentence: the intro
-   paragraph says "from raw data to a running product" in those words, three
-   lines above this drawing. They also cost 160px of fixed width plus their two
-   arrows -- about 200px of a 1280px row -- and that width is exactly what the
-   nodes need in order to wrap their terms in fewer lines. Measured: removing
-   them took the row from 314px to 231px, because every node got wider.
-
-/* A connector: a rule and a head. `shrink-0` is load-bearing -- without it
-   flex takes the arrows' width first when the row is tight, so the diagram
-   loses the only part that makes it a diagram before it loses anything else. */
-const Flow = () => (
-  <span aria-hidden="true" className="mt-[2.6rem] shrink-0 flex items-center w-5">
-    <span className="h-px flex-1 bg-line" />
-    <svg width="6" height="6" viewBox="0 0 6 6" className="shrink-0 fill-line">
-      <path d="M0 0l6 3-6 3z" />
-    </svg>
-  </span>
+/* The step between bands, and the label is the payload. A bare arrow says
+   "and then", which the list's 01-06 numerals already said; an arrow labelled
+   `features` says what the next stage RECEIVES, which is the thing no
+   arrangement of a list can express. */
+const Step = ({ label }) => (
+  <div className="flex items-center justify-center gap-2 py-0.5">
+    <span aria-hidden="true" className="h-3 w-px bg-line" />
+    <span className="font-mono text-micro lowercase tracking-[0.08em] text-faint">
+      {label}
+    </span>
+    <span aria-hidden="true" className="h-3 w-px bg-line" />
+  </div>
 );
 
-const Terms = ({ g, onDefine, onPin, shown }) => (
-  /* FLOWING, not the list view's one-per-line. These boxes are wider than the
-     six columns are, so stacked terms would leave a node ten lines tall and
-     push the section well past the one screen the list was cut down to.
-     Measured: wrapping holds the tallest node to three lines. */
-  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5">
-    {g.items.map((it) => (
-      <TagTerm
-        key={it}
-        name={it}
-        flow
-        dense
-        primary={g.primary?.includes(it)}
-        onDefine={onDefine}
-        onPin={onPin}
-        active={shown?.name === it}
-      />
+/**
+ * One stage, as a band: who it is on the left, what it uses on the right.
+ *
+ * The split is what fixes the scattering. With the identity in a fixed-width
+ * column the tool rows all start at the same x, so the eye reads a list down
+ * the right-hand side instead of hunting ragged wraps inside five boxes.
+ * `narrow` is for the forked pair, which share one row and so get half the
+ * width each.
+ */
+const Band = ({ stage, index, narrow, onDefine, onPin, shown }) => (
+  <div
+    className="flex min-w-0 flex-1 gap-4 rounded-lg border border-line border-l-[3px] bg-tertiary/50 px-3 py-2"
+    style={{ borderLeftColor: `rgb(var(${stage.tint}))` }}
+  >
+    <div className={`shrink-0 ${narrow ? "w-[8.5rem]" : "w-[13rem]"}`}>
+      <h3 className="flex items-baseline gap-2 font-display text-[14px] font-semibold leading-tight tracking-[-0.01em] text-white-100">
+        <span
+          aria-hidden="true"
+          className="stack-index font-mono text-[12px] font-medium"
+          style={{ "--cat": `var(${stage.tint})` }}
+        >
+          {stageNo(index)}
+        </span>
+        {stage.title}
+      </h3>
+      {/* The RESPONSIBILITY, not a description of the tools. This line is what
+          turns the band from a label into a slot something has to fill, and it
+          is the whole difference between this view and the list. */}
+      <p className="mt-0.5 font-serif text-label leading-[1.35] text-faint">
+        {stage.role}
+      </p>
+    </div>
+    <div className="flex min-w-0 flex-1 flex-wrap content-start gap-x-4 gap-y-0.5">
+      {stage.items.map((it) => (
+        <TagTerm
+          key={it}
+          name={it}
+          flow
+          dense
+          onDefine={onDefine}
+          onPin={onPin}
+          active={shown?.name === it}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+/* Buttons only. This used to carry `PLATFORM_NOTE` beside them, which put the
+   honesty line here AND an equivalent sentence in the swap block -- the same
+   claim twice, 20px apart, for 30px of height. */
+const PlatformPicker = ({ platform, onChange }) => (
+  <div
+    role="group"
+    aria-label="Platform"
+    className="flex shrink-0 items-center gap-1 rounded-full border border-line p-0.5"
+  >
+    {PLATFORMS.map((p) => (
+      <button
+        key={p.id}
+        type="button"
+        onClick={() => onChange(p.id)}
+        aria-pressed={platform === p.id}
+        className={`rounded-full px-2.5 py-1 font-mono text-micro uppercase tracking-[0.1em] transition-colors ${
+          platform === p.id
+            ? "bg-accent text-white-100"
+            : "text-faint hover:text-white-100"
+        }`}
+      >
+        {p.short}
+      </button>
     ))}
   </div>
 );
 
-const Node = ({ g, onDefine, onPin, shown }) => (
-  <div
-    className="min-w-0 flex-1 rounded-xl border border-line bg-tertiary/60 p-2.5"
-    style={{ "--cat": `var(${g.tint})` }}
-  >
-    <span
-      aria-hidden="true"
-      className="block h-[3px] w-full rounded-full"
-      style={{ background: `rgb(var(${g.tint}))`, opacity: 0.75 }}
-    />
-    <div className="mt-2.5 flex items-baseline gap-2">
-      <h3 className="min-w-0 font-display text-[14px] font-semibold text-white-100 tracking-[-0.01em] leading-tight">
-        {g.title}
-      </h3>
-      <span className="stack-index ml-auto shrink-0 font-mono text-[13px] font-medium leading-none">
-        {stageNo(g.i)}
-      </span>
+/**
+ * The portability story.
+ *
+ * Keyed by ROLE, in an aligned grid, because thirteen mappings separated by
+ * interpuncts was four lines of unbroken mono text and was reported as
+ * unreadable. A lookup table exists to be scanned DOWN for one row -- someone
+ * asking "how do I orchestrate on GCP?" should not have to parse the other
+ * twelve.
+ *
+ * It never REPLACES a tool name. Overwriting "S3" with "Cloud Storage" would
+ * have the page claiming he runs GCP; showing both, under a caption saying
+ * these are equivalents, claims only that he knows what fills the role
+ * elsewhere. That is the difference between a portfolio and a fabrication.
+ */
+const SwapBlock = ({ platform, onChange, why, onWhy }) => {
+  const vendor = PLATFORMS.find((p) => p.id === platform);
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <WhyPanel open={why} onToggle={onWhy} />
+        <PlatformPicker platform={platform} onChange={onChange} />
+        {platform === "oss" ? (
+          <p className="min-w-0 flex-1 font-serif italic text-label leading-[1.5] text-faint">
+            {PLATFORM_NOTE}
+          </p>
+        ) : (
+          <p className="font-mono text-micro uppercase tracking-[0.12em] text-secondary">
+            on {vendor.label}
+            <span className="normal-case tracking-normal text-faint opacity-70">
+              {" "}
+              — same roles, not deployments
+            </span>
+          </p>
+        )}
+      </div>
+      {platform !== "oss" && (
+        /* Three columns, not two. Two wide columns never wrapped a row but
+           needed seven of them: measured 1,113px against 1,067px for three
+           columns with two rows wrapping. No `truncate` on the mapping --
+           clipping hides the vendor name, which is the only reason the row
+           exists. */
+        <div className="mt-2 grid grid-cols-2 gap-x-8 gap-y-0.5 2xl:grid-cols-3">
+          {Object.entries(platformSwaps).map(([tool, s]) => (
+            <p
+              key={tool}
+              className="flex items-baseline gap-2 font-mono text-micro leading-[1.7]"
+            >
+              <span className="w-[8rem] shrink-0 text-faint opacity-70">
+                {s.role}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="text-faint">{tool}</span>
+                <span className="opacity-40"> → </span>
+                <span className="text-secondary">{s[platform]}</span>
+              </span>
+            </p>
+          ))}
+        </div>
+      )}
     </div>
-    <Terms g={g} onDefine={onDefine} onPin={onPin} shown={shown} />
-  </div>
+  );
+};
+
+/**
+ * The `?`, and it is the same affordance the hero field carries.
+ *
+ * A visualisation that needs explaining should carry its own explanation. The
+ * owner asked for this directly -- "just like you have question mark for the
+ * neural network so that the user understands what we are trying to say here"
+ * -- and the reasoning is the same in both places: the author knows why the
+ * picture is shaped this way and the reader has three seconds to work it out.
+ *
+ * In FLOW, not a popover. It costs height only while it is open, and it is
+ * open only because a reader asked, so it can never cover anything.
+ */
+const WhyPanel = ({ open, onToggle }) => (
+  <>
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-2.5 py-1 font-mono text-micro uppercase tracking-[0.1em] text-faint transition-colors hover:text-white-100"
+    >
+      <span aria-hidden="true" className="font-semibold">
+        ?
+      </span>
+      why a diagram
+    </button>
+    {open && (
+      <div className="mt-2 w-full rounded-lg border border-line bg-tertiary/50 px-3 py-2.5">
+        {DIAGRAM_WHY.map((line) => (
+          <p
+            key={line}
+            className="mt-1 font-serif text-label leading-[1.55] text-secondary first:mt-0"
+          >
+            {line}
+          </p>
+        ))}
+      </div>
+    )}
+  </>
 );
 
-const StackDiagram = ({ onDefine, onPin, shown }) => {
-  const node = (title) => (
-    <Node g={byTitle[title]} onDefine={onDefine} onPin={onPin} shown={shown} />
-  );
-  const platform = byTitle[PLATFORM];
+const StackDiagram = ({ platform = "oss", onPlatform, onDefine, onPin, shown }) => {
+  const [why, setWhy] = useState(false);
+  const pass = { onDefine, onPin, shown };
 
   return (
-    /* `lg` and up, where the list view also stops being a phone list. A
-       diagram whose entire content is left-to-right flow degrades at 390px
-       into a vertical stack of boxes -- which is the tool list again, except
-       taller and with arrows between the items. The phone keeps the list, and
-       the toggle that offers this is hidden there for the same reason. */
+    /* `lg` and up, matching the toggle that offers it. A diagram whose content
+       is a sequence of full-width bands would at 390px be a vertical list of
+       boxes -- the tool list again, taller and with arrows. The phone keeps
+       the list. */
     <Reveal delay={0.1} className="hidden lg:block mt-3">
-      {/* `items-start`, not `items-stretch`. Stretched, every single-stage box
-          grew to the height of the branch column beside it -- measured 392px
-          of box around ~180px of content, four times over, which is a row of
-          mostly empty rectangles. Each box is now its own content's height and
-          the arrows still line up, because they are centred on themselves
-          rather than on the row. */}
-      <div className="flex items-start gap-2">
-        {node("Data engineering")}
-        <Flow />
-        {node("Data science")}
-        <Flow />
-        {/* THE PARALLEL PAIR, and it is the one claim the list cannot make.
-            Side by side in a six-column row, LLM / RAG and Computer vision
-            read as areas three and four of six, in sequence. They are not in
-            sequence: both consume the same prepared data and both feed the
-            same product, which is visible in the projects and invisible in
-            the list. The bracket is the only mark in this drawing that is an
-            assertion rather than a restatement of something above. */}
-        <div className="relative min-w-0 flex-[2] flex flex-col gap-2 pl-3">
-          {/* A BRACKET, not a hairline. This started as `w-px bg-line` and at
-              1px it was invisible against the ground -- the one mark in the
-              drawing that carries an actual claim, and it read as nothing.
-              Three borders and a rounded left edge make a "[" that spans both
-              boxes, which is the conventional way a diagram says "these two,
-              together, from one input". */}
-          <span
-            aria-hidden="true"
-            className="absolute left-0 top-5 bottom-5 w-2 rounded-l-md border-y border-l border-line"
-          />
-          {node("LLM / RAG")}
-          {node("Computer vision")}
-        </div>
-        <Flow />
-        {node("Backend & apps")}
-      </div>
+      {/* ONE control row, not two. The `?` had a row of its own above the
+          bands and the platform picker had another below them: 72px of a
+          section under a one-screen budget spent on two strips each holding
+          one small control. Both are controls over the same drawing, so they
+          share a line, and each expands its panel underneath only when a
+          reader asks for it. */}
+      <SwapBlock
+        platform={platform}
+        onChange={onPlatform}
+        why={why}
+        onWhy={() => setWhy((v) => !v)}
+      />
 
-      {/* UNDERNEATH, not in the row. MLOps is the one group that is not a
-          stage: nothing flows into it and nothing flows out of it. Putting it
-          fifth in a left-to-right pipeline would make the drawing assert
-          something the six-column list never asserted, because the list claims
-          no sequence between neighbours at all. Drawn as the floor the other
-          five stand on, dashed so it reads as the surrounding condition rather
-          than as another box in the chain. */}
-      <div className="mt-2 flex items-stretch gap-2">
+      <div className="mt-3">
+        <Band stage={stageById.ingest} index={0} {...pass} />
+        <Step label={stageById.ingest.out} />
+        <Band stage={stageById.prepare} index={1} {...pass} />
+        <Step label={stageById.prepare.out} />
+
+        {/* THE FORK, and it is the one claim the list cannot make. In a
+            six-column list these read as areas three and four of six, in
+            sequence. They are not: both consume the same prepared data and
+            both feed the same product. Two bands sharing one row off one step
+            is how a layered diagram says that; everywhere else in this drawing
+            one row means one stage, so the shared row IS the statement. */}
+        <div className="flex items-stretch gap-2">
+          {FORK.map((id, i) => (
+            <Band key={id} stage={stageById[id]} index={2 + i} narrow {...pass} />
+          ))}
+        </div>
+
+        <Step label={stageById.language.out} />
+        <Band stage={stageById.serve} index={4} {...pass} />
+
+        {/* THE FLOOR, not a sixth stage. Nothing flows into `Ship & observe`
+            and nothing flows out of it, so it gets no step above it -- it sits
+            directly under the pipeline as the thing the pipeline stands on,
+            dashed to read as a condition rather than another step. */}
         <div
-          className="min-w-0 flex-1 rounded-xl border border-dashed border-line px-3 py-2.5"
-          style={{ "--cat": `var(${platform.tint})` }}
+          className="mt-2 flex gap-4 rounded-lg border border-dashed border-line px-3 py-2"
+          style={{ "--cat": `var(${systemFloor.tint})` }}
         >
-          {/* ONE ROW, not a heading above its terms. The band spans the full
-              width of the diagram, which is enough for the title, the caption
-              and all seven tools on a single line -- and stacking them cost
-              24px of a section that has to fit a screen. It wraps on its own
-              at narrower widths, so nothing is assumed about the fit. */}
-          <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1">
-            <h3 className="shrink-0 font-display text-[14px] font-semibold text-white-100 tracking-[-0.01em]">
-              {platform.title}
+          <div className="w-[13rem] shrink-0">
+            <h3 className="font-display text-[14px] font-semibold leading-tight tracking-[-0.01em] text-white-100">
+              {systemFloor.title}
             </h3>
-            <span className="shrink-0 font-serif italic text-faint text-label">
-              everything above runs on this
-            </span>
-            {platform.items.map((it) => (
+            <p className="mt-0.5 font-serif text-label leading-[1.35] text-faint">
+              {systemFloor.role}
+            </p>
+          </div>
+          <div className="flex min-w-0 flex-1 flex-wrap content-start gap-x-4 gap-y-0.5">
+            {systemFloor.items.map((it) => (
               <TagTerm
                 key={it}
                 name={it}
                 flow
                 dense
-                primary={platform.primary?.includes(it)}
                 onDefine={onDefine}
                 onPin={onPin}
                 active={shown?.name === it}
               />
             ))}
-            <span className="stack-index ml-auto shrink-0 font-mono text-[13px] font-medium leading-none">
-              {stageNo(platform.i)}
-            </span>
           </div>
         </div>
       </div>
+
     </Reveal>
   );
 };

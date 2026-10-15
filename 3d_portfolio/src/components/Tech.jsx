@@ -180,6 +180,11 @@ const Tech = () => {
    */
   const [view, setView] = useState("list");
 
+  // Lifted out of StackDiagram because its CONTROL sits in the header, where
+  // there is free vertical space, while the thing it controls sits below the
+  // header. See PlatformPicker's own comment.
+  const [platform, setPlatform] = useState("oss");
+
   // Shared by both views, so a term pinned in the list is still pinned when
   // the reader switches to the diagram. Written once rather than inline in
   // each view: two copies of a toggle-the-pin rule is two chances for them to
@@ -227,10 +232,27 @@ const Tech = () => {
             // argument for them is three lines the reader scrolls past.
             className="hidden md:block mt-4 max-w-[46rem] font-sans text-secondary text-body leading-[1.65]"
           >
-            Not a badge collection: this is what I actually reach for, grouped
-            by where it sits on the path from raw data to a running product. I
-            pick tools that are boring in production: measurable, reproducible,
-            and easy to hand off.
+            {view === "diagram" ? (
+              /* VIEW-SPECIFIC, and not as a trick to save height -- though it
+                 saves 56px, which is why it got looked at. The list's sentence
+                 says the tools are "grouped by where it sits on the path from
+                 raw data to a running product". In the diagram that path is
+                 drawn, with the stages named and the edges labelled, so the
+                 sentence is describing something the reader is looking at.
+                 What they need instead is how to READ the drawing. */
+              <>
+                The same tools, filed by the job they do in a system rather
+                than by what I would call the skill. Hover any one for what it
+                is; pick a platform to see what fills its role there.
+              </>
+            ) : (
+              <>
+                Not a badge collection: this is what I actually reach for,
+                grouped by where it sits on the path from raw data to a running
+                product. I pick tools that are boring in production:
+                measurable, reproducible, and easy to hand off.
+              </>
+            )}
           </motion.p>
 
         </div>
@@ -341,7 +363,13 @@ const Tech = () => {
             offered and `view` can only be "list", so the grid remains the one
             thing a tablet or a phone can reach. */}
         {view === "diagram" && (
-          <StackDiagram onDefine={setHovered} onPin={pinTerm} shown={shown} />
+          <StackDiagram
+            platform={platform}
+            onPlatform={setPlatform}
+            onDefine={setHovered}
+            onPin={pinTerm}
+            shown={shown}
+          />
         )}
 
         <div

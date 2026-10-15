@@ -453,3 +453,145 @@ export const projects = [
     live_link: "https://pb-card-deck.vercel.app/",
   },
 ];
+
+/* ---------------------------------------------------------------------------
+   THE SAME 47 TOOLS, FILED BY RESPONSIBILITY INSTEAD OF BY SKILL AREA.
+
+   `stackGroups` above answers "what does he know", and its boxes are areas of
+   HIS experience: Data engineering, Computer vision, and so on. That is the
+   right shape for a tool list and the wrong shape for a system diagram.
+
+   In a design interview nobody draws a box called "Data engineering". The
+   boxes are the jobs the system has to do -- get the data in, prepare it,
+   train something, serve it -- and the tools are what you drop into each slot.
+   The interesting sentence is then available: "Airflow here; on GCP that is
+   Composer, on AWS that is MWAA. Same role."
+
+   So these stages are roles, and `platformSwaps` below is what makes the
+   interchangeability explicit rather than something a reader has to know.
+
+   EVERY TOOL IN `stackGroups` APPEARS HERE EXACTLY ONCE, and
+   `utils/stages.test.mjs` fails the build's test run if that stops being true.
+   Two hand-maintained lists of the same 47 strings is precisely the drift this
+   repo keeps getting bitten by, so it is checked rather than hoped for.
+--------------------------------------------------------------------------- */
+
+export const PLATFORMS = [
+  // The default is what he actually runs. Everything else is an equivalence,
+  // and the UI says so -- see `PLATFORM_NOTE`.
+  { id: "oss", label: "Open source", short: "OSS" },
+  { id: "aws", label: "AWS", short: "AWS" },
+  { id: "gcp", label: "Google Cloud", short: "GCP" },
+  { id: "azure", label: "Azure", short: "Azure" },
+];
+
+/**
+ * The honesty line, and it is not optional.
+ *
+ * This page's rule is that absent beats invented, and a grid of cloud service
+ * names next to a person's photograph reads as "I have run all of these" to
+ * anyone skimming. It is not that. It is the mapping any engineer should be
+ * able to recite -- the role is the knowledge, the vendor is a lookup -- and
+ * the interface has to say which of the two it is showing.
+ */
+export const PLATFORM_NOTE =
+  "Role stays, vendor changes. The open-source column is what actually runs; the rest are equivalents.";
+
+/**
+ * tool -> the role it fills, and the managed service that fills it elsewhere.
+ *
+ * Only the tools that are genuinely vendor-specific are here. pandas, PyTorch
+ * and FastAPI run the same everywhere, and inventing a "GCP equivalent" for
+ * them would be noise that makes the real swaps harder to see.
+ */
+export const platformSwaps = {
+  Airflow: { role: "Orchestration", aws: "MWAA", gcp: "Cloud Composer", azure: "Data Factory" },
+  PySpark: { role: "Batch compute", aws: "EMR", gcp: "Dataproc", azure: "Synapse Spark" },
+  S3: { role: "Object store", aws: "S3", gcp: "Cloud Storage", azure: "Blob Storage" },
+  PostgreSQL: { role: "Relational store", aws: "RDS", gcp: "Cloud SQL", azure: "Azure SQL" },
+  DynamoDB: { role: "Key-value store", aws: "DynamoDB", gcp: "Firestore", azure: "Cosmos DB" },
+  DuckDB: { role: "Analytics engine", aws: "Athena", gcp: "BigQuery", azure: "Synapse" },
+  Jupyter: { role: "Notebooks", aws: "SageMaker Studio", gcp: "Vertex AI Workbench", azure: "Azure ML Studio" },
+  Pinecone: { role: "Vector index", aws: "OpenSearch k-NN", gcp: "Vertex Vector Search", azure: "AI Search" },
+  Claude: { role: "Managed LLM", aws: "Bedrock", gcp: "Vertex AI", azure: "Azure OpenAI" },
+  vLLM: { role: "Model serving", aws: "SageMaker Endpoints", gcp: "Vertex AI Endpoints", azure: "ML Endpoints" },
+  MLflow: { role: "Experiment tracking", aws: "SageMaker Experiments", gcp: "Vertex AI Experiments", azure: "Azure ML" },
+  Kubernetes: { role: "Container runtime", aws: "EKS", gcp: "GKE", azure: "AKS" },
+  "GitHub Actions": { role: "CI/CD", aws: "CodePipeline", gcp: "Cloud Build", azure: "Azure Pipelines" },
+};
+
+/**
+ * `out` is what LEAVES a stage, and it is the point of drawing this at all.
+ *
+ * A bare arrow between two boxes is decoration; it says "and then". A labelled
+ * arrow says what the next stage receives, which is the one thing a tool list
+ * structurally cannot express no matter how it is arranged.
+ */
+export const systemStages = [
+  {
+    id: "ingest",
+    title: "Ingest & store",
+    role: "Raw data in, addressable",
+    tint: "--c-cat-data",
+    items: ["Airflow", "ETL pipelines", "PySpark", "S3", "PostgreSQL", "DynamoDB", "DuckDB", "SQL"],
+    out: "tables",
+  },
+  {
+    id: "prepare",
+    title: "Explore & prepare",
+    role: "What the data supports",
+    tint: "--c-cat-science",
+    items: ["pandas", "Polars", "NumPy", "scikit-learn", "Jupyter", "Plotly", "Exploratory analysis"],
+    out: "features",
+  },
+  // The fork. Both of these read the same prepared data and both feed Serve,
+  // which is the structural claim the six-column list cannot make.
+  {
+    id: "vision",
+    title: "Vision models",
+    role: "Detect and track on footage",
+    tint: "--c-cat-vision",
+    parallel: true,
+    items: ["PyTorch", "YOLOv8", "OpenCV", "Detection & tracking", "Federated learning"],
+  },
+  {
+    id: "language",
+    title: "Language models & retrieval",
+    role: "Answers, grounded in sources",
+    tint: "--c-cat-llm",
+    parallel: true,
+    items: ["Hugging Face", "Transformers", "Fine-tuning", "Embeddings", "Pinecone", "LangChain", "LangGraph", "Claude", "Ollama"],
+    out: "weights + index",
+  },
+  {
+    id: "serve",
+    title: "Serve & interface",
+    role: "Behind an API and a screen",
+    tint: "--c-cat-backend",
+    items: ["vLLM", "FastAPI", "Pydantic", "Streamlit", "Next.js", "React", "TypeScript", "Tauri"],
+  },
+];
+
+/* Not a stage: nothing flows into it and nothing flows out. It is the floor
+   every stage above stands on, which is why it is drawn as a band rather than
+   as a sixth box in the chain. */
+export const systemFloor = {
+  title: "Ship & observe",
+  role: "Everything above runs on this",
+  tint: "--c-cat-mlops",
+  items: ["Python", "Docker", "Kubernetes", "Helm", "GitHub Actions", "pytest", "MLflow", "Weights & Biases", "DVC", "Evaluation"],
+};
+
+/**
+ * WHY THE STACK IS ALSO DRAWN AS A SYSTEM, in the reader's words rather than
+ * the code's. Opened from a `?` beside the diagram, the same affordance the
+ * hero field uses -- a visualisation that needs explaining should carry its
+ * own explanation rather than assuming the reader shares the author's mental
+ * model.
+ */
+export const DIAGRAM_WHY = [
+  "A tool list answers what I know. It cannot answer whether the pieces fit together, which is the question an interview actually asks.",
+  "So the boxes here are not my skill areas — they are the jobs a system has to do. The tools are what drops into each slot. Same 47 tools; only the filing changes.",
+  "The arrows carry what moves between stages, two stages run in parallel rather than in sequence, and the band underneath is what everything else stands on.",
+  "Every managed piece is a role, not a lock-in: pick a platform to see what fills each one on AWS, Google Cloud or Azure.",
+];
