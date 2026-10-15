@@ -24,18 +24,29 @@ const Reveal = forwardRef(({
   children,
   delay = 0,
   y = 18,
+  // Optional, and 1 means "behave exactly as before" so no existing caller
+  // changes. Only the Roles deck passes it: a stack of cards arriving should
+  // settle toward the reader, and a few thousandths of scale is the difference
+  // between a card appearing and a card being dealt.
+  scale = 1,
+  duration = 0.55,
   as = "div",
   className = "",
   ...rest
 }, ref) => {
   const Tag = motion[as] ?? motion.div;
+  // Spreading a `scale: 1` into the initial state would still hand framer a
+  // transform to animate, which promotes every revealed element on the page to
+  // its own layer for no visible gain.
+  const from = scale === 1 ? { opacity: 0, y } : { opacity: 0, y, scale };
+  const to = scale === 1 ? { opacity: 1, y: 0 } : { opacity: 1, y: 0, scale: 1 };
   return (
     <Tag
       ref={ref}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={from}
+      whileInView={to}
       viewport={{ once: true, amount: "some", margin: "0px 0px -12% 0px" }}
-      transition={{ duration: 0.55, delay, ease: EASE }}
+      transition={{ duration, delay, ease: EASE }}
       className={className}
       {...rest}
     >

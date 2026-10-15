@@ -1,5 +1,76 @@
 # Worklog
 
+## 2026-10-15: the roles deck gets a seam, and a card you can see in the dark
+
+Three complaints about the Roles section, all measured at 1512x900.
+
+### "I want some gap on the transition"
+
+There was none, and there is nowhere to put one: the deck REQUIRES the cards to
+overlap — that is the effect. Measured mid-transition, card 02's bottom sat at
+491px with card 03's top at 474px: a 17px overlap, identical fills either side
+of it, and the seam reading as a divider inside one panel rather than as the
+edge of a card in front.
+
+So the separation is DRAWN rather than spaced. A fourth shadow layer throws
+shade upward, onto whatever is behind the card's top edge — which in a sticky
+deck is always the card being covered. A real stack of cards would do this
+anyway.
+
+### The card being sliced was still the brightest thing on screen
+
+`useCoveredCards` marked a card covered only once the next one had climbed
+**half** its face. Until then the outgoing card sat at full strength with its
+last line cut in half by the incoming edge — the exact thing the dimming was
+written to prevent, arriving after the damage was done.
+
+0.55 to 0.78: the step back now lands once the incoming card has taken a
+quarter of the face. Not higher — at 0.9 the card fades while its bottom edge
+is still clear, so the thing being read dims while it is still the thing being
+read.
+
+And the step back is now visible. `scale(0.988)` on a 672px card insets 4px a
+side, which is under the width of the card's own border; at `0.976` it insets
+**8.1px measured**, so a strip of the page shows down both edges of a buried
+card.
+
+| At the reported scroll position | Before | After |
+| --- | ---: | ---: |
+| Outgoing card `data-covered` | `false` | **`true`** |
+| Its content opacity | 1 | **0.38** |
+| Side inset | 4.0px | **8.1px** |
+
+### "The background is looking crazy for the role section cards"
+
+In the dark theme the card fill was `rgb(20 44 51)` against a page of
+`rgb(15 34 40)` — five, ten and eleven points apart — and all three shadow
+layers were near-black on near-black. The deck read as one flat panel divided
+by hairlines.
+
+A dark ground does not take a shadow. Elevation there is carried by a lighter
+FILL, which is the one place the light-mode recipe does not transfer. Measured
+after: `rgb(34 57 63)`, **19/23/23** from the page.
+
+Written as `color-mix` on `--c-tertiary` rather than a hand-typed triple, so a
+theme that retunes that token takes its role cards with it, and scoped to
+`[data-scheme="dark"]` so `ink` gets it too and no light theme is touched.
+
+### The entrance
+
+The deck used the page's generic reveal: 18px, 0.55s, 0.08s apart. At 0.08 the
+last card starts before the first has settled, which is the same instant to a
+reader — four cards appearing, not a hand being dealt.
+
+Now 26px over 0.68s, 0.12s apart, from `scale: 0.985`. `Reveal` gained optional
+`scale` and `duration` props that default to exactly the old behaviour, and it
+skips the transform entirely when `scale === 1` — spreading a no-op scale into
+the initial state still hands framer a transform to animate, which would
+promote every revealed element on the page to its own layer for nothing.
+
+Education renders through the same component and deliberately keeps the plain
+reveal: two dated entries are a list, not a deck.
+
+
 ## 2026-10-15: the hero field finally draws the diagram it has been claiming
 
 The backdrop's whole premise: the four contact icons down the left edge are a
