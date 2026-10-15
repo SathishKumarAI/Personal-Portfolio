@@ -93,10 +93,13 @@
  * imported by NeuralField, so the shaken result is still a lazy chunk.
  */
 import {
+  AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
+  CanvasTexture,
   LineBasicMaterial,
   LineSegments,
+  NormalBlending,
   PerspectiveCamera,
   Points,
   PointsMaterial,
@@ -107,7 +110,10 @@ import {
 
 // The shape and the layer names are shared with the 2D field: see netShape.js
 // for why they stopped being declared twice.
-import { HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS } from "./netShape";
+import {
+  HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS,
+  FIELD_ALPHA, alphaFor, EDGE_REST, EDGE_LIT,
+} from "./netShape";
 
 const HIDDEN_DEPTH = [170, -190]; // toward the reader, then away
 /**
@@ -121,6 +127,49 @@ const HIDDEN_DEPTH = [170, -190]; // toward the reader, then away
 const MAX_SIGNALS = 32;
 
 const FOV = 50;
+
+/**
+ * Resting and lit intensity of an edge, where 0 is the page colour exactly and
+ * 1 is the full ink token.
+ *
+ * The edges are vertex-coloured rather than uniformly tinted, which is what
+ * lets the forward pass LIGHT THE WIRES it is crossing instead of only sending
+ * dots along them. A gap brightens as its front travels and settles back after
+ * — so the structure is legible at rest, and the pass is the one authored
+ * moment on the page rather than a scattering of effects.
+ *
+ * Mixing toward the page colour, rather than varying alpha per vertex, is what
+ * makes this work on light and dark grounds with one code path: a vertex
+ * colour can be interpolated, a material's alpha cannot.
+ */
+// EDGE_REST / EDGE_LIT live in netShape.js: the 2D field animates the same
+// pass and has to match.
+
+/**
+ * A soft round sprite for the nodes and the activations.
+ *
+ * `PointsMaterial` with no map draws a hard square, which is what made the
+ * hidden units read as dust rather than as anything lit. A radial falloff
+ * costs one 64px canvas, uploaded once, and turns every point into a glow with
+ * a defined core — the difference between a diagram that looks rendered and
+ * one that looks plotted.
+ */
+const softDot = () => {
+  const S = 64;
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
+  const g = c.getContext("2d");
+  const grd = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+  // A bright core that holds its shape, then a long tail. A linear falloff
+  // reads as a blurred blob; this reads as a point with light around it.
+  grd.addColorStop(0, "rgba(255,255,255,1)");
+  grd.addColorStop(0.22, "rgba(255,255,255,0.92)");
+  grd.addColorStop(0.5, "rgba(255,255,255,0.28)");
+  grd.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grd;
+  g.fillRect(0, 0, S, S);
+  return new CanvasTexture(c);
+};
 
 const rgb = (root, name) => {
   const v = getComputedStyle(root).getPropertyValue(name).trim().split(/\s+/).map(Number);
@@ -157,7 +206,7 @@ const port = (el, dir) => {
   };
 };
 
-export const start = () => {
+export const start = (anchor) => {
   const root = document.documentElement;
 
   /**
@@ -170,8 +219,31 @@ export const start = () => {
    */
   const canvas = document.createElement("canvas");
   canvas.setAttribute("aria-hidden", "true");
-  canvas.className = "pointer-events-none fixed inset-0 z-0 opacity-[0.55]";
-  document.body.appendChild(canvas);
+  // No opacity class: `FIELD_ALPHA` carries the quietness now, and the
+  // canvas's own opacity belongs to the scroll fade alone. See netShape.js.
+  canvas.className = "pointer-events-none fixed inset-0 z-0";
+
+  /**
+   * Mounted NEXT TO the 2D canvas, not on <body>.
+   *
+   * `document.body.appendChild` put the field ON TOP OF THE ENTIRE PAGE.
+   * `#root` is `position: static; z-index: auto`, so it paints in the normal
+   * flow; this canvas is `position: fixed; z-index: 0` and a LATER sibling of
+   * it, and a positioned element at level 0 paints above static content. Every
+   * edge therefore crossed the headline, the navbar and the buttons instead of
+   * passing behind them.
+   *
+   * It went unnoticed for as long as the field was invisible: at the old
+   * effective alpha of 0.077 there was nothing to see on top of anything. The
+   * moment the edges became legible, so did the mistake.
+   *
+   * `anchor` is the 2D canvas, which React renders as the first child of the
+   * app container -- exactly the right place, which is why the 2D field never
+   * had this bug. Inserting before it inherits that position: above the
+   * container's own background, below every sibling that holds content.
+   */
+  const mount = anchor?.parentElement ?? document.body;
+  mount.insertBefore(canvas, anchor ?? null);
 
   let w = window.innerWidth;
   let h = window.innerHeight;
@@ -255,31 +327,74 @@ export const start = () => {
   };
 
   // --- materials, coloured from the live theme tokens -----------------------
-  const nodeMat = new PointsMaterial({ size: 5, sizeAttenuation: true, transparent: true, opacity: 0.95, depthWrite: false });
-  // 0.14, under the canvas's own 0.55: an edge has to be findable when you look
-  // for it and invisible when you are reading the headline in front of it.
-  const edgeMat = new LineBasicMaterial({ transparent: true, opacity: 0.14, depthWrite: false });
-  // Smaller and softer than the nodes it travels between. At size 8 and 0.95
-  // alpha each activation was the brightest thing on a page whose brightest
-  // thing should be the headline.
-  const signalMat = new PointsMaterial({ size: 6.5, sizeAttenuation: true, transparent: true, opacity: 0.72, depthWrite: false });
+  const dot = softDot();
+
+  /**
+   * Sizes are up sharply because a soft sprite is mostly falloff: a 5px hard
+   * square and a 5px glow are not the same amount of visible mark. These are
+   * the sizes at which the core reads as a node and the halo as light.
+   */
+  const nodeMat = new PointsMaterial({
+    map: dot, size: 15, sizeAttenuation: true, transparent: true,
+    opacity: FIELD_ALPHA.node, depthWrite: false,
+  });
+  /**
+   * Vertex-coloured, so the forward pass can light the gap it is crossing.
+   * The alpha stays uniform on the material and the INTENSITY rides on the
+   * colour, mixed between the page colour and the ink token — the one
+   * formulation that behaves on a near-black and a near-white ground without
+   * branching. See EDGE_REST.
+   */
+  const edgeMat = new LineBasicMaterial({
+    transparent: true, vertexColors: true,
+    opacity: FIELD_ALPHA.edge, depthWrite: false,
+  });
+  const signalMat = new PointsMaterial({
+    map: dot, size: 26, sizeAttenuation: true, transparent: true,
+    opacity: FIELD_ALPHA.signal, depthWrite: false,
+  });
 
   const paintTheme = () => {
     const [r, g, b] = rgb(root, "--c-line-strong");
     const [ar, ag, ab] = rgb(root, "--c-accent");
     nodeMat.color.setRGB(r / 255, g / 255, b / 255);
-    edgeMat.color.setRGB(r / 255, g / 255, b / 255);
     signalMat.color.setRGB(ar / 255, ag / 255, ab / 255);
-  };
-  paintTheme();
 
-  // One container, reused. Appending to <body> rather than next to the canvas
-  // because the canvas is `fixed inset-0` and a sibling inside a transformed
-  // ancestor would be positioned against that ancestor instead of the viewport.
+    /**
+     * Blending is picked from the SCHEME, not the theme.
+     *
+     * Additive light is how a glow works on a dark ground: overlapping halos
+     * accumulate and the field reads as lit. On a white page additive is the
+     * one blend that cannot work — adding toward white on white erases the
+     * mark entirely, so every node would vanish on `light`, `paper`, `clean`
+     * and `sepia`. Those four take normal blending and read as ink instead.
+     */
+    const light = root.getAttribute("data-scheme") === "light";
+    const blending = light ? NormalBlending : AdditiveBlending;
+    nodeMat.blending = blending;
+    signalMat.blending = blending;
+
+    const a = alphaFor(light ? "light" : "dark");
+    nodeMat.opacity = a.node;
+    edgeMat.opacity = a.edge;
+    signalMat.opacity = a.signal;
+
+    paintEdges();
+  };
+
+  /* One container, reused, mounted beside the canvas for the same stacking
+     reason -- on <body> these captions painted over the page too.
+
+     The note that used to sit here warned that a `fixed` element inside a
+     TRANSFORMED ancestor is positioned against that ancestor rather than the
+     viewport. True in general, and checked here rather than assumed: the chain
+     from the app container up through #root to <body> carries no transform,
+     filter, perspective, will-change or contain, so nothing traps it. If one
+     is ever added, this and the canvas both move back out. */
   const labelBox = document.createElement("div");
   labelBox.setAttribute("aria-hidden", "true");
   labelBox.className = "pointer-events-none fixed inset-0 z-0 opacity-70";
-  document.body.appendChild(labelBox);
+  mount.insertBefore(labelBox, anchor ?? null);
 
   let nodes = null;   // Points
   let edges = null;   // LineSegments
@@ -288,9 +403,43 @@ export const start = () => {
   // forward pass carries one whole gap at a time, so this is the unit the
   // animation works in -- the flat `pairs` list is only what the geometry wants.
   let hops = [];      // [Vector3, Vector3][][]
+  // Where each hop's vertices live inside the one edge geometry, so a gap can
+  // be re-coloured without rebuilding anything. { start, count } in vertices.
+  let hopVerts = [];
   // Last built signature of the interface, so the 500ms poll can tell "nothing
   // moved" from "rebuild everything". See the guard in build().
   let lastSig = "";
+
+  /**
+   * Colour every edge for the current state of the pass.
+   *
+   * Each vertex is set to a mix between the PAGE colour and the ink token, so
+   * intensity 0 is invisible and 1 is a full-strength wire. The gap the front
+   * is crossing rides up to `EDGE_LIT` on a sine, which peaks as the front
+   * reaches the middle of the gap and settles back as it lands — the wires
+   * carry the signal rather than merely hosting a dot that slides along them.
+   *
+   * Called on theme change, on rebuild, and once per frame while a pass is in
+   * flight. 72 vertices; the cost is a buffer upload, not a recompute.
+   */
+  const paintEdges = () => {
+    if (!edges || !hopVerts.length) return;
+    const attr = edges.geometry.getAttribute("color");
+    if (!attr) return;
+    const bg = rgb(root, "--c-primary");
+    const ink = rgb(root, "--c-line-strong");
+    hopVerts.forEach((range, i) => {
+      let t = EDGE_REST;
+      if (wave && wave.hop === i) {
+        t = EDGE_REST + (EDGE_LIT - EDGE_REST) * Math.sin(Math.PI * Math.min(1, wave.t));
+      }
+      const r = (bg[0] + (ink[0] - bg[0]) * t) / 255;
+      const g = (bg[1] + (ink[1] - bg[1]) * t) / 255;
+      const b = (bg[2] + (ink[2] - bg[2]) * t) / 255;
+      for (let v = range.start; v < range.start + range.count; v++) attr.setXYZ(v, r, g, b);
+    });
+    attr.needsUpdate = true;
+  };
   // The real controls behind the first and last layer, index-aligned with
   // `layers[0]` and `layers.at(-1)`. Kept beside the geometry rather than on
   // it because a Vector3 is a Vector3 and hanging a DOM node off one is the
@@ -427,10 +576,12 @@ export const start = () => {
     // wants; `hops[k]` is what a wave needs — every edge crossing the gap from
     // layer k to layer k+1, so the whole gap can carry at once.
     hops = [];
+    hopVerts = [];
     const pairs = [];
     for (let i = 0; i < layers.length - 1; i++) {
       const from = layers[i], to = layers[i + 1];
       hops[i] = [];
+      const startVertex = pairs.length;
       from.forEach((a, ai) => {
         const centreOf = Math.round(((ai + 0.5) / from.length) * to.length - 0.5);
         for (const d of [0, 1]) {
@@ -438,9 +589,15 @@ export const start = () => {
           if (b) { pairs.push(a, b); hops[i].push([a, b]); }
         }
       });
+      hopVerts[i] = { start: startVertex, count: pairs.length - startVertex };
     }
-    edges = new LineSegments(new BufferGeometry().setFromPoints(pairs), edgeMat);
+    const edgeGeo = new BufferGeometry().setFromPoints(pairs);
+    // One colour per vertex, filled by paintEdges(). Allocated here because it
+    // has to match the position count exactly.
+    edgeGeo.setAttribute("color", new BufferAttribute(new Float32Array(pairs.length * 3), 3));
+    edges = new LineSegments(edgeGeo, edgeMat);
     scene.add(edges);
+    paintEdges();
 
     /* A pass in flight is holding Vector3s from the graph that was just
        replaced, so it would interpolate between nodes no longer on screen —
@@ -603,9 +760,12 @@ export const start = () => {
         wave = null;
         rest = REST_SECONDS;
         signalGeo.setDrawRange(0, 0);
+        paintEdges(); // back to rest, or the last gap stays lit
         return;
       }
     }
+
+    paintEdges();
 
     const gap = hops[wave.hop];
     // `ease` so a front leaves its layer and arrives at the next one with a
@@ -821,6 +981,7 @@ export const start = () => {
     nodeMat.dispose();
     edgeMat.dispose();
     signalMat.dispose();
+    dot.dispose(); // the sprite is a GPU texture, not just a canvas
     // Frees the GL context. Without it a resize that remounts this leaks one
     // context per mount, and browsers hard-cap the number a page may hold.
     renderer.dispose();

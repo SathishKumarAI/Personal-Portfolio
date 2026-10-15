@@ -33,7 +33,10 @@ import { useEffect, useRef } from "react";
 
 // The shape and the layer names live in netShape.js. They used to be declared
 // here AND in NeuralField3D, which is two copies of one fact: see that file.
-import { HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS } from "./netShape";
+import {
+  HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS,
+  FIELD_ALPHA, alphaFor, EDGE_REST, EDGE_LIT,
+} from "./netShape";
 
 const token = (el, name, alpha) => {
   const v = getComputedStyle(el).getPropertyValue(name).trim();
@@ -234,19 +237,31 @@ const NeuralField = () => {
       ctx.globalAlpha = heroVisible;
 
       if (layers.length >= 2) {
-        // every edge, faint
-        ctx.lineWidth = 0.7;
-        ctx.strokeStyle = ink.replace(",1)", ",0.055)");
-        for (let li = 0; li < layers.length - 1; li++) {
-          layers[li].forEach((a) => {
-            layers[li + 1].forEach((b) => {
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.stroke();
-            });
-          });
-        }
+        /* The SPARSE edge set, and the gap currently carrying drawn brighter --
+           both exactly as the 3D field does them.
+
+           This used to draw every node to every node in the next layer: 110
+           edges against the 3D field's 36. Fully connected is what an MLP
+           actually is, and the 3D file rejected it in as many words -- "at any
+           opacity that makes one edge visible reads as a mesh laid over the
+           headline". While the field was invisible the divergence cost
+           nothing; at a legible alpha the fallback rendered a dense net and
+           the WebGL version a clean lattice, which is two different drawings
+           of one diagram.
+
+           `gaps` is already the sparse set, built by gapsOf() from the same
+           rule, so the fix is to draw what the animation is already using. */
+        ctx.lineWidth = 0.9;
+        const a = alphaFor(root.getAttribute("data-scheme") === "light" ? "light" : "dark");
+        gaps.forEach((gap, k) => {
+          const lit = wave && wave.hop === k
+            ? EDGE_REST + (EDGE_LIT - EDGE_REST) * Math.sin(Math.PI * Math.min(1, wave.t))
+            : EDGE_REST;
+          ctx.strokeStyle = ink.replace(",1)", `,${(a.edge * lit).toFixed(3)})`);
+          ctx.beginPath();
+          gap.forEach(([p, q]) => { ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); });
+          ctx.stroke();
+        });
 
         // Layer labels, on a baseline along the bottom with a tick rising to each
         // column. They sit there rather than above the nodes because the columns
@@ -297,7 +312,7 @@ const NeuralField = () => {
         layers.slice(1, -1).flat().forEach((n) => {
           ctx.beginPath();
           ctx.arc(n.x, n.y, 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = ink.replace(",1)", ",0.3)");
+          ctx.fillStyle = ink.replace(",1)", `,${alphaFor(root.getAttribute("data-scheme") === "light" ? "light" : "dark").node})`);
           ctx.fill();
         });
 
@@ -317,13 +332,13 @@ const NeuralField = () => {
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(x, y);
-            ctx.strokeStyle = accent.replace(",1)", ",0.22)");
+            ctx.strokeStyle = accent.replace(",1)", `,${FIELD_ALPHA.trail})`);
             ctx.lineWidth = 1.2;
             ctx.stroke();
 
             ctx.beginPath();
             ctx.arc(x, y, 2.2, 0, Math.PI * 2);
-            ctx.fillStyle = accent.replace(",1)", ",0.8)");
+            ctx.fillStyle = accent.replace(",1)", `,${FIELD_ALPHA.signal})`);
             ctx.fill();
           });
         }
@@ -435,7 +450,7 @@ const NeuralField = () => {
       // a GL context lost at creation — the 2D field takes the canvas back
       // rather than the hero losing its backdrop.
       import("./NeuralField3D")
-        .then((m) => (cancelled ? null : m.start()))
+        .then((m) => (cancelled ? null : m.start(c)))
         .then((d) => {
           if (cancelled) { d?.(); return; }
           dispose3d = d;
@@ -466,7 +481,7 @@ const NeuralField = () => {
     <canvas
       ref={ref}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 hidden rail:block opacity-[0.55]"
+      className="pointer-events-none fixed inset-0 z-0 hidden rail:block"
     />
   );
 };

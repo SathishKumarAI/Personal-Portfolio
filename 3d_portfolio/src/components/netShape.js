@@ -68,3 +68,78 @@ export const FIRE_MS = 900;
  */
 export const HOP_SECONDS = 1.15;
 export const REST_SECONDS = 2.8;
+
+/**
+ * Alpha for each part of the field, as the FINAL value, applied straight to
+ * the material or the fill style.
+ *
+ * It used to be two numbers multiplied together — a `opacity-[0.55]` class on
+ * the canvas times each material's own alpha — and the product was the
+ * problem. Edges rendered at 0.55 x 0.14 = 0.077 in WebGL and 0.55 x 0.055 =
+ * 0.03 on the 2D canvas. Against the dark theme's page that is a six-point
+ * colour delta, and against the light themes barely more: below the threshold
+ * where a hairline is visible at all, which is exactly how it was reported —
+ * "I can't really see those lines".
+ *
+ * One number per part, applied once, so what is written here is what renders.
+ * The canvas's own opacity is now reserved for the scroll fade alone, which is
+ * also what fixes the jump: `onScroll` assigns `style.opacity = fade` with
+ * `fade` starting at 1, and that inline value overrode the 0.55 class, so
+ * scrolling a single pixel used to make the whole field leap from 0.55 to
+ * ~0.99.
+ *
+ * Tuned against measured contrast in all six themes rather than by eye — see
+ * the table in docs/WORKLOG.md. The edge is the number that matters: it is the
+ * thing that says "network" and it was the thing nobody could see.
+ */
+export const FIELD_ALPHA = {
+  edge: 0.26,
+  node: 0.62,
+  signal: 0.9,
+  trail: 0.22,
+};
+
+/**
+ * Light grounds need MORE alpha for the same perceived contrast.
+ *
+ * Not a hunch — the tokens are not mirror images. A dark theme draws the field
+ * in `--c-line-strong`, a pale blue (95 134 148) against a near-black page
+ * (15 34 40). A light theme draws the same thing in a mid-grey (143 135 118)
+ * against white. The dark pairing separates further, and a thin antialiased
+ * line only ever gets partial coverage, which halves whatever is left.
+ *
+ * Measured at one shared alpha of 0.3, median edge contrast per theme:
+ *
+ *   ink 51.2   dark 48.1   light 22.0   paper 20.0   clean 19.0   sepia 16.1
+ *
+ * The light half came in at roughly a third of the dark half — the same
+ * asymmetry the role cards hit, where a dark ground would not take a shadow
+ * and needed a lighter fill instead. One ratio corrects it; applying it per
+ * scheme rather than per theme keeps it to one number, since `data-scheme` is
+ * already the axis every structural rule in index.css reads.
+ */
+export const LIGHT_BOOST = 2.8;
+
+/**
+ * Resting and lit intensity of an edge, as a multiplier on its alpha. Shared,
+ * because both fields animate the same forward pass and a reader who switches
+ * machines must not see two different networks.
+ */
+export const EDGE_REST = 0.62;
+export const EDGE_LIT = 1;
+
+/** The alphas as they should render on a given `data-scheme`. */
+export const alphaFor = (scheme) => {
+  const k = scheme === "light" ? LIGHT_BOOST : 1;
+  return {
+    edge: Math.min(1, FIELD_ALPHA.edge * k),
+    // The node is already a filled dot rather than a hairline, so it needs
+    // less of the correction than the edges do; at the full ratio the hidden
+    // units read as punched holes on the paper themes.
+    node: Math.min(1, FIELD_ALPHA.node * (scheme === "light" ? 1.25 : 1)),
+    // The activation is drawn in the accent, which is a strong red in every
+    // palette and needs no help on either ground.
+    signal: FIELD_ALPHA.signal,
+    trail: Math.min(1, FIELD_ALPHA.trail * k),
+  };
+};
