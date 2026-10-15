@@ -1,5 +1,172 @@
 # Worklog
 
+## 2026-10-15: the field was painting on top of the page, and nobody could see it anyway
+
+Two faults, and the second hid the first for as long as the 3D field has existed.
+
+### Nobody could see the lines
+
+The alpha was a PRODUCT of two numbers: an `opacity-[0.55]` class on the
+canvas, times each material's own value. Edges therefore rendered at
+0.55 x 0.14 = **0.077** in WebGL and 0.55 x 0.055 = **0.03** on the 2D canvas.
+Against the dark theme's page that is a six-point colour delta. Not a faint
+line; no line.
+
+One number per part now, applied once. The canvas's own opacity is reserved
+for the scroll fade, which also fixes a jump nobody had noticed: `onScroll`
+assigns `style.opacity = fade` with `fade` starting at 1, and that inline
+value overrode the 0.55 class, so scrolling a single pixel made the whole
+field leap from 0.55 to ~0.99.
+
+### The field was drawn ON TOP OF THE PAGE
+
+`document.body.appendChild(canvas)`. `#root` holds the entire app and is
+`position: static; z-index: auto`; the canvas is `position: fixed; z-index: 0`
+and a LATER sibling of it. A positioned element at stacking level 0 paints
+above static content, so every edge crossed the headline, the navbar and the
+buttons rather than passing behind them.
+
+Invisible at alpha 0.077. The moment the edges became legible, so did the
+mistake: lines over the letterforms of "development to".
+
+Canvas and label box now mount beside the 2D canvas, inside the app container,
+which is exactly where React already puts the fallback and exactly why the
+fallback never had this bug.
+
+The comment defending the old mount warned that a `fixed` element inside a
+TRANSFORMED ancestor positions against that ancestor instead of the viewport.
+True in general. Checked rather than assumed: the chain from the app container
+through `#root` to `<body>` carries no transform, filter, perspective,
+will-change or contain. Verified after the move, the canvas is still 0,0 at
+exactly the viewport size.
+
+### Tuned against measurement, in all six themes
+
+The lever turned out not to be alpha but LINE COVERAGE. A `LineBasicMaterial`
+edge is one DEVICE pixel wide whatever `linewidth` says, two thirds of a CSS
+pixel at dpr 1.5, so most pixels a line crosses get partial coverage and
+roughly two thirds of the intended alpha never arrives.
+
+Median resting edge contrast against the page, per theme:
+
+| | before | first pass | shipped |
+| --- | ---: | ---: | ---: |
+| dark | ~6 | 37.1 | **34.6** |
+| ink | ~6 | 38.2 | **35.9** |
+| light | ~8 | 19.0 | **31** |
+| sepia | ~8 | 11.5 | **19.2** |
+| clean | ~8 | 16.0 | **27** |
+| paper | ~8 | 17.0 | **28** |
+
+Light grounds need roughly 2.8x the alpha of dark ones, because the tokens are
+not mirrors: a dark theme draws in a pale blue against near-black, a light one
+in a mid-grey against white. Same asymmetry the role cards hit, where a dark
+ground would not take a shadow and needed a lighter fill instead.
+
+### And it was made to look like something
+
+- **Soft sprite nodes.** `PointsMaterial` with no map draws a hard square,
+  which is what made the hidden units read as dust. One 64px radial-gradient
+  canvas, uploaded once, turns every point into a glow with a defined core.
+- **Edges that carry the signal.** The edge geometry is vertex-coloured, and
+  the gap a forward pass is crossing rides up to full intensity on a sine and
+  settles back. The wires light, rather than merely hosting a dot that slides
+  along them. Mixing toward the PAGE colour rather than varying alpha is what
+  lets one code path serve a near-black and a near-white ground.
+- **Blending from the scheme.** Additive on dark, where overlapping halos
+  accumulate and read as lit. Normal on light, because additive is the one
+  blend that cannot work on white.
+
+### The two fields had drifted into two different drawings
+
+The 2D fallback drew every node to every node: **110 edges** against the 3D
+field's 36. Fully connected is what an MLP actually is, and the 3D file had
+rejected it in as many words, "at any opacity that makes one edge visible
+reads as a mesh laid over the headline". While the field was invisible the
+divergence cost nothing. At a legible alpha the fallback rendered a dense net
+and the WebGL version a clean lattice.
+
+`gapsOf()` already built the sparse set for the animation, so the fallback now
+draws what it was already stepping through, and lights the carrying gap the
+same way.
+
+
+## 2026-10-15: the field was 1.5x too big, and every measurement agreed with it
+
+The owner said four times that the hero network was not aligned. Four times
+the numbers said it was. The numbers were taken inside the bug.
+
+### One argument
+
+```js
+renderer.setSize(w, h, false);
+```
+
+That third argument is `updateStyle`. `false` tells three.js not to write
+`canvas.style.width/height`, on the assumption that the element's
+`fixed inset-0` classes will size it.
+
+They do not. **A `<canvas>` is a replaced element.** `position: fixed` with all
+four insets at 0 does not stretch one — with `width: auto` it falls back to its
+INTRINSIC size, which is the `width`/`height` attributes, which are the drawing
+buffer, which `setPixelRatio` has already multiplied by the device pixel ratio.
+
+Measured on a 1.5x display:
+
+| | |
+| --- | ---: |
+| Viewport | 1601 x 883 |
+| Canvas drawing buffer | 2401 x 1324 |
+| Canvas CSS box | **2401 x 1324** |
+| Overflow past the viewport | **800px across, 441px down** |
+
+So the entire scene was magnified 1.5x from the top-left corner. The input
+layer drew at CSS x=99 against a dock at 66. The output layer drew at roughly
+x=2302 against a rail at 1520 — three quarters of the diagram was off the
+right-hand edge of the screen.
+
+At DPR 1 the buffer equals the viewport and it is pixel-perfect, which is why
+it shipped and survived. The 2D fallback never had it: it sets `c.style.width`
+itself.
+
+### Why every measurement missed it
+
+The `gl.readPixels` checks converted buffer pixels to CSS pixels with
+`scale = canvas.width / window.innerWidth`. On this display that ratio is
+**1.5** — the device pixel ratio, and therefore exactly the magnification being
+hunted. Dividing by it cancelled the error perfectly, so the columns always
+came back sitting on their labels.
+
+It is the oldest trap in the repo's own rules, in a new costume: *measure, do
+not infer.* The readings were real measurements of a coordinate system that
+did not exist on screen. The fix is to convert through the canvas's OWN
+rendered box, `canvas.getBoundingClientRect()`, which cannot cancel anything
+because it is the thing in question.
+
+The screenshots were right the whole time. They were overruled three times
+because the arithmetic looked cleaner.
+
+### After
+
+| | Before | After |
+| --- | ---: | ---: |
+| Canvas CSS box | 2401 x 1324 | **1601 x 883** |
+| Matches viewport | no | **yes** |
+| HIDDEN 1 column, CSS x | ~824 | **549.4** (label 550.7) |
+| HIDDEN 2 column, CSS x | ~1552 | **1034.9** (label 1035.3) |
+| Column y span | — | **362.1–520.2** (dock band 363.7–519.7) |
+
+Measured through the canvas's own box, and confirmed in the screenshot, which
+now shows each column directly above the label that names it.
+
+### What this says about the four PRs before it
+
+The geometry work in #52 and #54 was correct and still necessary — the
+perspective compensation, the band, the forward pass. None of it was visible
+on a retina display, because the canvas it all drew into was the wrong size.
+Two separate bugs stacked, and the outer one hid the inner one.
+
+
 ## 2026-10-15: the field draws a forward pass, not a path through one
 
 Raised by the owner, and correct: in a real network a LAYER computes at once.
