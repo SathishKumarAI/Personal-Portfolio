@@ -1,5 +1,49 @@
 # Worklog
 
+## 2026-10-15: the status row stops floating, and starts doing something
+
+Reported as dead space, and it measured that way. At 1707x872 the navbar ended
+at 76px and the status row began at 128 -- a 39px row sitting inside a 147px
+band between the bar and the headline.
+
+| | before | after |
+| --- | ---: | ---: |
+| Navbar bottom to status row | 52px | **20px** |
+| Rule to headline | 56px | **40px** |
+| Headline top | 223px | **175px** |
+
+The hero is `items-start` inside `min-h-screen`, so tightening the top does not
+squeeze anything: the slack moves to the bottom, where the scroll cue already
+lives and where the original author said it was never dead.
+
+### The rule draws itself
+
+`border-b` became a 1px span that scales from `origin-left` as the row arrives.
+A border cannot animate its own length; `scaleX` on a span is compositor-only.
+
+Borrowed deliberately rather than invented: `Availability` already does this
+and already says why -- "a line being drawn reads as something being written
+down". It is the one piece of motion in the hero that is not a fade, which is
+exactly why it is spent on the row that was otherwise a label floating in
+empty space.
+
+### "Open to AI engineering roles" is a link now
+
+It was a dead `<span>`. It is the one fact on the page a recruiter acts on, and
+the obvious next move after reading it had nowhere to go. It now points at
+`#contact`, and a "Get in touch" arrow slides out on hover or focus -- hidden
+at rest, because an arrow that is always visible is a second call to action
+competing with the real one.
+
+Verified through the keyboard path, which is the one that matters and the one
+the automation can actually hold: the link is the FIRST tab stop in the hero,
+`:focus-visible` is true on it, and the arrow goes from opacity 0 at -4px to
+opacity 1 at 0. The same generated rules serve `group-hover`.
+
+The arrow is `aria-hidden`, so it stays out of the accessible name -- confirmed
+in the a11y tree, which reads the link as "Open to AI engineering roles".
+
+
 ## 2026-10-15: the hero stops performing and hands the reader over
 
 The owner's point, and the sharpest design note of the session: the animation
