@@ -1,5 +1,93 @@
 # Worklog
 
+## 2026-10-15: the hero stops performing and hands the reader over
+
+The owner's point, and the sharpest design note of the session: the animation
+takes a lot from the user, and if it loops continuously they may not want to
+read the content.
+
+Correct, and the repo half-knew it. PR #43 cut the field down so "a reader
+notices it once and then reads on" -- but the field never actually stopped, so
+"reads on" never happened. A backdrop in perpetual motion never hands anything
+over; the eye keeps returning to it and the reader keeps re-finding their line.
+
+### Two passes, then still
+
+`PASS_BUDGET = 2`. The field fires twice -- icons light, a front crosses,
+section dots answer -- and then settles: wires still visible at `EDGE_REST`,
+zero motion. Nothing is hidden. It simply stops competing.
+
+The budget refills when the reader LEAVES the hero and comes back, so the field
+is alive on return and silent while they read. `left` latches only once the
+hero is properly off screen, or scroll jitter at the top of the page would
+re-arm it continuously and the budget would mean nothing.
+
+Measured, 3D, over 26 seconds:
+
+| | |
+| --- | --- |
+| Pass 1 | IN 1401ms to OUT 4854ms |
+| Pass 2 | IN 7656ms to OUT 11109ms |
+| 11.1s to 26s | **nothing** |
+
+2D, instrumented because the class-mutation observer proved unreliable:
+`passesLeft` 2 to 1 to 0 by 1800ms, `wave` null from 4800ms, held through
+7800ms. Scrolling away latched `left`, returning refilled the budget to 2 and
+started a pass immediately.
+
+### The one thing NOT done, on purpose
+
+Making the claims wait for the network would have left the reader looking at an
+empty hero for seven seconds. **Content is never gated behind decoration.** The
+fix was never "network first, then text" -- it was to stop the thing that was
+competing.
+
+### The claims stream instead of fading
+
+Everything on this page fades. A fourth fade says nothing. On a page whose
+subject is models, text that ARRIVES THE WAY A MODEL EMITS IT is the one piece
+of motion that carries meaning.
+
+`TokenText` splits a claim into words and gives each a CSS animation delay.
+Measured from document-start: first word at **796ms**, half by **1163ms**, all
+23 by **1480ms**. A texture, not a delay.
+
+The blur in the keyframe is what makes it read as resolving rather than
+sliding -- a word coming into focus. Transform and opacity alone give the same
+timing and none of the meaning.
+
+Three things it gets right that a typewriter effect does not:
+
+- Every word is in the DOM from the first frame; only opacity moves. A screen
+  reader reads the sentence whole and immediately, and selection copies it
+  whole. Verified: all three claims read correctly out of the DOM at t=0.
+- The spaces are real text nodes BETWEEN the spans. `.tok` has to be
+  `inline-block` for the transform to apply, and an inline-block holding its
+  own trailing space gives the line no break opportunity -- a long claim would
+  overflow instead of wrapping.
+- `prefers-reduced-motion` resolves them instantly rather than removing them.
+
+### Availability moved to the status row, and two names became one
+
+The hero's top strip said `SATHISH KUMAR` twenty pixels under a navbar that
+already says whose page this is, at every scroll position. The row is a STATUS
+strip -- name left, three live clocks right -- and availability is status, so
+it belongs there. It had been the last thing on the page, below the call to
+action.
+
+Now: a live dot, "Open to AI engineering roles", and the clocks. The full name
+still appears in the page title, the footer colophon and the AgentNote block.
+
+The `S` monogram went with it. On a personal portfolio the NAME is the logo; a
+monogram gave one person a second identity mark standing immediately beside the
+first. It also cost 44px in a bar that is already tight -- measured, brand plus
+links need 851px against an 819px container at the bar's own 900px breakpoint.
+
+### Still open
+
+The gap between the navbar and the status row reads as dead space. Next.
+
+
 ## 2026-10-15: the field became a dense layer, because that is what it claimed to be
 
 The owner asked a question rather than reporting a bug: in a real network, does

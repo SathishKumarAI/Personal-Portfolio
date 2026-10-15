@@ -197,9 +197,13 @@ const Navbar = () => {
             window.scrollTo({ top: 0, behavior: prefersReduced() ? "auto" : "smooth" });
           }}
         >
-          <span className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-black-100 font-display font-bold text-[15px]">
-            S
-          </span>
+          {/* The monogram is gone, deliberately.
+              On a personal portfolio the NAME is the logo; an "S" square gave
+              one person a second identity mark standing immediately beside the
+              first, which is a corporate convention borrowed where it has
+              nothing to do. It also cost 44px in a bar that is already tight:
+              measured, brand plus links need 851px against an 819px container
+              at this bar's own 900px breakpoint. */}
           <p className="text-white-100 font-sans text-[17px] font-semibold tracking-[-0.02em] flex items-center">
             Sathish
             <span className="bar:inline hidden font-normal text-faint">&nbsp;· AI Engineer</span>

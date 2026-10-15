@@ -3,11 +3,29 @@ import { styles } from "../styles";
 import LiveClock from "./LiveClock";
 import CodeCompletion from "./CodeCompletion";
 import { AvailabilityCompact } from "./Availability";
+import TokenText from "./TokenText";
 
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.1, delayChildren: 0.08 } },
 };
+/**
+ * The three claims, and when each starts streaming.
+ *
+ * 620ms holds them until the headline above has landed — the hero's cascade
+ * puts the h1 at roughly 0.3s and it takes 0.6s to settle. Starting the words
+ * under a still-moving headline asks the eye to watch two things at once.
+ * 180ms apart is a line's place in the queue, close enough to read as one
+ * event and far enough to read in order.
+ */
+const CLAIMS = [
+  "Retrieval that cites its source",
+  "Vision that trains where the data already lives",
+  "Results reported as measured, negative ones included",
+];
+const CLAIM_START = 620;
+const CLAIM_GAP = 180;
+
 const rise = {
   hidden: { y: 16, opacity: 0 },
   show: { y: 0, opacity: 1, transition: { duration: 0.6, ease: [0.2, 0.65, 0.3, 0.9] } },
@@ -41,13 +59,20 @@ const Hero = () => {
         animate="show"
         className="relative z-10 max-w-7xl mx-auto w-full"
       >
+        {/* STATUS, not a byline.
+            This row said "SATHISH KUMAR" twenty pixels under a navbar that
+            already says whose page this is, and says it at every scroll
+            position. The hero's first line is better spent on the one fact a
+            recruiter is actually looking for, and availability IS status —
+            so it sits with the clocks rather than below the CTA, where it had
+            been the last thing after the call to action.
+            The full name still appears in the page title, the footer
+            colophon, and the AgentNote block written for crawlers. */}
         <motion.div
           variants={rise}
-          className="flex items-center justify-between border-b border-line pb-4 mb-10 sm:mb-14"
+          className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line pb-4 mb-10 sm:mb-14"
         >
-          <span className="font-sans text-[13px] font-medium uppercase tracking-[0.09em] text-secondary">
-            Sathish Kumar
-          </span>
+          <AvailabilityCompact />
           <LiveClock className="text-label hidden sm:inline" />
         </motion.div>
 
@@ -89,21 +114,31 @@ const Hero = () => {
             scan in about a second each; the same words in prose ask for a
             decision to start reading, which most people who land here do not
             make. */}
-        <motion.ul variants={rise} className="mt-8 max-w-xl list-none space-y-3">
-          {[
-            "Retrieval that cites its source",
-            "Vision that trains where the data already lives",
-            "Results reported as measured, negative ones included",
-          ].map((claim) => (
+        {/* The claims STREAM in, word by word, rather than fading as a block.
+            On a page about models, text arriving the way a model emits it is
+            the one piece of motion that carries meaning; a fourth fade would
+            have carried none. See TokenText for why it is a texture and not a
+            delay — all three complete inside ~1.2s, so nothing is withheld.
+
+            `CLAIM_START` holds the words until the headline above has landed,
+            so the eye is handed down the page rather than asked to watch two
+            things at once. The per-claim offset is the line's own place in
+            the queue. */}
+        <ul className="mt-8 max-w-xl list-none space-y-3">
+          {CLAIMS.map((claim, i) => (
             <li
               key={claim}
               className="flex items-baseline gap-3 font-sans text-secondary text-[calc(clamp(0.95rem,1.35vw,1.15rem)*var(--type-scale,1))] leading-[1.45]"
             >
-              <span aria-hidden="true" className="relative top-[-0.3em] h-px w-5 shrink-0 bg-accent/70" />
-              {claim}
+              <span
+                aria-hidden="true"
+                className="tok relative top-[-0.3em] h-px w-5 shrink-0 bg-accent/70"
+                style={{ "--tok": 0, "--tok-start": `${CLAIM_START + i * CLAIM_GAP}ms` }}
+              />
+              <TokenText text={claim} start={CLAIM_START + i * CLAIM_GAP + 60} />
             </li>
           ))}
-        </motion.ul>
+        </ul>
 
         {/* One CTA, not two. "Get in touch" was the fifth route to #contact, navbar, right rail, palette, and "Reach out →" in the status card a
             screen below, which carries context a bare button cannot. A secondary
@@ -124,9 +159,6 @@ const Hero = () => {
 
         </motion.div>
 
-        <motion.div variants={rise} className="mt-5">
-          <AvailabilityCompact />
-        </motion.div>
       </motion.div>
 
       {/* The lower slack, below `rail`. The hero is `min-h-screen` and

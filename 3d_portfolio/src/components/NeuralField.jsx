@@ -36,6 +36,7 @@ import { useEffect, useRef } from "react";
 import {
   HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS,
   FIELD_ALPHA, alphaFor, EDGE_REST, EDGE_LIT, HIDDEN_SPREAD, inkToken, edgesFor,
+  PASS_BUDGET,
 } from "./netShape";
 
 const token = (el, name, alpha) => {
@@ -101,6 +102,10 @@ const NeuralField = () => {
     let gaps = [];
     let wave = null;      // { hop, t } while a pass is in flight, else null
     let rest = 1.2;       // seconds of quiet left before the next pass
+    // Two passes, then the field holds still so the reader can read. Refilled
+    // when they leave the hero and come back. See netShape.js.
+    let passesLeft = PASS_BUDGET;
+    let left = false;
     // Signature of the interface the current graph was built from, so the
     // 500ms poll can tell "nothing moved" from "rebuild". Without it the poll
     // dropped every pass before it crossed: a pass takes ~3.5s and the poll
@@ -347,11 +352,22 @@ const NeuralField = () => {
       // 1/60s rather than a real delta: this loop has always stepped in fixed
       // ticks, and a pass is paced in seconds, so the two agree.
       const dt = 1 / 60;
+
+      // The hero leaving and coming back is what refills the budget. `left`
+      // latches, so jitter at the top of the page cannot re-arm it.
+      if (heroVisible < 0.15) left = true;
+      else if (left && heroVisible > 0.9) {
+        left = false;
+        passesLeft = PASS_BUDGET;
+        rest = 0.6;
+      }
+
       if (!wave) {
         // Passes stop while the hero is off screen rather than piling up
-        // behind it, and the first one after the reader returns is immediate.
-        if (heroVisible > 0.05) rest -= dt;
-        if (rest <= 0 && gaps.length) {
+        // behind it, and stop for good once the budget is spent.
+        if (heroVisible > 0.05 && passesLeft > 0) rest -= dt;
+        if (rest <= 0 && gaps.length && passesLeft > 0) {
+          passesLeft -= 1;
           wave = { hop: 0, t: 0 };
           layers[0]?.forEach((n) => fire(n.el)); // the whole input VECTOR
         }
