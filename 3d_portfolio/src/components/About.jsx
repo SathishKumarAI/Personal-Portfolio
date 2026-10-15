@@ -1,8 +1,8 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { profile, projects } from "../constants";
 import { fadeIn } from "../utils/motion";
-import TokenText from "./TokenText";
+import TokenText, { CLAIM_GAP } from "./TokenText";
 import { SectionWrapper } from "../hoc";
 import SectionHead from "./SectionHead";
 import Availability from "./Availability";
@@ -70,18 +70,49 @@ const PRINCIPLES = [
   .map((p) => ({ ...p, project: projects.find((x) => x.name === p.name) }))
   .filter((p) => p.project);
 
-/* Matches the hero's spacing between claims. One number, one meaning: a
-   line's place in the queue. */
-const CLAIM_GAP = 180;
+/**
+ * How long the scroll has to be still before the claims start streaming.
+ *
+ * `useInView` alone was not enough. It fires the moment the list is partly on
+ * screen, which mid-scroll is while the section is still flying past — so the
+ * whole cascade played during the travel and was over before the reader had
+ * arrived. Reported as "I can't humanly measure it".
+ *
+ * 220ms of no scroll events is the difference between "this is passing through
+ * the viewport" and "this person has stopped here".
+ */
+const SETTLE_MS = 220;
 
 const About = () => {
-  /* The claims are a screen down, so their stream is held until they are
-     actually on screen -- see `[data-tok="wait"]` in index.css. `once` so
-     scrolling back up does not replay it; a reveal that repeats stops being a
-     reveal and becomes a loop. `amount: 0.4` waits for the list to be properly
-     in view rather than firing on its first pixel. */
+  /**
+   * Two conditions, not one: the claims must be properly on screen AND the
+   * reader must have stopped moving.
+   *
+   * `useInView` is deliberately NOT `once` here. A reader who scrolls straight
+   * past would otherwise burn the one play on a section they never stopped at;
+   * leaving it live means the gate is still armed, and whenever they do come
+   * to rest on it the cascade runs. `played` is what makes it fire once —
+   * a reveal that replays every time it re-enters the viewport stops being a
+   * reveal and becomes a loop.
+   */
   const claimsRef = useRef(null);
-  const claimsSeen = useInView(claimsRef, { once: true, amount: 0.4 });
+  const visible = useInView(claimsRef, { amount: 0.5 });
+  const [claimsSeen, setClaimsSeen] = useState(false);
+
+  useEffect(() => {
+    if (claimsSeen || !visible) return undefined;
+    let id = 0;
+    const arm = () => {
+      clearTimeout(id);
+      id = window.setTimeout(() => setClaimsSeen(true), SETTLE_MS);
+    };
+    arm();
+    window.addEventListener("scroll", arm, { passive: true });
+    return () => {
+      clearTimeout(id);
+      window.removeEventListener("scroll", arm);
+    };
+  }, [visible, claimsSeen]);
 
   return (
   <>

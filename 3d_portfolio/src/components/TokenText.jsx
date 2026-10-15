@@ -9,9 +9,11 @@
  * subject is models, text that STREAMS is the one piece of motion that means
  * something: it is what the reader has watched a model do.
  *
- * It is a texture, not a delay. At 45ms a word, a five-word claim completes in
- * 225ms and all three are done inside ~1.2s. Content is never gated behind
- * decoration — that rule outranks the effect.
+ * It is a texture, not a delay: every word is in the DOM from the first frame
+ * and only its opacity moves, so nothing is ever withheld from a reader or a
+ * screen reader. Content is never gated behind decoration — that rule outranks
+ * the effect, and it is why this is an opacity ramp rather than a typewriter
+ * that inserts characters over time.
  *
  * WHY CSS AND NOT FRAMER
  *
@@ -33,7 +35,22 @@
  * break opportunity there, so a long claim would overflow instead of wrapping.
  * The spaces are therefore real text nodes BETWEEN the spans.
  */
-const TokenText = ({ text, start = 0, step = 45, className = "" }) => {
+/**
+ * The pace, shared by every block that streams.
+ *
+ * 85ms a word, up from 45. At 45 the whole About list finished in ~1.2s, which
+ * is fine when it plays on page load and the reader is already looking at it —
+ * and far too fast when it is triggered by arriving at a section. Reported as
+ * exactly that: "I can't humanly measure it, it's going very fast".
+ *
+ * `CLAIM_GAP` is a line's place in the queue. At 320ms three claims read as
+ * three events in order rather than one blur; the whole cascade now runs about
+ * 1.8s instead of 1.2s.
+ */
+export const TOKEN_STEP = 85;
+export const CLAIM_GAP = 320;
+
+const TokenText = ({ text, start = 0, step = TOKEN_STEP, className = "" }) => {
   const words = text.split(" ");
   return (
     <span className={className}>

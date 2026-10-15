@@ -1,5 +1,55 @@
 # Worklog
 
+## 2026-10-15: the About reveal waits for the reader to actually arrive
+
+Reported after watching it: *"I can't humanly measure it. When I'm scrolling
+up it's going very fast."* Both halves of that are a real fault, and the
+suggested fix -- wait until the section has arrived, then animate -- is the
+right one.
+
+### `useInView` fires too early by design
+
+It reports "partly on screen", which **mid-scroll is while the section is
+still flying past**. The whole cascade therefore played during the travel and
+was over before the reader came to rest. The animation was correct and nobody
+could ever see it.
+
+Two conditions now, not one: the claims must be properly on screen AND the
+reader must have stopped moving. 220ms without a scroll event is the
+difference between "this is passing through the viewport" and "this person has
+stopped here".
+
+`useInView` is deliberately NOT `once` any more. A reader who scrolls straight
+past would otherwise burn the single play on a section they never stopped at.
+Leaving it live keeps the gate armed, and whenever they do come to rest the
+cascade runs. A separate `played` flag is what makes it fire once -- a reveal
+that replays on every re-entry stops being a reveal and becomes a loop, which
+is the same fault the hero field had this morning.
+
+Measured, scripted as a real scroll rather than a jump:
+
+| | gate |
+| --- | --- |
+| Stepping through and past the section, never pausing | **`wait`** the whole way |
+| Instant arrival | `wait` |
+| +150ms still | `wait` (under the settle) |
+| +550ms still | **`run`** |
+
+### And it was too fast to read even once it fired
+
+`TOKEN_STEP` 45ms to **85ms**, `CLAIM_GAP` 180ms to **320ms**. Measured: the
+first word lands at 105ms and all 26 by **1556ms**, against ~980ms before.
+
+Both constants now live in `TokenText` and are imported by the hero and About
+alike. One effect, one speed, wherever it appears -- the pace was previously
+declared separately in two components, which is the drift this repo keeps
+having to undo.
+
+The hero keeps its own `CLAIM_START` of 620ms, because that number is about
+something else: holding the words until the headline above has finished
+landing, so the eye is not asked to watch two things at once.
+
+
 ## 2026-10-15: two overlaps, a button that read as a warning, and the other trio
 
 Four reports, all from looking at the real page.
