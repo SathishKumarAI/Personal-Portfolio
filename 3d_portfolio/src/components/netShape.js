@@ -49,3 +49,22 @@ export const LAYERS = [
  * pulse off mid-ring.
  */
 export const FIRE_MS = 900;
+
+/**
+ * How a forward pass is paced: seconds per layer gap, and seconds of quiet
+ * between passes.
+ *
+ * Shared because both fields animate the same event and a reader who switches
+ * machines should not see two different networks. A pass is three gaps, so
+ * 1.15s each puts a full pass at ~3.5s and a complete cycle at ~6.3s.
+ *
+ * On the attention budget: PR #43 measured the old field at ~4.9 activations
+ * lit at once and chose that so a reader notices the motion once and then
+ * reads over it. A pass shows 8, 16 and 12 dots across its three gaps and then
+ * NOTHING for `REST_SECONDS`, which averages near the same figure while
+ * spending a third of every cycle completely still. That is the better bargain
+ * for one budget: the eye is caught by motion that never stops, not by motion
+ * that happens and then ends.
+ */
+export const HOP_SECONDS = 1.15;
+export const REST_SECONDS = 2.8;
