@@ -1,5 +1,73 @@
 # Worklog
 
+## 2026-10-15: the field became a dense layer, because that is what it claimed to be
+
+The owner asked a question rather than reporting a bug: in a real network, does
+each input carry a value to ALL the units in the next layer, or only some?
+
+**All of them.** A dense layer's weight matrix is `(n_out x n_in)` and every
+entry exists. For the shape on the page:
+
+| Gap | A real dense MLP | What we drew |
+| --- | ---: | ---: |
+| INPUT → HIDDEN 1 | 4 x 8 = 32 | 8 |
+| HIDDEN 1 → HIDDEN 2 | 8 x 6 = 48 | 15 |
+| HIDDEN 2 → OUTPUT | 6 x 5 = 30 | 11 |
+| **Total** | **110** | **34** |
+
+So each contact icon should fan to all eight hidden units, and reached about
+two.
+
+It was not nonsense — sparse connectivity is real. A convolution gives each
+unit a local receptive field; pruned nets, locally-connected layers and
+mixture-of-experts routing all connect to a subset. The drawing was a
+locally-connected net. The problem was the mismatch: labelled `HIDDEN 1 /
+HIDDEN 2` over a `4 → 8 → 6 → 5` funnel, an ML reader reads *dense MLP*, and
+the wires then contradict the caption. Same class as the layer-wise fault
+caught earlier today.
+
+### The original objection, and why it no longer holds
+
+The sparse rule was deliberate, and the file said so: 110 edges "at any opacity
+that makes one edge visible reads as a mesh laid over the headline."
+
+That was decided when every edge was a flat uniform grey, the field was
+painting on top of the page, and the lattice was a 10:1 strip. All three are
+now fixed. **Density is paid for in alpha instead of in edge count**, and the
+structure is carried by the per-gap lighting rather than by how many lines
+there are.
+
+`FIELD_ALPHA.edge` 0.26 → **0.095**. Holding total ink exactly level would be
+0.26 × (34/110) = 0.080; a little above that, because a dense fan *should* read
+as denser than a sparse one — that is the point of drawing it.
+
+Measured, quietest frame, activations excluded:
+
+| | sparse (34 edges) | dense (110 edges) |
+| --- | ---: | ---: |
+| Ink pixels, dark | 28,326 | **85,427** (3.0x) |
+| Mean alpha, dark | 64.4 | 25.1 |
+| Per-line contrast, dark | 34.6 | 12.8 |
+| Ink pixels, light | 28,243 | **85,149** |
+| Per-line contrast, light | 41 | 15 |
+
+Per-line contrast falls below the floor fought for this morning, and that is
+fine *here*: in a dense fan no single line carries the reading, the aggregate
+texture does. Confirmed by eye in both schemes — the headline stays clean and
+the network finally looks like a network.
+
+### What it forced
+
+`MAX_SIGNALS` 32 → **64**. A pass carries every edge of one gap at once, and
+the widest gap is now 8 x 6 = 48. At 32 the second hop would have lost sixteen
+edges **silently**, because `stepSignals` draws `min(gap.length, MAX_SIGNALS)`
+rather than throwing. `netshape.test.mjs` now fails if a gap ever outgrows the
+buffer.
+
+The test that asserted the lattice stays sparse became the test that asserts it
+is fully connected — `pairs.length === from * to`, per gap.
+
+
 ## 2026-10-15: a hidden unit wired to nothing, and a light theme nobody could read
 
 Four things, all reported from the screen rather than found in the code.

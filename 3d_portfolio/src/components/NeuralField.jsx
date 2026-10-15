@@ -230,20 +230,11 @@ const NeuralField = () => {
       ctx.globalAlpha = heroVisible;
 
       if (layers.length >= 2) {
-        /* The SPARSE edge set, and the gap currently carrying drawn brighter --
-           both exactly as the 3D field does them.
-
-           This used to draw every node to every node in the next layer: 110
-           edges against the 3D field's 36. Fully connected is what an MLP
-           actually is, and the 3D file rejected it in as many words -- "at any
-           opacity that makes one edge visible reads as a mesh laid over the
-           headline". While the field was invisible the divergence cost
-           nothing; at a legible alpha the fallback rendered a dense net and
-           the WebGL version a clean lattice, which is two different drawings
-           of one diagram.
-
-           `gaps` is already the sparse set, built by gapsOf() from the same
-           rule, so the fix is to draw what the animation is already using. */
+        /* Every edge, and the gap currently carrying drawn brighter — the
+           same wiring and the same lighting the 3D field uses, from the same
+           `edgesFor`. This file used to build its own fully-connected set
+           while the WebGL one drew a sparse lattice: two different drawings of
+           one diagram, which is the drift netShape.js exists to stop. */
         ctx.lineWidth = 0.9;
         const a = alphaFor(scheme);
         gaps.forEach((gap, k) => {

@@ -79,9 +79,9 @@
  *  - one renderer, one scene, no post-processing, no textures, no shadows
  *  - `powerPreference: "low-power"`, antialias off, DPR capped at 1.5
  *  - the loop stops when the hero leaves the screen and when the tab hides
- *  - 36 edges, and at most one forward pass in flight — 16 dots at the widest
- *    gap, none at all between passes; geometry is rebuilt when the interface
- *    moves, never per frame
+ *  - 110 edges at a tenth of the alpha, and at most one forward pass in
+ *    flight — 48 dots at the widest gap, none at all between passes; geometry
+ *    is rebuilt when the interface moves, never per frame
  */
 
 /**
@@ -117,14 +117,18 @@ import {
 
 const HIDDEN_DEPTH = [170, -190]; // toward the reader, then away
 /**
- * Ceiling on dots drawn in one frame, which is now the widest GAP rather than
- * a budget of independent activations. The widest gap is HIDDEN 1 -> HIDDEN 2:
- * eight units reaching two apiece, so sixteen edges carry at once. 32 leaves
- * room for the shape to be retuned in netShape.js without silently clipping a
- * front — `stepSignals` draws `min(gap.length, MAX_SIGNALS)`, so overflowing
- * it would drop edges from the pass rather than throw.
+ * Ceiling on dots drawn in one frame, which is the widest GAP rather than a
+ * budget of independent activations: a forward pass carries every edge of one
+ * gap at once.
+ *
+ * Fully connected, the widest gap is HIDDEN 1 -> HIDDEN 2 at 8 x 6 = 48. The
+ * old value of 32 was sized for the sparse lattice and would now clip sixteen
+ * edges out of every second hop -- silently, because `stepSignals` draws
+ * `min(gap.length, MAX_SIGNALS)` rather than throwing. 64 leaves room for the
+ * shape in netShape.js to be retuned without that happening again, and
+ * `netshape.test.mjs` fails if a gap ever outgrows it.
  */
-const MAX_SIGNALS = 32;
+const MAX_SIGNALS = 64;
 
 const FOV = 50;
 
@@ -568,12 +572,10 @@ export const start = (anchor) => {
     scene.add(nodes);
 
     /**
-     * Sparse on purpose: each node reaches the two nodes opposite it in the
-     * next layer, not all of them. Fully connected is what an MLP actually is
-     * and it was the first thing built — 110 edges, which at any opacity that
-     * makes one edge visible reads as a mesh laid over the headline. The
-     * repo's rule for ambient work is that it must not cross text; 36 edges
-     * still says "network" and leaves the type alone.
+     * Fully connected, which is what a dense layer is: every unit reads every
+     * unit of the layer before it. See `edgesFor` in netShape.js for why the
+     * sparse version that used to live here was the drawing contradicting its
+     * own captions, and for what pays the visual cost (alpha, not edge count).
      */
     // Grouped BY HOP as well as flattened. The flat list is what the geometry
     // wants; `hops[k]` is what a wave needs — every edge crossing the gap from

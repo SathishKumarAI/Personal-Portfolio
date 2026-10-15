@@ -93,7 +93,15 @@ export const REST_SECONDS = 2.8;
  * thing that says "network" and it was the thing nobody could see.
  */
 export const FIELD_ALPHA = {
-  edge: 0.26,
+  /**
+   * 0.095, down from 0.26, because the lattice went from 34 edges to 110.
+   * Alpha is what pays for density: at the old value a fully connected net is
+   * three times the ink and genuinely does read as a mesh over the headline.
+   * 0.26 * (34/110) = 0.080 would hold total ink exactly level; a little above
+   * that, because a dense fan SHOULD read as denser than a sparse one -- that
+   * is the whole point of drawing it.
+   */
+  edge: 0.095,
   node: 0.62,
   signal: 0.9,
   trail: 0.22,
@@ -166,52 +174,32 @@ export const inkToken = (scheme) =>
 /**
  * Every edge crossing one layer gap, as [from, to] pairs.
  *
- * Lives here because both fields drew this and each had its own copy of the
- * rule -- two chances for the wiring to diverge between the WebGL field and
- * the fallback, which is the thing this module exists to stop.
+ * FULLY CONNECTED, because that is what the diagram claims to be.
  *
- * TWO PASSES, AND THE SECOND ONE IS THE BUG FIX.
+ * A dense layer's weight matrix is (n_out x n_in) and every entry exists:
+ * every input reaches every unit of the next layer. Labelled HIDDEN 1 /
+ * HIDDEN 2 over a 4 -> 8 -> 6 -> 5 funnel, an ML reader reads "dense MLP", so
+ * anything less is the drawing contradicting its own caption.
  *
- * The first pass is the original rule: each source reaches the two units
- * opposite it in the next layer, not all of them. Fully connected is what an
- * MLP actually is, and at 110 edges it reads as a mesh laid over the headline.
+ * It used to draw each node to the two units opposite it: 34 edges against the
+ * 110 a dense net has. That is a real architecture -- locally connected, which
+ * is what a convolution is -- but it is not the one the labels name, and the
+ * owner spotted the gap by eye before anyone counted it.
  *
- * That rule alone leaves units stranded whenever a layer EXPANDS. From four
- * inputs into eight hidden units each source claims two, which covers seven of
- * the eight -- and the last source wastes its second edge on a duplicate,
- * because `centreOf + 1` clamps to the final index it already took. So HIDDEN
- * 1's top unit was drawn with no incoming connection at all, and the gap
- * carried one fewer activation than it had edges to show.
+ * The original objection to 110 was visual: "at any opacity that makes one
+ * edge visible reads as a mesh laid over the headline". That was decided when
+ * every edge was a flat uniform grey. The density is now paid for in alpha
+ * instead -- see FIELD_ALPHA.edge, cut to keep total ink close to the sparse
+ * version -- and the structure is carried by the per-gap lighting rather than
+ * by the count of lines.
  *
- * The second pass fixes it: any target nothing reached gets an edge to the
- * source opposite IT. A drawn unit with no wires is not a quiet unit, it is a
- * drawing of something that is not a network.
- *
- * The `seen` set also drops the duplicates the first pass produces, so a pair
- * is never drawn twice at double brightness.
+ * Lives here because both fields draw it, and each used to own a copy of the
+ * rule: two chances for the WebGL version and the fallback to disagree about
+ * what the network is.
  */
 export const edgesFor = (from, to) => {
   const pairs = [];
-  const seen = new Set();
-  const reached = new Array(to.length).fill(false);
-  const add = (fi, ti) => {
-    const key = `${fi}:${ti}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    reached[ti] = true;
-    pairs.push([from[fi], to[ti]]);
-  };
-  const clamp = (v, n) => Math.min(n - 1, Math.max(0, v));
-
-  from.forEach((_, fi) => {
-    const c = Math.round(((fi + 0.5) / from.length) * to.length - 0.5);
-    for (const d of [0, 1]) add(fi, clamp(c + d, to.length));
-  });
-  to.forEach((_, ti) => {
-    if (reached[ti]) return;
-    const c = Math.round(((ti + 0.5) / to.length) * from.length - 0.5);
-    add(clamp(c, from.length), ti);
-  });
+  for (const a of from) for (const b of to) pairs.push([a, b]);
   return pairs;
 };
 
