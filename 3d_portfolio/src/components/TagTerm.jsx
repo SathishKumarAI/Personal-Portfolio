@@ -149,6 +149,15 @@ const CHIP =
  */
 const FLOW = "font-mono text-chip inline-flex items-center min-h-11 transition-colors";
 
+/**
+ * The same bare treatment, without the 44px touch floor.
+ *
+ * `FLOW` carries `min-h-11` because on a phone every term is a tap target. The
+ * Stack columns are desktop-only and pointer-driven, and six stacked 44px rows
+ * is 264px of column for six words. This keeps the ink and drops the floor.
+ */
+const FLOW_DENSE = "font-mono text-chip inline-flex items-center transition-colors";
+
 // Idle and active tone for each tier. Kept out of the component so the two
 // tiers can be compared side by side instead of read out of nested ternaries.
 const TONES = {
@@ -175,6 +184,7 @@ const TagTerm = ({
   plain = false,
   primary = false,
   flow = false,
+  dense = false,
   // Shared-panel mode. See `show` below: supplying `onDefine` turns this chip
   // from something that owns a popover into something that reports to one.
   onDefine = null,
@@ -264,7 +274,7 @@ const TagTerm = ({
   const tone = flow
     ? (primary ? FLOW_TONES.solid : FLOW_TONES.outline)
     : (primary ? TONES.solid : TONES.outline);
-  const shape = flow ? FLOW : CHIP;
+  const shape = flow ? (dense ? FLOW_DENSE : FLOW) : CHIP;
 
   /**
    * `onDefine` switches this chip from OWNING a popover to REPORTING to one.

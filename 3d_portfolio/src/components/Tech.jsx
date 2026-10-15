@@ -5,8 +5,8 @@ import { fadeIn } from "../utils/motion";
 import Reveal from "./Reveal";
 import { SectionWrapper } from "../hoc";
 import SectionHead from "./SectionHead";
-import TagTerm from "./TagTerm";
 import TokenStream from "./TokenStream";
+import TagTerm from "./TagTerm";
 
 // A set, not a sum: several tools appear in more than one group, and counting
 // the arrays would claim more than he lists.
@@ -40,7 +40,7 @@ const DefinitionPanel = ({ entry, pinned }) => (
        fault this panel exists to fix: a translucent surface carrying prose
        lets whatever is behind it bleed into the words. The old popover was
        `rgba(255 255 255 / 0.62)` and unreadable for exactly that reason. */
-    className="hidden md:flex mt-5 min-h-[9rem] flex-col rounded-2xl border border-line bg-tertiary p-4"
+    className="hidden md:flex min-h-[9rem] flex-col rounded-2xl border border-line bg-tertiary p-4"
     // Announced, but politely: the reader asked for this by pointing at a
     // chip, so it is a result, not an alert.
     aria-live="polite"
@@ -108,29 +108,44 @@ const Tech = () => {
 
   return (
     <>
-      {/* The token stream lives here and nowhere else: this is the section with
-          the LLM / RAG group, so a stream of sub-word pieces illustrates the
-          content instead of decorating the page. */}
+      {/* The token stream, back and boxed.
+          It belongs here -- this is the section with the LLM / RAG group, so a
+          stream of sub-word pieces illustrates the content rather than
+          decorating the page. What was wrong was its SIZE, not its presence:
+          at `w-[52%]` it measured a 416x106px overlap with the intro paragraph
+          (the whole paragraph) and another 416x19 with the hint. Deleting it
+          was the wrong correction.
+
+          Confined to the top-right block instead, which is the one region the
+          new layout genuinely leaves empty -- above the definition panel and
+          clear of the text column. The repo's rule is that ambient work must
+          not cross text, not that it cannot exist. */}
       <TokenStream />
 
-      {/* HEADER IN TWO COLUMNS.
-          Stacked, this section opened with 395px of header above 419px of
-          content, and the whole right half sat empty behind a decorative
-          canvas. Heading and rail take the left; the argument, the hint and
-          the definition panel take the space that was doing nothing.
-          One column below `md`, where the intro is hidden anyway. */}
-      <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,21rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] md:gap-x-10 md:items-start">
+      {/* HEADER IN TWO COLUMNS, and the argument stays with the heading.
+          The first attempt put the intro in the right column and the panel
+          under it. That left 244px of measured dead space under "Stack" on the
+          left, because the right column was the taller of the two and the grid
+          waits for both. Reading order suffered too: the eye had to cross the
+          page to find the sentence that explains the section.
+          Heading and argument together on the left; the panel takes the right,
+          which is the half that was empty to begin with.
+
+          `items-end`, not `items-start`. Aligned to the top, the panel sat at
+          the top right while the tools it describes were ~400px below it, so
+          pointing at a chip meant reading the answer at the other end of the
+          section. Dropped to the baseline of the header it sits directly above
+          the columns, and the slack moves up beside the display-size heading,
+          where open space reads as intent rather than as a gap. */}
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:gap-x-12 md:items-end">
         <div className="min-w-0">
           <SectionHead title="Stack" meta={STACK_META} />
 
-        </div>
-
-        <div className="min-w-0">
           <motion.p
             variants={fadeIn("", "", 0.1, 1)}
             // Desktop only. On a phone this section is a list of tools and the
             // argument for them is three lines the reader scrolls past.
-            className="hidden md:block font-sans text-secondary text-body leading-[1.65]"
+            className="hidden md:block mt-4 max-w-[46rem] font-sans text-secondary text-body leading-[1.65]"
           >
             Not a badge collection: this is what I actually reach for, grouped
             by where it sits on the path from raw data to a running product. I
@@ -159,9 +174,9 @@ const Tech = () => {
             </svg>
             {TERM_HINT}
           </motion.p>
-
-          <DefinitionPanel entry={shown} pinned={Boolean(pinned)} />
         </div>
+
+        <DefinitionPanel entry={shown} pinned={Boolean(pinned)} />
       </div>
 
       {/* Two shapes, because a phone and a desktop want different things here.
@@ -227,40 +242,29 @@ const Tech = () => {
             Reveal stays the motion wrapper and the card is a plain child of it,
             so the pointermove handler writes --mx/--my to an element that
             framer-motion is not also writing a style attribute to. */}
-        {/* THE PIPELINE RAIL. The intro claims the six groups are ordered
-            along a path from raw data to a running product, and until now
-            nothing on the page showed it: a 3x2 grid of cards states six
-            categories and throws the ordering away. The rail draws the
-            claim, and now the columns under it do too.
+        {/* THE PATH, SAID ONCE.
+            This was a segmented rail: six tinted bars with "raw data" and
+            "running product" at the ends. It was drawn when the areas were a
+            3x2 grid of cards, which states six categories and throws the
+            ordering away -- the rail had to put the ordering back.
 
-            It repeats none of the card titles on purpose — six titles above
-            six titled columns is the same six words read twice. It carries
-            the two end labels, which are the part the columns cannot say,
-            and the six tints, which double as the legend for the dots.
+            The columns ARE the ordering now. They run left to right, they are
+            numbered 01-06, and each carries its own tint bar. The rail was
+            therefore saying the same thing a third time, which is why it read
+            as decoration nobody could interpret: "what does RAW DATA mean
+            here?" is the right question to ask of a label with no sentence
+            around it.
 
-            aria-hidden, and correctly so: it is a picture of an ordering the
-            intro states in words, and the columns sit in that order in the
-            DOM. A screen reader loses nothing. */}
+            What survives is the part the columns genuinely cannot say -- where
+            the path starts and where it ends -- written as the two halves of a
+            sentence rather than as two bare labels. */}
         <Reveal
           delay={0.1}
-          aria-hidden="true"
-          className="hidden md:flex items-center gap-3 mt-8 font-mono text-micro text-faint uppercase tracking-[0.14em]"
+          className="hidden md:flex items-baseline justify-between gap-4 mt-10 font-mono text-micro text-faint uppercase tracking-[0.14em]"
         >
-          <span className="shrink-0">raw data</span>
-          <span className="flex flex-1 items-center gap-[3px]">
-            {stackGroups.map((g, i) => (
-              <span
-                key={g.title}
-                className="stack-seg h-[3px] flex-1 rounded-full"
-                style={{
-                  background: `rgb(var(${g.tint}))`,
-                  opacity: active === null ? 0.45 : active === i ? 1 : 0.16,
-                  transform: active === i ? "scaleY(2.4)" : "scaleY(1)",
-                }}
-              />
-            ))}
-          </span>
-          <span className="shrink-0">running product</span>
+          <span>from raw data</span>
+          <span aria-hidden="true" className="h-px flex-1 bg-line" />
+          <span>to a running product</span>
         </Reveal>
 
         {/* SIX COLUMNS, ONE ROW — the pipeline IS the layout.
@@ -314,14 +318,29 @@ const Tech = () => {
                     {g.note}
                   </p>
                 )}
-                {/* Stacked, not wrapped. In a 200px column a wrapped row packs
-                    one-and-a-bit chips per line and leaves ragged gaps; one per
-                    line reads as a list of tools, which is what it is. */}
-                <div className="mt-3 flex flex-col items-start gap-1.5">
+                {/* BARE WORDS, not boxes — the treatment this file already
+                    uses on a phone, for the reason it already gives there:
+                    "the dotted underline does all the work the border was
+                    doing... same information, a fifth of the ink."
+
+                    Boxed, a 200px column could not hold "Detection & tracking"
+                    or "Exploratory analysis" on one line, so those two chips
+                    broke across two lines and stood 45px tall against 25px for
+                    every other chip — measured. And the primary tier was a
+                    solid near-black fill, so twelve of thirty-three tools were
+                    the heaviest marks in the section, competing with the
+                    heading for no stated reason.
+
+                    Bare, a long name simply wraps as text, and the tier is
+                    carried by weight and colour the way the rest of the page
+                    carries emphasis. */}
+                <div className="mt-3 flex flex-col items-start gap-y-1">
                   {g.items.map((it) => (
                     <TagTerm
                       key={it}
                       name={it}
+                      flow
+                      dense
                       primary={g.primary?.includes(it)}
                       onDefine={setHovered}
                       onPin={(e) => setPinned((p) => (p?.name === e.name ? null : e))}

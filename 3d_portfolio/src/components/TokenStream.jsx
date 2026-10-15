@@ -111,9 +111,14 @@ const TokenStream = () => {
       // piece from end to end, and the sentence turns over once a lap.
       ctx.font = '500 12px "JetBrains Mono Variable", ui-monospace, monospace';
       ctx.textBaseline = "middle";
-      const COUNT = 12;
+      // Twelve was tuned for a 52%-wide band. The run is longer now, so the
+      // same count would leave visible gaps between tokens.
+      const COUNT = 16;
       for (let i = 0; i < COUNT; i++) {
-        const raw = time * 0.05 + i / COUNT;
+        // 0.032, down from 0.05: a lap is ~31s rather than ~20s. Travel time
+        // is a function of SPEED, not of width, so widening the band without
+        // this would simply have made every token move faster across it.
+        const raw = time * 0.032 + i / COUNT;
         const p = raw % 1;
         const emission = Math.floor(raw) * COUNT + i; // monotonic, so the text advances
         const x = p * (w + 180) - 90;
@@ -182,7 +187,23 @@ const TokenStream = () => {
       // cards: section-scoped wallpaper is still wallpaper. It now occupies only
       // the empty strip to the right of the intro text, above the grid, so it
       // crosses no content at all.
-      className="pointer-events-none absolute top-0 right-0 -z-10 hidden rail:block h-[22rem] w-[52%] opacity-[0.95]"
+      /* The band to the RIGHT of the heading, running to the section's edge.
+         At `w-[52%] h-[22rem]` this canvas crossed the intro paragraph -- a
+         measured 416x106px overlap with the whole paragraph -- and the repo's
+         rule is that ambient work must not cross text. Boxing it into the
+         corner fixed that and cost the effect its run: a token had a few
+         hundred pixels to cross.
+         `left-[33%]` starts it just past "Stack" and `right-0` gives it the
+         whole remaining width, which is the longest clear horizontal run in
+         the section. It sits above the intro and above the definition panel,
+         so it still crosses nothing. */
+      /* EXPLICIT WIDTH, not `left` + `right`. A <canvas> is a REPLACED
+         element: given both insets and `width: auto` it does not stretch, it
+         falls back to its intrinsic width and ignores `right`. Measured when
+         this was `left-[33%] right-0`: 416px wide instead of the ~1060px the
+         insets implied, which put it straight back over the heading. The hero
+         field hit the identical trap with `renderer.setSize(w, h, false)`. */
+      className="pointer-events-none absolute top-[6.5rem] left-[33%] w-[60%] -z-10 hidden rail:block h-[10rem] opacity-[0.95]"
     />
   );
 };
