@@ -37,6 +37,17 @@ const MAP = {
   // better reason to show nothing than any substitute would be.
   DynamoDB: null,
   DuckDB: "duckdb",
+  Snowflake: "snowflake",
+  Databricks: "databricks",
+  // Not in simple-icons, and not companies with a mark to borrow:
+  // drawn in conceptIcons.js instead.
+  "Unity Catalog": null,
+  Guardrails: null,
+  LangSmith: null,
+  Ragas: null,
+  "IAM & RBAC": null,
+  "Secrets management": null,
+  "PII & anonymisation": null,
   Airflow: "apacheairflow",
   S3: null,
   SQL: null,
@@ -95,7 +106,6 @@ const MAP = {
   // named in roles and projects
   Neo4j: "neo4j",
   Azure: null, // see the Amazon/Microsoft note above
-  Databricks: "databricks",
   "Applied ML": null,
   Multimodal: null,
   Product: null,

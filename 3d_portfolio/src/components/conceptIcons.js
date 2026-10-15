@@ -181,3 +181,36 @@ for (const [role, src] of Object.entries(ROLE_ALIAS)) {
   CONCEPT_ICONS[role] = CONCEPT_ICONS[src];
 }
 Object.assign(CONCEPT_ICONS, ROLE_DRAWN);
+
+/* Added with the 2026-10-15 production-gaps pass: security and governance
+   terms, LLM evaluation, and the roles the cloud matrix gained alongside
+   them. Same vocabulary as everything above -- lines, arcs, dots at 1.8px. */
+const LATER_DRAWN = {
+  // A catalogue card with a lock: what exists, and who may see it.
+  "Unity Catalog": { d: "M4.5 4.5h15v15h-15z M4.5 9h15 M8 4.5v4.5 M9 13h6v4.5H9z M10.5 13v-1.5a1.5 1.5 0 0 1 3 0V13", s: 1 },
+  // A shield across the output path: checked before it leaves.
+  Guardrails: { d: "M12 3.5 19 6v6c0 4-3 6.5-7 8-4-1.5-7-4-7-8V6z M8.5 12l2.5 2.5 4.5-5", s: 1 },
+  // A trace: every step the call took, in order.
+  LangSmith: { d: "M4 6.5h4 M4 12h7 M4 17.5h5 M10.5 6.5h9.5 M13.5 12h6.5 M11.5 17.5h8.5 M9.2 6.5h.01 M12.2 12h.01 M10.2 17.5h.01", s: 1 },
+  // A score against a reference: the answer measured, not read.
+  Ragas: { d: "M5 4.5h8l3.5 3.5v5 M5 4.5v15h7 M8 9h5 M8 12.5h3 M18 15.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7 M16.6 19l1 1 2.2-2.4", s: 1 },
+  // A person and a key: who may do what.
+  "IAM & RBAC": { d: "M8 8.5a2.8 2.8 0 1 0 0-.01 M3.5 19c0-2.9 1.9-4.4 4.5-4.4 M14 14.5h6.5 M20.5 14.5v3 M17.5 14.5v2", s: 1 },
+  // A key inside a safe.
+  "Secrets management": { d: "M4.5 6.5h15v12h-15z M10 12.5a2 2 0 1 0 0-.01 M12 12.5h5 M15.5 12.5v2.5", s: 1 },
+  // A face, redacted.
+  "PII & anonymisation": { d: "M12 5.5a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8 M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5 M3.5 8l17 9", s: 1 },
+};
+
+const LATER_ALIAS = {
+  "Guardrails & safety": "Guardrails",
+  "LLM evaluation": "Ragas",
+  "Data privacy": "PII & anonymisation",
+  "Audit & lineage": "Unity Catalog",
+  Lakehouse: "SQL",
+};
+
+Object.assign(CONCEPT_ICONS, LATER_DRAWN);
+for (const [role, src] of Object.entries(LATER_ALIAS)) {
+  CONCEPT_ICONS[role] = CONCEPT_ICONS[src];
+}

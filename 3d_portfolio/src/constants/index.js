@@ -260,6 +260,15 @@ export const glossary = {
   Neo4j: { def: "A graph database: stores data as nodes and the relationships between them, which makes connected questions cheap to ask.", link: "https://neo4j.com/", full: "Neo4j graph database" },
   Azure: { def: "Microsoft's cloud platform, the servers, storage and managed services an app runs on.", link: "https://azure.microsoft.com/", full: "Microsoft Azure" },
   Databricks: { def: "A platform for large-scale data and ML work, built around Apache Spark.", link: "https://www.databricks.com/", full: "Databricks Lakehouse Platform" },
+  Snowflake: { def: "A cloud data warehouse that separates storage from compute, so a query can scale without moving the data.", link: "https://www.snowflake.com/" },
+  Databricks: { def: "A lakehouse platform: Spark, notebooks and ML on files in object storage, instead of a separate warehouse.", link: "https://www.databricks.com/" },
+  "Unity Catalog": { def: "One place that records what data and models exist, who owns them and who may read them, across workspaces.", link: "https://www.databricks.com/product/unity-catalog" },
+  Guardrails: { def: "Checks on what a model may receive and emit — blocked topics, PII, format, grounding — enforced before an answer reaches anyone.", link: "https://www.guardrailsai.com/" },
+  LangSmith: { def: "Traces every step an LLM app took and scores the result, so a bad answer can be explained rather than guessed at.", link: "https://www.langchain.com/langsmith" },
+  Ragas: { def: "Scores a RAG system on whether its answer is grounded in what it retrieved, not on whether it sounds right.", link: "https://docs.ragas.io/" },
+  "IAM & RBAC": { def: "Who may do what, to which resource, written as policy rather than left to whoever created the bucket.", link: "https://en.wikipedia.org/wiki/Identity_management", full: "Identity and access management" },
+  "Secrets management": { def: "Keys and tokens held in one audited place, rotated, and never committed to a repository.", link: "https://en.wikipedia.org/wiki/Key_management" },
+  "PII & anonymisation": { def: "Finding personal data and masking it before it reaches a model, a log or a notebook.", link: "https://en.wikipedia.org/wiki/Personal_data", full: "Personally identifiable information" },
   /* THE ROLES, and these are the entries that make the cloud view readable.
      Reported: "you are saying Cloud Storage, but it doesn't mean anything
      here." Right — and the fix belongs on the ROLE rather than the service,
@@ -300,6 +309,11 @@ export const glossary = {
   "Secrets": { def: "Keeps keys and passwords out of the code and out of the repository.", link: "https://en.wikipedia.org/wiki/Key_management" },
   "Identity & access": { def: "Who is allowed to do what. The thing that decides whether a request is permitted at all.", link: "https://en.wikipedia.org/wiki/Identity_management" },
   "Monitoring & logs": { def: "Tells you it broke, and ideally why, before a user does.", link: "https://en.wikipedia.org/wiki/Observability_(software)" },
+  "Guardrails & safety": { def: "Stops a model answering with something it should not: blocked topics, leaked PII, ungrounded claims.", link: "https://en.wikipedia.org/wiki/AI_safety" },
+  "LLM evaluation": { def: "Scores generated answers against something checkable — grounding, correctness, refusal — rather than a reading of the output.", link: "https://en.wikipedia.org/wiki/Language_model_benchmark" },
+  Lakehouse: { def: "Warehouse behaviour over files in object storage: one copy of the data, queried and trained on in place.", link: "https://en.wikipedia.org/wiki/Data_lakehouse" },
+  "Data privacy": { def: "Finding and masking personal data before it reaches a model, a log or a dashboard.", link: "https://en.wikipedia.org/wiki/Information_privacy" },
+  "Audit & lineage": { def: "Who touched what, and where a number came from. The question every regulated system is eventually asked.", link: "https://en.wikipedia.org/wiki/Data_lineage" },
   "Cost & budgets": { def: "What it costs to run, per team and per service. The thing that decides whether it keeps running.", link: "https://en.wikipedia.org/wiki/FinOps" },
   // Added 2026-10-15. The six groups had drifted behind the work: the LLM area
   // named no model hub and no serving runtime, and the data areas named no
@@ -382,7 +396,7 @@ export const stackGroups = [
     dot: "bg-cat-data",
     tint: "--c-cat-data",
     primary: ["PySpark", "SQL"],
-    items: ["PySpark", "Airflow", "ETL pipelines", "PostgreSQL", "DynamoDB", "DuckDB", "S3", "SQL"],
+    items: ["PySpark", "Airflow", "ETL pipelines", "PostgreSQL", "DynamoDB", "DuckDB", "S3", "SQL", "Snowflake", "Databricks", "Unity Catalog"],
   },
   {
     title: "Data science",
@@ -398,7 +412,7 @@ export const stackGroups = [
     dot: "bg-cat-llm",
     tint: "--c-cat-llm",
     primary: ["Hugging Face", "LangChain"],
-    items: ["Hugging Face", "Transformers", "LangChain", "LangGraph", "Fine-tuning", "vLLM", "Ollama", "Claude", "Pinecone", "Embeddings"],
+    items: ["Hugging Face", "Transformers", "LangChain", "LangGraph", "Fine-tuning", "vLLM", "Ollama", "Claude", "Pinecone", "Embeddings", "Guardrails", "LangSmith", "Ragas"],
   },
   {
     title: "Computer vision",
@@ -414,7 +428,7 @@ export const stackGroups = [
     dot: "bg-cat-mlops",
     tint: "--c-cat-mlops",
     primary: ["MLflow", "Docker"],
-    items: ["MLflow", "Weights & Biases", "DVC", "Docker", "GitHub Actions", "Kubernetes", "Helm"],
+    items: ["MLflow", "Weights & Biases", "DVC", "Docker", "GitHub Actions", "Kubernetes", "Helm", "IAM & RBAC", "Secrets management", "PII & anonymisation"],
   },
   {
     title: "Backend & apps",
@@ -542,7 +556,7 @@ export const systemPlanes = [
         id: "store",
         title: "Store",
         role: "Keep it addressable",
-        items: ["S3", "PostgreSQL", "DynamoDB", "DuckDB", "SQL"],
+        items: ["S3", "PostgreSQL", "DynamoDB", "DuckDB", "SQL", "Snowflake", "Databricks", "Unity Catalog", "PII & anonymisation"],
       },
       {
         id: "shape",
@@ -594,6 +608,12 @@ export const systemPlanes = [
         items: ["Hugging Face", "Transformers", "Fine-tuning"],
       },
       {
+        id: "providers",
+        title: "Hosted models",
+        role: "Frontier models called, not run",
+        items: ["Claude"],
+      },
+      {
         id: "retrieve",
         title: "Language — retrieve",
         role: "Ground the answer in real sources",
@@ -610,14 +630,14 @@ export const systemPlanes = [
       {
         id: "inference",
         title: "Inference",
-        role: "Run the model on real traffic",
-        items: ["vLLM", "Ollama", "Claude"],
+        role: "Run a model on your own hardware",
+        items: ["vLLM", "Ollama"],
       },
       {
         id: "api",
         title: "API",
         role: "A contract, and bad input stopped at the edge",
-        items: ["FastAPI", "Pydantic"],
+        items: ["FastAPI", "Pydantic", "Guardrails"],
       },
       {
         id: "interface",
@@ -652,7 +672,7 @@ export const systemSubstrate = {
       id: "package",
       title: "Package & run",
       role: "Same behaviour on a laptop and a cluster",
-      items: ["Docker", "Kubernetes", "Helm"],
+      items: ["Docker", "Kubernetes", "Helm", "IAM & RBAC", "Secrets management"],
     },
     {
       id: "deliver",
@@ -664,7 +684,7 @@ export const systemSubstrate = {
       id: "track",
       title: "Track & evaluate",
       role: "Know which run produced which number",
-      items: ["MLflow", "Weights & Biases", "DVC", "Evaluation"],
+      items: ["MLflow", "Weights & Biases", "DVC", "Evaluation", "LangSmith", "Ragas"],
     },
   ],
 };
@@ -748,6 +768,9 @@ export const platformMatrix = [
   { plane: "Data", role: "Key-value store", node: "store", mine: "DynamoDB", aws: "DynamoDB", gcp: "Firestore", azure: "Cosmos DB" },
   { plane: "Data", role: "Warehouse", node: "store", mine: "SQL", aws: "Redshift", gcp: "BigQuery", azure: "Fabric Warehouse" },
   { plane: "Data", role: "Query engine", node: "shape", mine: "DuckDB", aws: "Athena", gcp: "BigQuery", azure: "Fabric SQL analytics" },
+  { plane: "Data", role: "Lakehouse", node: "store", mine: "Databricks", aws: "Lake Formation", gcp: "BigLake", azure: "Fabric Lakehouse" },
+  { plane: "Data", role: "Data privacy", node: "store", mine: "PII & anonymisation", aws: "Macie", gcp: "Sensitive Data Protection", azure: "Purview DLP" },
+  { plane: "Substrate", role: "Audit & lineage", node: "track", mine: "Unity Catalog", aws: "CloudTrail", gcp: "Cloud Audit Logs", azure: "Monitor audit logs" },
   { plane: "Data", role: "Catalog & governance", node: "store", mine: null, aws: "Glue Catalog / Lake Formation", gcp: "Dataplex Universal Catalog", azure: "Microsoft Purview" },
   { plane: "Data", role: "Notebooks", node: "shape", mine: "Jupyter", aws: "SageMaker AI Studio", gcp: "Vertex AI Workbench", azure: "Azure ML Studio" },
   // The owner's own example, and a fair one: Power BI is what an Azure shop
@@ -760,8 +783,10 @@ export const platformMatrix = [
   { plane: "Model", role: "Model registry", node: "track", mine: "MLflow", aws: "SageMaker AI Model Registry", gcp: "Vertex AI Model Registry", azure: "Azure ML Registry" },
   { plane: "Model", role: "ML pipelines", node: "track", mine: null, aws: "SageMaker AI Pipelines", gcp: "Vertex AI Pipelines", azure: "Azure ML Pipelines" },
   { plane: "Model", role: "Feature store", node: "shape", mine: null, aws: "SageMaker AI Feature Store", gcp: "Vertex AI Feature Store", azure: "Azure ML Feature Store" },
+  { plane: "Model", role: "Guardrails & safety", node: "api", mine: "Guardrails", aws: "Bedrock Guardrails", gcp: "Vertex AI safety filters", azure: "AI Content Safety" },
+  { plane: "Model", role: "LLM evaluation", node: "track", mine: "Ragas", aws: "Bedrock Evaluations", gcp: "Vertex AI Gen AI evaluation", azure: "AI Foundry evaluations" },
   { plane: "Model", role: "Vector index", node: "retrieve", mine: "Pinecone", aws: "OpenSearch Serverless (vector)", gcp: "Vertex Vector Search", azure: "AI Search" },
-  { plane: "Model", role: "Managed LLM", node: "adapt", mine: "Claude", aws: "Bedrock", gcp: "Vertex AI", azure: "Azure OpenAI" },
+  { plane: "Model", role: "Managed LLM", node: "providers", mine: "Claude", aws: "Bedrock", gcp: "Vertex AI", azure: "Azure OpenAI" },
   { plane: "Model", role: "Document & vision AI", node: "detect", mine: "OpenCV", aws: "Textract / Rekognition", gcp: "Document AI / Vision AI", azure: "AI Document Intelligence" },
 
   // --- serving plane ------------------------------------------------------
@@ -776,8 +801,8 @@ export const platformMatrix = [
   { plane: "Substrate", role: "Container runtime", node: "package", mine: "Kubernetes", aws: "EKS", gcp: "GKE", azure: "AKS" },
   { plane: "Substrate", role: "Container registry", node: "package", mine: null, aws: "ECR", gcp: "Artifact Registry", azure: "ACR" },
   { plane: "Substrate", role: "CI/CD", node: "deliver", mine: "GitHub Actions", aws: "CodePipeline", gcp: "Cloud Build", azure: "Azure Pipelines" },
-  { plane: "Substrate", role: "Secrets", node: "package", mine: null, aws: "Secrets Manager", gcp: "Secret Manager", azure: "Key Vault" },
-  { plane: "Substrate", role: "Identity & access", node: "package", mine: null, aws: "IAM", gcp: "IAM", azure: "Entra ID" },
+  { plane: "Substrate", role: "Secrets", node: "package", mine: "Secrets management", aws: "Secrets Manager", gcp: "Secret Manager", azure: "Key Vault" },
+  { plane: "Substrate", role: "Identity & access", node: "package", mine: "IAM & RBAC", aws: "IAM", gcp: "IAM", azure: "Entra ID" },
   { plane: "Substrate", role: "Monitoring & logs", node: "track", mine: null, aws: "CloudWatch", gcp: "Cloud Monitoring", azure: "Azure Monitor" },
   { plane: "Substrate", role: "Cost & budgets", node: "track", mine: null, aws: "Cost Explorer", gcp: "Cloud Billing", azure: "Cost Management" },
 ];

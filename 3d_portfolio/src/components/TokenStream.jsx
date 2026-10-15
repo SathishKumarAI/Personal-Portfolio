@@ -207,10 +207,12 @@ const TokenStream = () => {
          but y=161 at 1281px, because its question wrapped to two lines -- so
          the height had to be responsive to chase it.
 
-         The toggle has moved beside the heading and the definition panel now
-         stretches from the header's top edge, which is y=152 at every width.
-         So the only thing this band has to clear sits at a constant y, and
-         80px + 56px = 136px clears it by 16px everywhere.
+         The band sits in the section's TOP PADDING, which is the only strip
+         on this page where an ambient canvas crosses nothing by construction.
+         That is why Stack's padding is asymmetric: trimming it evenly moved
+         the content up under the ribbon and put a measured 466x44px of canvas
+         behind the definition panel. Band 52px + 52px = 104px of the ~112px
+         the padding gives it. Re-measure if either number is touched.
 
          A long thin ribbon rather than a short wide block, and that is the
          right trade for this effect: the ask was for the stream to "take more
@@ -225,7 +227,7 @@ const TokenStream = () => {
          this was `left-[33%] right-0`: 416px wide instead of the ~1060px the
          insets implied, which put it straight back over the heading. The hero
          field hit the identical trap with `renderer.setSize(w, h, false)`. */
-      className="pointer-events-none absolute top-[5rem] left-[33%] w-[60%] -z-10 hidden rail:block h-[3.5rem] opacity-[0.95]"
+      className="pointer-events-none absolute top-[3.25rem] left-[33%] w-[60%] -z-10 hidden rail:block h-[3.25rem] opacity-[0.95]"
     />
   );
 };
