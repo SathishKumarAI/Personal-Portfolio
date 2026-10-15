@@ -187,6 +187,13 @@ const TagTerm = ({
   dense = false,
   // Shared-panel mode. See `show` below: supplying `onDefine` turns this chip
   // from something that owns a popover into something that reports to one.
+  /* `label` lets the chip SHOW one string while being ABOUT another. The
+     Stack diagram's compact cloud view needs exactly this: the mark and the
+     definition belong to the role ("Object store"), and the text the reader
+     needs is the service filling it ("Blob Storage"). Without it the compact
+     view had to drop to bare text, which is what made it read as scattered —
+     nothing marked where one item ended and the next began. */
+  label = null,
   onDefine = null,
   onPin = null,
   active = false,
@@ -330,7 +337,7 @@ const TagTerm = ({
         onFocus={show}
         onBlur={hide}
         aria-expanded={onDefine ? Boolean(active) : open}
-        aria-label={`${name}: what is this?`}
+        aria-label={label ? `${label} — ${name}: what is this?` : `${name}: what is this?`}
         className={`${shape} group ${tone[(onDefine ? active : open) ? "active" : "idle"]}`}
       >
         {/* Outside the underlined span on purpose: the dotted rule marks the
@@ -342,7 +349,7 @@ const TagTerm = ({
             open ? "border-solid" : "border-dotted group-hover:border-solid group-focus-visible:border-solid"
           }`}
         >
-          {name}
+          {label ?? name}
         </span>
       </button>
 

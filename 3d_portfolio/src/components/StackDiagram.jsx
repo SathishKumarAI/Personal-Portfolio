@@ -177,16 +177,27 @@ const Node = ({ node, index, flow, platform, compact, onDefine, onPin, shown }) 
                  Flowed, a six-service node is two lines instead of six. The
                  roles are still there in full detail, which is the trade the
                  button is for. */
-              <p className="cloud-in flex flex-wrap gap-x-2 gap-y-0 font-mono text-micro leading-[1.5]">
-                {roles.map((r, i) => (
-                  <span key={r.role}>
-                    {i > 0 && <span className="text-faint opacity-40">· </span>}
-                    <span style={{ color: `rgb(var(${platTint(platform)}))` }}>
-                      {r[platform]}
-                    </span>
-                  </span>
+              /* EVERY ITEM CARRIES ITS ROLE'S MARK. Flowed as bare names
+                 separated by interpuncts this read as one run-on string —
+                 "still scattered", and fairly. A glyph in front of each name
+                 is non-verbal punctuation: the eye finds the boundaries
+                 without reading a word, and the same mark means the same slot
+                 in every platform and in full detail. The chip still defines
+                 the ROLE on hover; only the text it prints changes. */
+              <div className="cloud-in flex flex-wrap content-start gap-x-3 gap-y-0.5">
+                {roles.map((r) => (
+                  <TagTerm
+                    key={r.role}
+                    name={r.role}
+                    label={r[platform]}
+                    flow
+                    dense
+                    onDefine={onDefine}
+                    onPin={onPin}
+                    active={shown?.name === r.role}
+                  />
                 ))}
-              </p>
+              </div>
             ) : (
               <ul className="list-none space-y-[3px]">
                 {roles.map((r, i) => (
