@@ -757,7 +757,9 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
 .tok {
   display: inline-block;
   opacity: 0;
-  animation: tok-in 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  /* 0.5s, up from 0.42. A slower word pace wants a slower resolve, or the
+     words arrive gently and then snap the last of the way. */
+  animation: tok-in 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
   animation-delay: calc(var(--tok-start, 0ms) + var(--tok, 0) * var(--tok-step, 45ms));
 }
 

@@ -38,17 +38,23 @@
 /**
  * The pace, shared by every block that streams.
  *
- * 85ms a word, up from 45. At 45 the whole About list finished in ~1.2s, which
- * is fine when it plays on page load and the reader is already looking at it —
- * and far too fast when it is triggered by arriving at a section. Reported as
- * exactly that: "I can't humanly measure it, it's going very fast".
+ * Twice now this has been too fast to follow. 45ms a word was set when the
+ * hero streamed on page load and the reader was already looking at it; 85ms
+ * still read as a flicker once the About list waited for the reader to arrive
+ * and then performed for them.
  *
- * `CLAIM_GAP` is a line's place in the queue. At 320ms three claims read as
- * three events in order rather than one blur; the whole cascade now runs about
- * 1.8s instead of 1.2s.
+ * 120ms is a pace you can watch a word land at. A line of six takes 600ms to
+ * fill and the whole three-claim cascade runs about 2.9s -- long for an
+ * entrance, and correct for a deliberate one: by the time it plays, every
+ * other thing in the section has already landed and this is the only thing
+ * moving. Nothing is withheld while it runs, because every word is in the DOM
+ * from the first frame and only its opacity moves.
+ *
+ * `CLAIM_GAP` is a line's place in the queue. At 430ms the three claims read
+ * as three separate events rather than one wash.
  */
-export const TOKEN_STEP = 85;
-export const CLAIM_GAP = 320;
+export const TOKEN_STEP = 120;
+export const CLAIM_GAP = 430;
 
 const TokenText = ({ text, start = 0, step = TOKEN_STEP, className = "" }) => {
   const words = text.split(" ");
