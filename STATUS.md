@@ -4,7 +4,7 @@ Written when work stopped. Read this first on return, then `3d_portfolio/README.
 for the change-to-file table.
 
 **Last touched:** 2026-10-15
-**Branch:** `feat/stack-one-screen` — **fifteen commits.**
+**Branch:** `main`. **63 PRs squash-merged**, the Stack increment landing as #66 (sixteen commits squashed), branch deleted.
 The owner asked for commits rather than a merge per fix ("try not to merge
 every time you fix everything, just commit"). One PR goes up for the whole
 Stack increment when he is satisfied with it.
@@ -18,9 +18,12 @@ NOT deploy. Trigger it with:
 what `main` builds. The CDN serves the previous bundle for ~15-60s after a
 successful deploy; poll until the hash matches rather than trusting the green
 tick.
-**Working tree:** `download.png` sits untracked at the root, left alone.
-**NOT deployed since the Stack work.** Everything below the 2026-10-15 merge
-list is live; the five Stack commits are not.
+**Working tree:** clean. `download.png` sits untracked at the root, left alone.
+**Deployed and verified** 2026-10-15: live serves `index-BSvDy0U3.js`, which is
+what `main` builds. Checked on the live site, not just the green tick — 47
+terms, the view toggle, four planes and sixteen nodes in the diagram, the
+crawler notice as points, and the retrieval panel reading "best match" with no
+"100%" anywhere.
 **The site is `3d_portfolio/`.** Everything else here is supporting material.
 
 ## The 2026-10-15 session, newest first
@@ -225,7 +228,13 @@ only file affected.
 
 ### Where the next session starts
 
-Open the PR for the Stack increment once the owner has looked at both views.
+Stack is merged and live. Open, and both the owner's call:
+
+- **The diagram view is 1.38 screens.** The tool list holds one screen and is
+  the default. Levers: collapse the substrate band, or drop the per-node role
+  line (~40px) — which is the sentence that makes a box a slot rather than a
+  label, so it is not mine to cut.
+- `COD-327` — cold-loading a section link does not scroll. Still open.
 
 ## The 2026-09-15 session, newest first
 
