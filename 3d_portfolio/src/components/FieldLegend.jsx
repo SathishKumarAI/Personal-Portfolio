@@ -33,7 +33,39 @@ const SHAPE = `4 → ${HIDDEN.join(" → ")} → 5`;
 
 const FieldLegend = () => {
   const [open, setOpen] = useState(false);
+  const [onHero, setOnHero] = useState(true);
   const wrap = useRef(null);
+
+  /**
+   * SCOPED TO THE LANDING VIEW, like the thing it explains.
+   *
+   * This button was `fixed` with no scroll awareness, so it followed the
+   * reader through Roles, Stack and every other section -- offering to explain
+   * a diagram that had faded out a screen earlier. The field itself is already
+   * scoped: both modules fade the canvas and the layer labels out as the hero
+   * leaves. The caption has to leave with them.
+   *
+   * An observer on the hero rather than a scroll threshold, because the field
+   * uses a scroll fade and duplicating that arithmetic here is two numbers to
+   * keep in step. Intersection is the plain question being asked: is the thing
+   * I describe still on screen?
+   */
+  useEffect(() => {
+    const hero = document.querySelector('section[aria-label="Intro"]');
+    if (!hero) return undefined;
+    const io = new IntersectionObserver(([e]) => setOnHero(e.isIntersecting), {
+      // A sliver is not enough: by the time the hero is a strip at the top the
+      // field has already faded to nothing, so the caption would outlive it.
+      threshold: 0.25,
+    });
+    io.observe(hero);
+    return () => io.disconnect();
+  }, []);
+
+  // Leaving the hero with the panel open would park it off-subject.
+  useEffect(() => {
+    if (!onHero) setOpen(false);
+  }, [onHero]);
 
   // Escape closes, and a click anywhere else closes. Both are what a reader
   // expects of a disclosure, and neither is free on a bare button.
@@ -61,7 +93,15 @@ const FieldLegend = () => {
          of the INPUT caption -- measured, a 14 x 18px overlap with the words
          "ways to reach me". 80px clears that block with air to spare, and the
          popover still opens upward into empty hero. */
-      className="hidden rail:block fixed left-2 xl:left-4 bottom-20 z-40"
+      /* The DISPLAY CLASS is what toggles, not the `hidden` attribute.
+         `hidden` is a UA-stylesheet `display: none` with no !important, and
+         this element also carries `rail:block` -- which sets `display: block`
+         at >=1024px and wins on specificity. The attribute would have been
+         silently ignored on exactly the widths where the legend exists.
+         Dropping `rail:block` leaves plain `hidden`, which has nothing to
+         fight. Not unmounted: the panel holds no state worth keeping, but a
+         mount/unmount on every scroll past the hero is churn for one button. */
+      className={`${onHero ? "hidden rail:block" : "hidden"} fixed left-2 xl:left-4 bottom-20 z-40`}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
