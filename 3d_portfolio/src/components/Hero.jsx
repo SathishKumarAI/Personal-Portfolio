@@ -3,7 +3,7 @@ import { styles } from "../styles";
 import LiveClock from "./LiveClock";
 import CodeCompletion from "./CodeCompletion";
 import { AvailabilityCompact } from "./Availability";
-import TokenText from "./TokenText";
+import TokenText, { CLAIM_GAP } from "./TokenText";
 
 const container = {
   hidden: {},
@@ -15,8 +15,9 @@ const container = {
  * 620ms holds them until the headline above has landed — the hero's cascade
  * puts the h1 at roughly 0.3s and it takes 0.6s to settle. Starting the words
  * under a still-moving headline asks the eye to watch two things at once.
- * 180ms apart is a line's place in the queue, close enough to read as one
- * event and far enough to read in order.
+ *
+ * The pace itself lives in TokenText, shared with About: one effect, one
+ * speed, wherever it appears.
  */
 const CLAIMS = [
   "Retrieval that cites its source",
@@ -24,15 +25,14 @@ const CLAIMS = [
   "Results reported as measured, negative ones included",
 ];
 const CLAIM_START = 620;
-const CLAIM_GAP = 180;
 
 /**
  * The rule under the status row DRAWS ITSELF, left to right, as the row
  * arrives. Borrowed deliberately from `Availability`, which already does this
  * and already says why: "a line being drawn reads as something being written
  * down". It is the one piece of motion in the hero that is not a fade, which
- * is exactly why it is spent here, on the row that was otherwise a label
- * floating in dead space.
+ * is exactly why it is spent on the row that was otherwise a label floating in
+ * dead space.
  */
 const rule = {
   hidden: { scaleX: 0 },
