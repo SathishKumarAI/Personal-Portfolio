@@ -3,17 +3,67 @@
 Written when work stopped. Read this first on return, then `3d_portfolio/README.md`
 for the change-to-file table.
 
-**Last touched:** 2026-09-15
-**Branch:** `main`. **46 PRs squash-merged** in total, nine of them on
-2026-09-15, every branch deleted, no PR open.
+**Last touched:** 2026-10-15
+**Branch:** `main`. **55 PRs squash-merged** in total, six of them on
+2026-10-15, every branch deleted, no PR open.
 **Live:** <https://sathishkumarai.github.io/> — GitHub Pages, built from `main`
-by Actions in the OTHER repo. **Deployed and verified**: the bundle hash the
-live site serves matches the one `main` builds.
-**Working tree:** clean.
+by Actions in the OTHER repo, **`workflow_dispatch` only**. A merge here does
+NOT deploy. Trigger it with:
+`gh workflow run "Deploy portfolio to Pages" --repo SathishKumarAI/SathishKumarAI.github.io`
+**Deployed and verified** 2026-10-15: live serves `index-MACC7LWR.js`, which is
+what `main` builds. Before that run the live site was a month stale, and a whole
+session was spent reviewing a build that did not contain any of the work.
+**Working tree:** clean. `download.png` sits untracked at the root, left alone.
 **The site is `3d_portfolio/`.** Everything else here is supporting material.
 **There IS 3D in it now** — `NeuralField3D.js`, three.js, hero only, desktop
-only, in a lazy chunk a phone never fetches. The folder name stopped being a
-joke on 2026-09-14.
+only, in a lazy chunk a phone never fetches.
+
+## The 2026-10-15 session, newest first
+
+Six merges, #50 to #55. `3d_portfolio/docs/WORKLOG.md` has the measurements.
+
+| PR | What changed | The number that mattered |
+| --- | --- | --- |
+| #55 | The hero field became visible, and stopped painting over the page | canvas CSS box 2401x1324 → **1601x883**; edge contrast ~6 → **34.6** |
+| #54 | The field animates a forward pass, not a path through one | `IN x4` → `OUT x5`, pass **3453ms**, cycle **6255ms** |
+| #53 | The roles deck got a drawn seam and a card the dark can show | covered card 4.0px → **8.1px** inset; dark fill 5/10/11 → **19/23/23** |
+| #52 | Hidden columns land on their own labels, and the field stays wired | label-to-node **50px → 0.8px**; re-anchors in **2 frames** |
+| #51 | The field stands down below the rail breakpoint | orphan labels at 882px **4 → 0** |
+| #50 | The gutter moved to the stage, out of the 1280px cap | hero `h1` at 1920px **392px → 320px** |
+
+### Three bugs were stacked, and each hid the next
+
+Worth reading before touching the hero field again:
+
+1. The canvas was sized in DRAWING-BUFFER pixels (`setSize(w, h, false)`), so on
+   any display above DPR 1 the whole scene was magnified from the top-left and
+   most of it hung off the right of the screen. **Pixel-perfect at DPR 1**,
+   which is why it shipped.
+2. It was `appendChild`-ed to `<body>`, a later sibling of a static `#root`, so
+   it painted **on top of** the headline rather than behind it.
+3. Every alpha was a product of a canvas class and a material value, landing at
+   **0.077** — invisible, which is what hid 1 and 2 for as long as they existed.
+
+**And the measurements agreed with the bug.** Buffer-to-CSS conversions used
+`canvas.width / innerWidth`, which IS the device pixel ratio — exactly the
+magnification being hunted — so dividing by it cancelled the error and the
+columns always came back aligned. Convert through
+`canvas.getBoundingClientRect()` instead: that box cannot cancel the thing it
+is being used to measure. The screenshots were right and were overruled three
+times because the arithmetic looked cleaner.
+
+### Left deliberately undone
+
+- **The parallax still swings the two anchored layers 17.1px** across a pointer
+  sweep, against −3.8/5.2 for the free ones. Kept on the owner's call after
+  being shown the numbers. `PARALLAX` in `NeuralField3D.js` is the knob: set
+  both axes to 0 for pixel-exact anchors.
+- **three.js is still 132.98 kB gzipped** for depth plus parallax. The owner
+  asked to decide after seeing it run; it now runs correctly, so the question
+  is live.
+- `sepia` is the weakest theme for the field at **19.2** resting contrast
+  against 34.6 on dark. It is a deliberately soft palette; perceptible, but the
+  floor.
 
 ## The 2026-09-15 session, newest first
 
