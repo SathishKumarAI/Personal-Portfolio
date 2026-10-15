@@ -17,25 +17,94 @@ const STACK_META = `${stackGroups.length} areas · ${
 const stageNo = (i) => String(i + 1).padStart(2, "0");
 
 /**
- * Where the pointer is, in card-local percent, written straight to the DOM node
- * as `--mx`/`--my` for the spotlight in `.stack-card::before`.
+ * Owns, the one place a tool's definition is read.
+ * Does not own: which tool that is — the section decides, from hover and taps.
  *
- * Imperative on purpose. Routing a pointermove through React state would
- * re-render six cards on every mouse pixel for an effect that is pure paint,
- * and the target here is a plain element rather than the motion wrapper around
- * it, so framer-motion never rewrites the style attribute out from under it.
+ * It replaced thirty-three floating popovers. Those failed twice over: the
+ * surface was `rgba(255 255 255 / 0.62)`, so a definition rendered over a card
+ * full of chips could not be read through its own background, and hover-open
+ * plus click-pin let two sit on screen overlapping each other.
+ *
+ * A fixed slot cannot cover anything, cannot be clipped by the row below, and
+ * gives a reader ONE place to look — which matters more here than anywhere
+ * else on the page, because a recruiter meeting an unfamiliar tool is exactly
+ * who this section is for.
+ *
+ * It holds its height whether or not anything is selected. A panel that
+ * appears and disappears would move the rail and the heading beside it on
+ * every hover, and the fix for a jumpy section is not a jumpier one.
  */
-const spot = (e) => {
-  const el = e.currentTarget;
-  const r = el.getBoundingClientRect();
-  el.style.setProperty("--mx", `${((e.clientX - r.left) / r.width) * 100}%`);
-  el.style.setProperty("--my", `${((e.clientY - r.top) / r.height) * 100}%`);
-};
+const DefinitionPanel = ({ entry, pinned }) => (
+  <div
+    /* OPAQUE. `bg-tertiary/40` was the first attempt and it is the very
+       fault this panel exists to fix: a translucent surface carrying prose
+       lets whatever is behind it bleed into the words. The old popover was
+       `rgba(255 255 255 / 0.62)` and unreadable for exactly that reason. */
+    className="hidden md:flex mt-5 min-h-[9rem] flex-col rounded-2xl border border-line bg-tertiary p-4"
+    // Announced, but politely: the reader asked for this by pointing at a
+    // chip, so it is a result, not an alert.
+    aria-live="polite"
+  >
+    {entry ? (
+      <>
+        <p className="flex items-baseline gap-2">
+          <span className="font-display text-[15px] font-semibold text-white-100 tracking-[-0.01em]">
+            {entry.name}
+          </span>
+          {pinned && (
+            <span className="font-mono text-micro uppercase tracking-[0.12em] text-accent-ink">
+              pinned
+            </span>
+          )}
+        </p>
+        {entry.full && entry.full !== entry.name && (
+          <p className="mt-0.5 font-mono text-label text-faint">{entry.full}</p>
+        )}
+        <p className="mt-2 font-sans text-data text-secondary leading-snug">
+          {entry.def}
+        </p>
+        {entry.link && (
+          <a
+            href={entry.link}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-auto pt-2 font-mono text-chip text-accent-ink hover:underline"
+          >
+            Learn more ↗
+          </a>
+        )}
+      </>
+    ) : (
+      /* The resting state says what the slot is FOR. An empty bordered box
+         reads as something that failed to load. */
+      <p className="m-auto text-center font-serif italic text-faint text-label leading-[1.5]">
+        Point at any tool to read what it does.
+        <br />
+        Tap one to keep it here.
+      </p>
+    )}
+  </div>
+);
 
 const Tech = () => {
   // Which group the pointer is on, or null. Drives only the rail above the
   // grid: the cards light themselves in CSS, which needs no state at all.
   const [active, setActive] = useState(null);
+
+  /**
+   * ONE definition panel for thirty-three terms.
+   *
+   * `hovered` is what the pointer is over; `pinned` is what a tap fixed in
+   * place. Pinned wins, so a reader can park a definition and keep scanning
+   * without it being stolen by whatever the cursor crosses next.
+   *
+   * Both live here rather than in the chips because "only one is showing" is a
+   * fact about the section. Thirty-three components each owning a popover is
+   * how two ended up on screen at once.
+   */
+  const [hovered, setHovered] = useState(null);
+  const [pinned, setPinned] = useState(null);
+  const shown = pinned ?? hovered;
 
   return (
     <>
@@ -44,76 +113,56 @@ const Tech = () => {
           content instead of decorating the page. */}
       <TokenStream />
 
-      <SectionHead title="Stack" meta={STACK_META} />
+      {/* HEADER IN TWO COLUMNS.
+          Stacked, this section opened with 395px of header above 419px of
+          content, and the whole right half sat empty behind a decorative
+          canvas. Heading and rail take the left; the argument, the hint and
+          the definition panel take the space that was doing nothing.
+          One column below `md`, where the intro is hidden anyway. */}
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,21rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] md:gap-x-10 md:items-start">
+        <div className="min-w-0">
+          <SectionHead title="Stack" meta={STACK_META} />
 
-      <motion.p
-        variants={fadeIn("", "", 0.1, 1)}
-        // Desktop only. On a phone this section is a list of tools and the
-        // argument for them is three lines the reader scrolls past to reach it.
-        className="hidden md:block mt-4 font-sans text-secondary text-lede max-w-[34rem] leading-[1.7]"
-      >
-        Not a badge collection: this is what I actually reach for, grouped by
-        where it sits on the path from raw data to a running product. I pick
-        tools that are boring in production: measurable, reproducible, and easy
-        to hand off.
-      </motion.p>
+        </div>
 
-      {/* The hint is an instruction about the interface, not part of the
-          argument the intro is making, so it gets its own line, its own voice
-          (serif italic, the reading face) and a mark. The info glyph is inline
-          rather than in icons.js: that module owns brand marks and off-site
-          destinations, not one-off affordances. */}
-      <motion.p
-        variants={fadeIn("", "", 0.18, 1)}
-        className="mt-4 flex items-start gap-2 font-serif italic text-faint text-body leading-[1.6] max-w-[32rem]"
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          aria-hidden="true"
-          className="mt-[4px] shrink-0"
-        >
-          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2a8 8 0 110 16 8 8 0 010-16zm-1 3h2v2h-2V7zm0 4h2v6h-2v-6z" />
-        </svg>
-        {TERM_HINT}
-      </motion.p>
+        <div className="min-w-0">
+          <motion.p
+            variants={fadeIn("", "", 0.1, 1)}
+            // Desktop only. On a phone this section is a list of tools and the
+            // argument for them is three lines the reader scrolls past.
+            className="hidden md:block font-sans text-secondary text-body leading-[1.65]"
+          >
+            Not a badge collection: this is what I actually reach for, grouped
+            by where it sits on the path from raw data to a running product. I
+            pick tools that are boring in production: measurable, reproducible,
+            and easy to hand off.
+          </motion.p>
 
-      {/* THE PIPELINE RAIL. The intro claims the six groups are ordered along a
-          path from raw data to a running product, and until now nothing on the
-          page showed it: a 3x2 grid of cards states six categories and throws
-          the ordering away. The rail draws the claim.
+          {/* The hint is an instruction about the interface, not part of the
+              argument the intro is making, so it gets its own line, its own
+              voice (serif italic, the reading face) and a mark. The info glyph
+              is inline rather than in icons.js: that module owns brand marks
+              and off-site destinations, not one-off affordances. */}
+          <motion.p
+            variants={fadeIn("", "", 0.18, 1)}
+            className="hidden md:flex mt-3 items-start gap-2 font-serif italic text-faint text-label leading-[1.5]"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+              className="mt-[3px] shrink-0"
+            >
+              <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2a8 8 0 110 16 8 8 0 010-16zm-1 3h2v2h-2V7zm0 4h2v6h-2v-6z" />
+            </svg>
+            {TERM_HINT}
+          </motion.p>
 
-          It repeats none of the card titles on purpose — six titles above six
-          titled cards is the same six words read twice. It carries the two end
-          labels, which are the part the cards cannot say, and the six tints,
-          which double as the legend for the dots below.
-
-          aria-hidden, and correctly so: it is a picture of an ordering the
-          intro paragraph already states in words, and the cards below sit in
-          that order in the DOM. A screen reader loses nothing. */}
-      <Reveal
-        delay={0.1}
-        aria-hidden="true"
-        className="hidden md:flex items-center gap-3 mt-10 font-mono text-micro text-faint uppercase tracking-[0.14em]"
-      >
-        <span className="shrink-0">raw data</span>
-        <span className="flex flex-1 items-center gap-[3px]">
-          {stackGroups.map((g, i) => (
-            <span
-              key={g.title}
-              className="stack-seg h-[3px] flex-1 rounded-full"
-              style={{
-                background: `rgb(var(${g.tint}))`,
-                opacity: active === null ? 0.45 : active === i ? 1 : 0.16,
-                transform: active === i ? "scaleY(2.4)" : "scaleY(1)",
-              }}
-            />
-          ))}
-        </span>
-        <span className="shrink-0">running product</span>
-      </Reveal>
+          <DefinitionPanel entry={shown} pinned={Boolean(pinned)} />
+        </div>
+      </div>
 
       {/* Two shapes, because a phone and a desktop want different things here.
           On a phone this is one block with six labelled rows: six bordered cards
@@ -178,53 +227,106 @@ const Tech = () => {
             Reveal stays the motion wrapper and the card is a plain child of it,
             so the pointermove handler writes --mx/--my to an element that
             framer-motion is not also writing a style attribute to. */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 items-stretch">
+        {/* THE PIPELINE RAIL. The intro claims the six groups are ordered
+            along a path from raw data to a running product, and until now
+            nothing on the page showed it: a 3x2 grid of cards states six
+            categories and throws the ordering away. The rail draws the
+            claim, and now the columns under it do too.
+
+            It repeats none of the card titles on purpose — six titles above
+            six titled columns is the same six words read twice. It carries
+            the two end labels, which are the part the columns cannot say,
+            and the six tints, which double as the legend for the dots.
+
+            aria-hidden, and correctly so: it is a picture of an ordering the
+            intro states in words, and the columns sit in that order in the
+            DOM. A screen reader loses nothing. */}
+        <Reveal
+          delay={0.1}
+          aria-hidden="true"
+          className="hidden md:flex items-center gap-3 mt-8 font-mono text-micro text-faint uppercase tracking-[0.14em]"
+        >
+          <span className="shrink-0">raw data</span>
+          <span className="flex flex-1 items-center gap-[3px]">
+            {stackGroups.map((g, i) => (
+              <span
+                key={g.title}
+                className="stack-seg h-[3px] flex-1 rounded-full"
+                style={{
+                  background: `rgb(var(${g.tint}))`,
+                  opacity: active === null ? 0.45 : active === i ? 1 : 0.16,
+                  transform: active === i ? "scaleY(2.4)" : "scaleY(1)",
+                }}
+              />
+            ))}
+          </span>
+          <span className="shrink-0">running product</span>
+        </Reveal>
+
+        {/* SIX COLUMNS, ONE ROW — the pipeline IS the layout.
+            A 3x2 grid of cards states six categories and throws the ordering
+            away; the rail above had to draw it back. Laid left to right, the
+            columns are the path, and the section stopped being 1.34 screens
+            tall.
+
+            Six only from `xl`. Below that the columns would be narrower than
+            the longest chip ("Exploratory analysis"), so it steps down to
+            three and then two rather than letting a tool name wrap mid-word. */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-x-4 gap-y-7 items-start">
           {stackGroups.map((g, i) => (
             <Reveal
               key={g.title}
-              // Delay by column, so a row arrives as a row rather than all six
-              // off one event.
-              delay={(i % 3) * 0.07}
-              className="h-full"
+              // By column, so the row arrives as a row travelling left to
+              // right — the same direction the pipeline reads.
+              delay={(i % 6) * 0.06}
+              className="min-w-0"
             >
               <div
-                className="stack-card glass-card card-lift rounded-2xl p-5 sm:p-6 flex flex-col h-full"
+                className="flex min-w-0 flex-col"
                 style={{ "--cat": `var(${g.tint})` }}
-                onPointerMove={spot}
                 onMouseEnter={() => setActive(i)}
                 onMouseLeave={() => setActive(null)}
                 onFocus={() => setActive(i)}
                 onBlur={() => setActive(null)}
               >
-                <div className="flex items-start gap-2.5">
-                  <span
-                    className={`mt-[7px] h-2 w-2 shrink-0 rounded-full ${g.dot}`}
-                    aria-hidden="true"
-                  />
-                  {/* The heading was 12px uppercase in accent red: a dashboard
-                      label for what is the only heading inside the card. At
-                      reading size in the display face it is a heading, and the
-                      hierarchy inside a card finally runs heading > note > tools
-                      instead of three near-equal bands. */}
-                  <h3 className="font-display text-[17px] font-semibold text-white-100 tracking-[-0.01em] leading-tight">
+                {/* The tint rule is what ties a column to its segment in the
+                    rail above. It replaces the card border: six bordered boxes
+                    side by side read as a table, and the colour already does
+                    the grouping the border was doing. */}
+                <span
+                  aria-hidden="true"
+                  className="h-[3px] w-full rounded-full"
+                  style={{
+                    background: `rgb(var(${g.tint}))`,
+                    opacity: active === null ? 0.55 : active === i ? 1 : 0.2,
+                  }}
+                />
+                <div className="mt-3 flex items-baseline gap-2">
+                  <h3 className="font-display text-[15px] font-semibold text-white-100 tracking-[-0.01em] leading-tight">
                     {g.title}
                   </h3>
-                  <span className="stack-index ml-auto shrink-0 font-mono text-[26px] font-medium leading-none -mt-1">
+                  <span className="stack-index ml-auto shrink-0 font-mono text-[15px] font-medium leading-none">
                     {stageNo(i)}
                   </span>
                 </div>
                 {g.note && (
-                  <p className="mt-2.5 font-serif text-secondary text-body leading-[1.5]">
+                  <p className="mt-1.5 font-serif text-secondary text-label leading-[1.45]">
                     {g.note}
                   </p>
                 )}
-                {/* mt-auto is the whole point: grid already equalises card
-                    height, but without it the chip row floats up under a
-                    one-line note and two cards in a row disagree by up to
-                    34px. */}
-                <div className="mt-auto pt-5 flex flex-wrap gap-2">
+                {/* Stacked, not wrapped. In a 200px column a wrapped row packs
+                    one-and-a-bit chips per line and leaves ragged gaps; one per
+                    line reads as a list of tools, which is what it is. */}
+                <div className="mt-3 flex flex-col items-start gap-1.5">
                   {g.items.map((it) => (
-                    <TagTerm key={it} name={it} primary={g.primary?.includes(it)} />
+                    <TagTerm
+                      key={it}
+                      name={it}
+                      primary={g.primary?.includes(it)}
+                      onDefine={setHovered}
+                      onPin={(e) => setPinned((p) => (p?.name === e.name ? null : e))}
+                      active={shown?.name === it}
+                    />
                   ))}
                 </div>
               </div>

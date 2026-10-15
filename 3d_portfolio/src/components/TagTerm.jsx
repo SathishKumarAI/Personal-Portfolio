@@ -170,7 +170,17 @@ const FLOW_TONES = {
   outline: { idle: "text-secondary", active: "text-accent-ink" },
 };
 
-const TagTerm = ({ name, plain = false, primary = false, flow = false }) => {
+const TagTerm = ({
+  name,
+  plain = false,
+  primary = false,
+  flow = false,
+  // Shared-panel mode. See `show` below: supplying `onDefine` turns this chip
+  // from something that owns a popover into something that reports to one.
+  onDefine = null,
+  onPin = null,
+  active = false,
+}) => {
   const entry = glossary[name];
   const g = plain ? null : entry;
   const [open, setOpen] = useState(false);
@@ -256,12 +266,31 @@ const TagTerm = ({ name, plain = false, primary = false, flow = false }) => {
     : (primary ? TONES.solid : TONES.outline);
   const shape = flow ? FLOW : CHIP;
 
+  /**
+   * `onDefine` switches this chip from OWNING a popover to REPORTING to one.
+   *
+   * The floating version is still here and still used anywhere a chip stands
+   * on its own. In the Stack grid it was the wrong shape twice over: the panel
+   * is `rgba(255 255 255 / 0.62)` -- a translucent surface carrying prose, so
+   * whatever sat behind it bled through and the definition could not be read
+   * -- and hover-open plus click-pin meant two could be on screen at once,
+   * overlapping each other.
+   *
+   * With `onDefine` the chip says what it is and a single panel owned by the
+   * section decides where that goes. Nothing floats, so nothing can cover a
+   * neighbour, and "only one at a time" stops being a thing to coordinate
+   * between thirty-three independent components.
+   */
+  const entryOut = g && { name, full: g.full, def: g.def, link: g.link };
+
   const show = () => {
     clearTimeout(closeTimer.current);
+    if (onDefine) { onDefine(entryOut); return; }
     setOpen(true);
   };
   const hide = () => {
     if (pinned) return;
+    if (onDefine) { onDefine(null); return; }
     closeTimer.current = setTimeout(() => setOpen(false), 120);
   };
 
@@ -274,6 +303,9 @@ const TagTerm = ({ name, plain = false, primary = false, flow = false }) => {
     >
       <button
         onClick={() => {
+          // Pinning belongs to the parent when a shared panel is in play:
+          // "only one pinned" is a fact about the section, not about a chip.
+          if (onDefine) { onPin?.(entryOut); return; }
           // A second tap closes. The old version only unpinned, which on a
           // touch screen left the panel open with nothing to dismiss it:
           // there is no mouseleave to fall back on.
@@ -287,9 +319,9 @@ const TagTerm = ({ name, plain = false, primary = false, flow = false }) => {
         }}
         onFocus={show}
         onBlur={hide}
-        aria-expanded={open}
+        aria-expanded={onDefine ? Boolean(active) : open}
         aria-label={`${name}: what is this?`}
-        className={`${shape} group ${tone[open ? "active" : "idle"]}`}
+        className={`${shape} group ${tone[(onDefine ? active : open) ? "active" : "idle"]}`}
       >
         {/* Outside the underlined span on purpose: the dotted rule marks the
             WORD as definable, and carrying it under the logo too would say the
@@ -304,7 +336,7 @@ const TagTerm = ({ name, plain = false, primary = false, flow = false }) => {
         </span>
       </button>
 
-      {open && (
+      {open && !onDefine && (
         <span
           ref={tipRef}
           role="tooltip"
