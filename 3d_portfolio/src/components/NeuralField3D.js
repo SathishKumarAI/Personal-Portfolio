@@ -113,6 +113,7 @@ import {
 import {
   HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS,
   FIELD_ALPHA, alphaFor, EDGE_REST, EDGE_LIT, HIDDEN_SPREAD, inkToken, edgesFor,
+  PASS_BUDGET,
 } from "./netShape";
 
 const HIDDEN_DEPTH = [170, -190]; // toward the reader, then away
@@ -733,17 +734,22 @@ export const start = (anchor) => {
    * when it lands — not one of each, which quietly said the pass involved a
    * single icon.
    */
-  let wave = null;   // { hop, t } or null between passes
-  let rest = 1.2;    // seconds of quiet left before the next pass
+  let wave = null;      // { hop, t } or null between passes
+  let rest = 1.2;       // seconds of quiet left before the next pass
+  let passesLeft = PASS_BUDGET; // then the field settles and holds still
 
   const beginPass = () => {
-    if (!hops.length) return;
+    if (!hops.length || passesLeft <= 0) return;
+    passesLeft -= 1;
     wave = { hop: 0, t: 0 };
     ends.in.forEach(fire);
   };
 
   const stepSignals = (dt) => {
     if (!wave) {
+      // Spent its budget: the wires hold at EDGE_REST and nothing moves until
+      // the reader leaves the hero and comes back. See onScroll.
+      if (passesLeft <= 0) { signalGeo.setDrawRange(0, 0); return; }
       rest -= dt;
       if (rest <= 0) beginPass();
       signalGeo.setDrawRange(0, 0);
@@ -895,6 +901,15 @@ export const start = (anchor) => {
 
   // Scoped to the landing view, like the 2D field: a backdrop that follows the
   // reader through Experience and Contact is wallpaper competing with text.
+  /**
+   * Scoped to the landing view, and the place the pass budget refills.
+   *
+   * `left` latches once the hero is properly off screen, so coming back to the
+   * top is what grants another two passes. Without the latch, the tiny scroll
+   * jitter around the top of the page would re-arm the field continuously and
+   * the budget would mean nothing.
+   */
+  let left = false;
   const onScroll = () => {
     const next = Math.max(0, 1 - window.scrollY / (h * 0.75));
     if (Math.abs(next - fade) > 0.01) {
@@ -903,6 +918,13 @@ export const start = (anchor) => {
       labelBox.style.opacity = String(fade * 0.7);
     }
     onScreen = fade > 0.02;
+
+    if (fade < 0.15) left = true;
+    else if (left && fade > 0.9) {
+      left = false;
+      passesLeft = PASS_BUDGET;
+      rest = 0.6; // a beat after arriving, not the instant the scroll lands
+    }
   };
 
   /**

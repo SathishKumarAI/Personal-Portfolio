@@ -66,6 +66,26 @@ export const FIRE_MS = 900;
  * for one budget: the eye is caught by motion that never stops, not by motion
  * that happens and then ends.
  */
+/**
+ * How many forward passes the field runs before it settles, and stops.
+ *
+ * A hero's one job is to hand the reader to the content. A backdrop that never
+ * stops moving never hands anything over: the eye keeps returning to it, and
+ * the reader keeps re-finding their line. PR #43 already believed this -- it
+ * cut the field so "a reader notices it once and then reads on" -- but the
+ * field never actually stopped, so "reads on" never happened.
+ *
+ * Two passes is enough to show what the diagram is: the icons light, a front
+ * crosses, the section dots answer. After that the wires stay VISIBLE at rest
+ * intensity and simply hold still. Nothing is hidden; the structure is still
+ * there and still anchored to the docks. It just stops competing.
+ *
+ * The budget refills when the reader leaves the hero and comes back, so the
+ * field is alive on return and silent while they read. See `onScroll` in
+ * either field module.
+ */
+export const PASS_BUDGET = 2;
+
 export const HOP_SECONDS = 1.15;
 export const REST_SECONDS = 2.8;
 

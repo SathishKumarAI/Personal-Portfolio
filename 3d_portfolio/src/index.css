@@ -735,6 +735,56 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
   }
 }
 
+/* Text that arrives one word at a time, the way a model emits it.
+   -------------------------------------------------------------------------
+   Used by `TokenText` for the hero's three claims. On a page whose subject is
+   models, text that STREAMS is the one piece of motion that means something:
+   it is what the reader has watched a model do. Everything else on the page
+   fades, and a fourth fade would have said nothing.
+
+   It is a TEXTURE, NOT A DELAY. At the 45ms default a five-word claim
+   completes in 225ms and all three are done inside ~1.2s. Content is never
+   gated behind decoration; that rule outranks the effect.
+
+   The blur is the part that makes it read as resolving rather than sliding —
+   a word coming into focus, not a word moving. Transform and opacity alone
+   give the same timing and none of the meaning.
+
+   `inline-block` because a transform does not apply to an inline box. The
+   spaces between words are real text nodes OUTSIDE these spans, or an
+   inline-block holding its own trailing space would give the line no break
+   opportunity and a long claim would overflow instead of wrapping. */
+.tok {
+  display: inline-block;
+  opacity: 0;
+  animation: tok-in 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  animation-delay: calc(var(--tok-start, 0ms) + var(--tok, 0) * var(--tok-step, 45ms));
+}
+
+@keyframes tok-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.34em);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* The words still have to be there, and still have to be readable, for anyone
+   who asked for less motion. They simply arrive already resolved. */
+@media (prefers-reduced-motion: reduce) {
+  .tok {
+    opacity: 1;
+    animation: none;
+    transform: none;
+    filter: none;
+  }
+}
+
 /* A control the hero field has just fired through.
    -------------------------------------------------------------------------
    The field claims the four contact icons are its input layer and the five
