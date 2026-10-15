@@ -4,66 +4,75 @@ Written when work stopped. Read this first on return, then `3d_portfolio/README.
 for the change-to-file table.
 
 **Last touched:** 2026-10-15
-**Branch:** `main`. **55 PRs squash-merged** in total, six of them on
+**Branch:** `main`. **62 PRs squash-merged** in total, fourteen of them on
 2026-10-15, every branch deleted, no PR open.
 **Live:** <https://sathishkumarai.github.io/> — GitHub Pages, built from `main`
 by Actions in the OTHER repo, **`workflow_dispatch` only**. A merge here does
 NOT deploy. Trigger it with:
 `gh workflow run "Deploy portfolio to Pages" --repo SathishKumarAI/SathishKumarAI.github.io`
-**Deployed and verified** 2026-10-15: live serves `index-MACC7LWR.js`, which is
-what `main` builds. Before that run the live site was a month stale, and a whole
-session was spent reviewing a build that did not contain any of the work.
+**Deployed and verified** 2026-10-15: live serves `index-Ca2LUgWZ.js`, which is
+what `main` builds. The CDN serves the previous bundle for ~15-60s after a
+successful deploy; poll until the hash matches rather than trusting the green
+tick.
 **Working tree:** clean. `download.png` sits untracked at the root, left alone.
 **The site is `3d_portfolio/`.** Everything else here is supporting material.
-**There IS 3D in it now** — `NeuralField3D.js`, three.js, hero only, desktop
-only, in a lazy chunk a phone never fetches.
 
 ## The 2026-10-15 session, newest first
 
-Six merges, #50 to #55. `3d_portfolio/docs/WORKLOG.md` has the measurements.
+Fourteen merges, #50 to #63. `3d_portfolio/docs/WORKLOG.md` has the
+measurements; `DECISIONS.md` has what was chosen and what it cost.
 
 | PR | What changed | The number that mattered |
 | --- | --- | --- |
-| #55 | The hero field became visible, and stopped painting over the page | canvas CSS box 2401x1324 → **1601x883**; edge contrast ~6 → **34.6** |
-| #54 | The field animates a forward pass, not a path through one | `IN x4` → `OUT x5`, pass **3453ms**, cycle **6255ms** |
-| #53 | The roles deck got a drawn seam and a card the dark can show | covered card 4.0px → **8.1px** inset; dark fill 5/10/11 → **19/23/23** |
-| #52 | Hidden columns land on their own labels, and the field stays wired | label-to-node **50px → 0.8px**; re-anchors in **2 frames** |
+| #63 | About's stream waits for the section to finish arriving, and slowed | gate opens **250ms** after the scroll stops; 23 words over **1.93s** |
+| #62 | The stream holds until the reader actually stops scrolling | gate stayed `wait` through a stepped scroll past the section |
+| #61 | Two overlaps cleared, the CTA calmed, About's claims stream | SCROLL vs OUTPUT **53x33px** → 0; CTA **18.2:1** |
+| #60 | The dead space above the status row closed; the row earns it | navbar to status row **52px → 20px** |
+| #59 | The field stops performing; the hero claims stream | 2 passes then still; first word **796ms** |
+| #58 | The field became a dense layer | **34 → 110 edges**, alpha 0.26 → 0.095 |
+| #57 | Every hidden unit wired; light themes made readable | incoming `0,1,...` → **all 1**; sepia **11.5 → 32.5** |
+| #55 | Canvas sized in CSS px; field made visible and stopped painting over the page | canvas box **2401x1324 → 1601x883** |
+| #54 | The field animates a forward pass, not a path through one | `IN x4` → `OUT x5`, pass **3453ms** |
+| #53 | Roles deck got a drawn seam and a card the dark can show | covered inset **4.0 → 8.1px** |
+| #52 | Hidden columns land on their labels; the field stays wired | label-to-node **50px → 0.8px**; re-anchors in **2 frames** |
 | #51 | The field stands down below the rail breakpoint | orphan labels at 882px **4 → 0** |
-| #50 | The gutter moved to the stage, out of the 1280px cap | hero `h1` at 1920px **392px → 320px** |
+| #50 | The gutter moved to the stage, out of the 1280px cap | hero `h1` at 1920px **392 → 320px** |
 
-### Three bugs were stacked, and each hid the next
+### The trap that cost this session the most
 
-Worth reading before touching the hero field again:
+Three hero-field bugs were stacked and each hid the next: a canvas sized in
+drawing-buffer pixels, mounted so it painted over the page, at an alpha low
+enough that nobody could see either. All three were pixel-perfect or invisible
+at DPR 1, which is why they shipped.
 
-1. The canvas was sized in DRAWING-BUFFER pixels (`setSize(w, h, false)`), so on
-   any display above DPR 1 the whole scene was magnified from the top-left and
-   most of it hung off the right of the screen. **Pixel-perfect at DPR 1**,
-   which is why it shipped.
-2. It was `appendChild`-ed to `<body>`, a later sibling of a static `#root`, so
-   it painted **on top of** the headline rather than behind it.
-3. Every alpha was a product of a canvas class and a material value, landing at
-   **0.077** — invisible, which is what hid 1 and 2 for as long as they existed.
+**And every measurement agreed with the bug.** Buffer-to-CSS conversions used
+`canvas.width / innerWidth`, which IS the device pixel ratio and therefore
+exactly the magnification being hunted — dividing by it cancelled the error and
+every check came back green. Convert through `canvas.getBoundingClientRect()`
+instead: that box cannot cancel the thing it is being used to measure.
 
-**And the measurements agreed with the bug.** Buffer-to-CSS conversions used
-`canvas.width / innerWidth`, which IS the device pixel ratio — exactly the
-magnification being hunted — so dividing by it cancelled the error and the
-columns always came back aligned. Convert through
-`canvas.getBoundingClientRect()` instead: that box cannot cancel the thing it
-is being used to measure. The screenshots were right and were overruled three
-times because the arithmetic looked cleaner.
+The screenshots were right and were overruled three times because the
+arithmetic looked cleaner. **When a measurement and the picture disagree, the
+measurement is the one with a bug in it until proven otherwise.**
 
-### Left deliberately undone
+### Open, and worth knowing before touching the hero
 
+- **`COD-327`: cold-loading any section link does not scroll.** Measured on
+  `/#roles`: `scrollY` 0 with the anchor 1742px down. The browser resolves the
+  hash before React has rendered anything to scroll to. In-page clicks work; a
+  shared or bookmarked link does not. Filed, not fixed.
 - **The parallax still swings the two anchored layers 17.1px** across a pointer
   sweep, against −3.8/5.2 for the free ones. Kept on the owner's call after
   being shown the numbers. `PARALLAX` in `NeuralField3D.js` is the knob: set
   both axes to 0 for pixel-exact anchors.
-- **three.js is still 132.98 kB gzipped** for depth plus parallax. The owner
-  asked to decide after seeing it run; it now runs correctly, so the question
-  is live.
-- `sepia` is the weakest theme for the field at **19.2** resting contrast
-  against 34.6 on dark. It is a deliberately soft palette; perceptible, but the
-  floor.
+- **three.js is 133.1 kB gzipped** for depth plus parallax. The owner asked to
+  decide after seeing it run correctly; it now does, so the question is live.
+- **`sepia` is the weakest theme** for field contrast at 32.5 resting against
+  34.6 on dark. Deliberately soft palette; it is the floor, not a bug.
+
+### Where the next session starts
+
+The owner's next target is the **Stack** section.
 
 ## The 2026-09-15 session, newest first
 

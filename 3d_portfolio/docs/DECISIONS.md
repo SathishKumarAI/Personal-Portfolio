@@ -22,6 +22,88 @@ These predate the individual decisions and constrain all of them.
 
 ## Decisions
 
+### The hero field is a dense layer, and it stops after two passes
+
+**2026-10-15.** Two separate calls, both made after the owner questioned what
+the drawing was claiming.
+
+The lattice is now **fully connected** — 110 edges, every input to every unit.
+It drew 34 before: each node reaching the two opposite it, which is a
+locally-connected net wearing a dense net's captions.
+
+The field also **settles after `PASS_BUDGET` (2) forward passes** and holds
+still, refilling only when the reader leaves the hero and comes back.
+
+- **Rejected for the wiring:** keeping the sparse set and relabelling it
+  honestly. Cheaper, and it would have left the page explaining a compromise
+  instead of showing the thing.
+- **Rejected for the budget:** stopping permanently until reload, and waking on
+  hover. The first is unrecoverable; the second fires when a pointer merely
+  crosses the hero on its way to the nav.
+- **Cost:** density is paid in alpha, not edge count — `FIELD_ALPHA.edge` 0.26
+  → 0.095 to hold total ink near level. `MAX_SIGNALS` 32 → 64, because the
+  widest gap is now 48 edges and `stepSignals` clips silently rather than
+  throwing.
+- **Reversal:** one function. `edgesFor` in `netShape.js` is the only thing
+  that decides connectivity, and both fields call it.
+
+### The accent stopped being the button
+
+**2026-10-15.** `Start with the roles` was a hot accent fill with a matching
+accent glow and black label text, reported as reading "too like dangerous". At
+button size that is the shape of a destructive confirm.
+
+`.btn-primary` uses `--c-chip-solid`, the ink already used for primary tool
+chips, so no new colour entered the system. Measured 18.2:1 against white.
+
+- **Rejected:** a deeper red, and an outline button. The first keeps the siren
+  quality at lower volume; the second reads as secondary and gets clicked less.
+- **Cost:** the page's single most saturated element is no longer its CTA.
+- **Consequence to keep in mind:** the accent is now *free* to be the one
+  highlight — "real-world impact", the claim rules, the live dot. Putting it
+  back on a button re-opens the competition.
+
+### Availability moved into the hero's status row, and the monogram went
+
+**2026-10-15.** `Open to AI engineering roles` sat below the call to action, as
+the last thing on the page. The hero's top strip is a status row — name left,
+live clocks right — and availability is status, so it belongs there. It is a
+link to `#contact` now, not a dead `<span>`.
+
+The `SATHISH KUMAR` byline went with it: the navbar says whose page this is at
+every scroll position, twenty pixels above. The `S` monogram went too — on a
+personal portfolio the name *is* the logo.
+
+- **Rejected:** the navbar. Measured, brand plus links need 851px against an
+  819px container at the bar's own 900px breakpoint; adding a 201px pill pushes
+  the full-bar breakpoint from 900px to ~1200px, so every laptop between those
+  loses the top bar to a hamburger.
+- **Cost:** a reader who deep-links past the hero never sees it. The Contact
+  section already carries availability, so the fact is not lost.
+- **Reversal:** easy, but note the full name now appears only in the page
+  title, the footer colophon and the AgentNote block.
+
+### Text streams rather than fades, and waits to be watched
+
+**2026-10-15.** The hero's three claims and About's three now arrive word by
+word. On a page about models, text arriving the way a model emits it is the one
+piece of motion that carries meaning; everything else on the page fades, and a
+fourth fade said nothing.
+
+About's stream waits for **all four** of its own entrance animations to finish
+*and* for the scroll to settle for 220ms.
+
+- **Rejected:** a fixed delay. No single element is reliably last — the status
+  card is `fadeIn(0.2, 0.7)` and the claims list `fadeIn(0.15, 1.0)` — so a
+  constant would be a guess that goes stale the moment a variant is retuned.
+  Each element reports in through `onAnimationComplete` instead.
+- **Rejected:** a typewriter that inserts characters. Every word is in the DOM
+  from the first frame and only opacity moves, so a screen reader reads the
+  sentence whole and selection copies it whole.
+- **Cost:** three retunes to find a readable pace — 45ms a word, then 85, now
+  **120**, with 430ms between claims. A 2.5s safety net exists because the cost
+  of the gate being wrong is hidden *text*, not a missed animation.
+
 ### The ask box answers from the page, with no model
 
 **2026-09-14.** `Ctrl K` was twelve commands; it now retrieves passages from the

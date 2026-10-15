@@ -55,13 +55,17 @@ dynamic `import()`.
 
 | Chunk | Raw | Gzipped | Who fetches it |
 | --- | --- | --- | --- |
-| `index-*.js` (app) | 108 kB | **36.0 kB** | everyone |
-| `react-*.js` | 141 kB | 45.1 kB | everyone |
-| `motion-*.js` (framer) | 120 kB | 39.7 kB | everyone |
+| `index-*.js` (app) | 117 kB | **38.7 kB** | everyone |
+| `react-*.js` | 137 kB | 44.0 kB | everyone |
+| `motion-*.js` (framer) | 121 kB | 39.9 kB | everyone |
 | `vendor-*.js` | 4 kB | 1.8 kB | everyone |
-| `index-*.css` | 42 kB | 9.1 kB | everyone |
+| `index-*.css` | 49 kB | 10.6 kB | everyone |
 | `glyphs-*.js` (41 tool marks) | 39 kB | **17.4 kB** | on the first chip mount |
-| `NeuralField3D-*.js` (three.js) | 523 kB | **131.1 kB** | desktop + motion allowed + WebGL only |
+| `NeuralField3D-*.js` (three.js) | 527 kB | **133.1 kB** | desktop + motion allowed + WebGL only |
+
+Measured 2026-10-15. The app chunk grew ~2.7 kB gz across that session for the
+token-stream component, the shared `netShape` module and the field legend; the
+CSS ~1.5 kB for the stream keyframes and the new primary button.
 
 ```mermaid
 flowchart TD
@@ -180,8 +184,9 @@ Five things move. Every one of them is metered.
 
 | Effect | Where | Guard |
 | --- | --- | --- |
-| Hero field (WebGL) | `NeuralField3D.js` | ≥1024px, motion allowed, WebGL available; stops when the hero scrolls away or the tab hides |
-| Hero field (2D fallback) | `NeuralField.jsx` | same breakpoint; one settled frame under reduced motion |
+| Hero field (WebGL) | `NeuralField3D.js` | ≥1024px, motion allowed, WebGL available; stops when the hero scrolls away or the tab hides, **and settles permanently after `PASS_BUDGET` passes** — the budget refills only when the reader leaves the hero and returns |
+| Hero field (2D fallback) | `NeuralField.jsx` | same breakpoint and the same pass budget; one settled frame under reduced motion |
+| Token streams | `TokenText.jsx`, `.tok` in `index.css` | hero streams at load; About waits for its own entrance to finish AND for the scroll to settle, with a 2.5s safety net so text is never withheld |
 | Career diagrams | `CareerTrack.jsx` | desktop only, one rAF loop for four diagrams, active role polled on a timer not per frame |
 | Role-edge light | `.role-card[data-current]::before` | ≥640px, 9s a turn, `@property` with a static fallback |
 | Card reveals, deck dimming | `Reveal.jsx`, `useCoveredCards` | `MotionConfig reducedMotion="user"`; the deck handler batches reads before writes |
