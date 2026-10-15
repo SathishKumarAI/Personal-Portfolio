@@ -1,5 +1,81 @@
 # Worklog
 
+## 2026-10-15: the field was 1.5x too big, and every measurement agreed with it
+
+The owner said four times that the hero network was not aligned. Four times
+the numbers said it was. The numbers were taken inside the bug.
+
+### One argument
+
+```js
+renderer.setSize(w, h, false);
+```
+
+That third argument is `updateStyle`. `false` tells three.js not to write
+`canvas.style.width/height`, on the assumption that the element's
+`fixed inset-0` classes will size it.
+
+They do not. **A `<canvas>` is a replaced element.** `position: fixed` with all
+four insets at 0 does not stretch one — with `width: auto` it falls back to its
+INTRINSIC size, which is the `width`/`height` attributes, which are the drawing
+buffer, which `setPixelRatio` has already multiplied by the device pixel ratio.
+
+Measured on a 1.5x display:
+
+| | |
+| --- | ---: |
+| Viewport | 1601 x 883 |
+| Canvas drawing buffer | 2401 x 1324 |
+| Canvas CSS box | **2401 x 1324** |
+| Overflow past the viewport | **800px across, 441px down** |
+
+So the entire scene was magnified 1.5x from the top-left corner. The input
+layer drew at CSS x=99 against a dock at 66. The output layer drew at roughly
+x=2302 against a rail at 1520 — three quarters of the diagram was off the
+right-hand edge of the screen.
+
+At DPR 1 the buffer equals the viewport and it is pixel-perfect, which is why
+it shipped and survived. The 2D fallback never had it: it sets `c.style.width`
+itself.
+
+### Why every measurement missed it
+
+The `gl.readPixels` checks converted buffer pixels to CSS pixels with
+`scale = canvas.width / window.innerWidth`. On this display that ratio is
+**1.5** — the device pixel ratio, and therefore exactly the magnification being
+hunted. Dividing by it cancelled the error perfectly, so the columns always
+came back sitting on their labels.
+
+It is the oldest trap in the repo's own rules, in a new costume: *measure, do
+not infer.* The readings were real measurements of a coordinate system that
+did not exist on screen. The fix is to convert through the canvas's OWN
+rendered box, `canvas.getBoundingClientRect()`, which cannot cancel anything
+because it is the thing in question.
+
+The screenshots were right the whole time. They were overruled three times
+because the arithmetic looked cleaner.
+
+### After
+
+| | Before | After |
+| --- | ---: | ---: |
+| Canvas CSS box | 2401 x 1324 | **1601 x 883** |
+| Matches viewport | no | **yes** |
+| HIDDEN 1 column, CSS x | ~824 | **549.4** (label 550.7) |
+| HIDDEN 2 column, CSS x | ~1552 | **1034.9** (label 1035.3) |
+| Column y span | — | **362.1–520.2** (dock band 363.7–519.7) |
+
+Measured through the canvas's own box, and confirmed in the screenshot, which
+now shows each column directly above the label that names it.
+
+### What this says about the four PRs before it
+
+The geometry work in #52 and #54 was correct and still necessary — the
+perspective compensation, the band, the forward pass. None of it was visible
+on a retina display, because the canvas it all drew into was the wrong size.
+Two separate bugs stacked, and the outer one hid the inner one.
+
+
 ## 2026-10-15: the field draws a forward pass, not a path through one
 
 Raised by the owner, and correct: in a real network a LAYER computes at once.

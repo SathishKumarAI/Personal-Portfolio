@@ -200,7 +200,28 @@ export const start = () => {
     camera.aspect = w / h;
     camera.position.z = h / 2 / Math.tan((FOV / 2) * (Math.PI / 180));
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h, false);
+    /**
+     * `true` — let three.js write `style.width/height`. This argument is
+     * `updateStyle`, and passing `false` is what broke the whole field on any
+     * display with a devicePixelRatio above 1.
+     *
+     * A <canvas> is a REPLACED element. `position: fixed; inset: 0` does not
+     * stretch one: with `width: auto` it falls back to its INTRINSIC size,
+     * which is the `width`/`height` attributes — and those are the drawing
+     * buffer, which `setPixelRatio` multiplies by the DPR. So on a 1.5x
+     * display a 1601x883 viewport got a canvas laid out at 2401x1324 CSS
+     * pixels, anchored top-left and overflowing the screen by 800px across.
+     *
+     * The scene inside it was then magnified 1.5x from the top-left corner.
+     * The input layer landed at CSS x=99 against a dock at 66, and the output
+     * layer at roughly x=2302 against a rail at 1520 — three quarters of the
+     * diagram was off the right-hand edge of the screen.
+     *
+     * At DPR 1 the buffer equals the viewport and everything is exactly right,
+     * which is why this shipped and survived. The 2D fallback never had it: it
+     * sets `c.style.width` itself.
+     */
+    renderer.setSize(w, h);
   };
 
   /** Camera distance to the z = 0 plane. `fit()` keeps `camera.position.z` here. */
