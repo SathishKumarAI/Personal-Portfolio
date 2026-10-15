@@ -60,8 +60,12 @@
  * it leaves and the real control it arrives at, so the claim is demonstrated
  * on something they recognise rather than asserted in a caption.
  *
- * Activations still travel input → hidden → hidden → output. In 3D they travel
- * through the page rather than across it.
+ * Activations travel as a LAYER WAVE: one gap at a time, every edge crossing
+ * it carrying at once. A layer in an MLP is a single matrix multiply, so every
+ * unit of layer k+1 reads every unit of layer k simultaneously — there is no
+ * path through one unit per layer, which is what this used to draw and which
+ * read as each layer waiting its turn. In 3D the front travels through the
+ * page rather than across it.
  *
  * THE COST, STATED PLAINLY
  *
@@ -75,8 +79,9 @@
  *  - one renderer, one scene, no post-processing, no textures, no shadows
  *  - `powerPreference: "low-power"`, antialias off, DPR capped at 1.5
  *  - the loop stops when the hero leaves the screen and when the tab hides
- *  - 36 edges and ≤ 14 live activations; the geometry is rebuilt on resize and
- *    on the 500ms dock poll, never per frame
+ *  - 36 edges, and at most one forward pass in flight — 16 dots at the widest
+ *    gap, none at all between passes; geometry is rebuilt when the interface
+ *    moves, never per frame
  */
 
 /**
@@ -102,22 +107,19 @@ import {
 
 // The shape and the layer names are shared with the 2D field: see netShape.js
 // for why they stopped being declared twice.
-import { HIDDEN, LAYERS, FIRE_MS } from "./netShape";
+import { HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS } from "./netShape";
 
 const HIDDEN_DEPTH = [170, -190]; // toward the reader, then away
 /**
- * EIGHT, NOT FOURTEEN, AND SLOW.
- *
- * The field is a diagram behind the page's most important words, and it was
- * winning. Fourteen activations crossing at roughly a screen every three
- * seconds is enough motion to pull the eye off a sentence and back again on
- * every pass — the reader keeps re-finding their line.
- *
- * The numbers below are all attention, not performance: the scene ran at 60fps
- * either way. Halved travel speed, a third of the spawn rate and six fewer
- * lights make it something you notice once and then read over.
+ * Ceiling on dots drawn in one frame, which is now the widest GAP rather than
+ * a budget of independent activations. The widest gap is HIDDEN 1 -> HIDDEN 2:
+ * eight units reaching two apiece, so sixteen edges carry at once. 32 leaves
+ * room for the shape to be retuned in netShape.js without silently clipping a
+ * front — `stepSignals` draws `min(gap.length, MAX_SIGNALS)`, so overflowing
+ * it would drop edges from the pass rather than throw.
  */
-const MAX_SIGNALS = 8;
+const MAX_SIGNALS = 32;
+
 const FOV = 50;
 
 const rgb = (root, name) => {
@@ -261,6 +263,13 @@ export const start = () => {
   let nodes = null;   // Points
   let edges = null;   // LineSegments
   let layers = [];    // Vector3[][]
+  // hops[k] = every [from, to] edge crossing the gap from layer k to k+1. A
+  // forward pass carries one whole gap at a time, so this is the unit the
+  // animation works in -- the flat `pairs` list is only what the geometry wants.
+  let hops = [];      // [Vector3, Vector3][][]
+  // Last built signature of the interface, so the 500ms poll can tell "nothing
+  // moved" from "rebuild everything". See the guard in build().
+  let lastSig = "";
   // The real controls behind the first and last layer, index-aligned with
   // `layers[0]` and `layers.at(-1)`. Kept beside the geometry rather than on
   // it because a Vector3 is a Vector3 and hanging a DOM node off one is the
@@ -297,19 +306,67 @@ export const start = () => {
     if (!inputs.length || !outputs.length) {
       disposeGraph();
       layers = [];
+      hops = [];
+      lastSig = "";
+      // A pass in flight refers to Vector3s from the graph just thrown away.
+      wave = null;
       ends = { in: [], out: [] };
       labelLayers();
       return;
     }
+    /**
+     * NOTHING MOVED? THEN DO NOTHING.
+     *
+     * The poll calls this twice a second whether or not the interface changed,
+     * which used to be merely wasteful — it rebuilt two BufferGeometries and
+     * re-made four label elements per second for a picture that was already
+     * correct. It stopped being merely wasteful when a forward pass became a
+     * thing with state: `build()` has to drop a wave in flight, because that
+     * wave holds Vector3s from the graph being replaced, and a pass takes
+     * ~3.5s. A rebuild every 0.5s meant no pass ever survived to reach the
+     * output layer. Measured before this guard: the input dock fired every
+     * ~500ms and the section rail never fired once in nine seconds.
+     *
+     * The signature is every anchor's rounded position plus the viewport, which
+     * is exactly the set of things the geometry is derived from.
+     */
+    const sig = `${w}x${h}|${[...inputs, ...outputs]
+      .map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).join(" ")}`;
+    if (sig === lastSig && layers.length) return;
+    lastSig = sig;
+
     ends = { in: inputs.map((p) => p.el), out: outputs.map((p) => p.el) };
 
     const x0 = inputs[0].x, x1 = outputs[0].x;
-    const spread = h * 0.44;
+
+    /**
+     * The hidden layers occupy the SAME vertical band as the two real columns.
+     *
+     * They used to span `h * 0.44` centred on the viewport — 384px on a 872px
+     * screen, against roughly 200px for the docks they connect. So the middle
+     * of the network bulged well above and below the icons at either end, and
+     * the band moved whenever the window height changed while the docks, being
+     * sized by their own content, did not. Two of the four layers were read
+     * from the interface and two were invented from the viewport.
+     *
+     * Reading the band off the real controls makes all four columns share the
+     * same rows, and makes the whole drawing a function of the interface: the
+     * only thing that can move a hidden node now is a dock moving.
+     */
+    const ys = [...inputs, ...outputs].map((p) => p.y);
+    const bandTop = Math.min(...ys);
+    const bandBottom = Math.max(...ys);
+    const span = bandBottom - bandTop;
+
     const hidden = HIDDEN.map((count, li) => {
       const x = x0 + ((x1 - x0) * (li + 1)) / (HIDDEN.length + 1);
       return Array.from({ length: count }, (_, ni) =>
         toWorld(
-          { x, y: h / 2 - spread / 2 + (spread * (ni + 0.5)) / count },
+          // Spread across the band inclusively — first node ON `bandTop`, last
+          // ON `bandBottom` — so the outermost hidden units line up with the
+          // outermost icon and the outermost section dot rather than floating
+          // inside them. `count - 1` guards a one-unit layer against /0.
+          { x, y: count === 1 ? bandTop + span / 2 : bandTop + (span * ni) / (count - 1) },
           // A little per-node jitter in z, or each hidden layer reads as a flat
           // card standing in space and the volume collapses back to 2D.
           HIDDEN_DEPTH[li] + Math.sin(ni * 2.3 + li) * 34
@@ -345,19 +402,32 @@ export const start = () => {
      * repo's rule for ambient work is that it must not cross text; 36 edges
      * still says "network" and leaves the type alone.
      */
+    // Grouped BY HOP as well as flattened. The flat list is what the geometry
+    // wants; `hops[k]` is what a wave needs — every edge crossing the gap from
+    // layer k to layer k+1, so the whole gap can carry at once.
+    hops = [];
     const pairs = [];
     for (let i = 0; i < layers.length - 1; i++) {
       const from = layers[i], to = layers[i + 1];
+      hops[i] = [];
       from.forEach((a, ai) => {
         const centreOf = Math.round(((ai + 0.5) / from.length) * to.length - 0.5);
         for (const d of [0, 1]) {
           const b = to[Math.min(to.length - 1, Math.max(0, centreOf + d))];
-          if (b) pairs.push(a, b);
+          if (b) { pairs.push(a, b); hops[i].push([a, b]); }
         }
       });
     }
     edges = new LineSegments(new BufferGeometry().setFromPoints(pairs), edgeMat);
     scene.add(edges);
+
+    /* A pass in flight is holding Vector3s from the graph that was just
+       replaced, so it would interpolate between nodes no longer on screen —
+       and `build()` runs on every resize tick and twice a second on the poll.
+       Dropping it costs at most one pass and cannot leave a front stranded.
+       `rest` is left alone: restarting it here would mean a window being
+       dragged never gets far enough into the quiet to start one. */
+    wave = null;
 
     labelLayers();
   };
@@ -429,7 +499,6 @@ export const start = () => {
   signals.frustumCulled = false;
   scene.add(signals);
 
-  let live = []; // { path: Vector3[], t, speed, to, arrived }
 
   /**
    * Light the REAL control an activation just left or just reached.
@@ -466,42 +535,71 @@ export const start = () => {
     lit.clear();
   };
 
-  const spawn = () => {
-    if (layers.length < 2 || live.length >= MAX_SIGNALS) return;
-    // The INDEX is picked, not the node, because the index is what finds the
-    // control: `ends.in` and `ends.out` are aligned with the first and last
-    // layer, and a Vector3 cannot say which icon it came from.
-    const pick = layers.map((l) => Math.floor(Math.random() * l.length));
-    live.push({
-      path: layers.map((l, i) => l[pick[i]]),
-      t: 0,
-      // Roughly half of what it was (0.26-0.46). A crossing now takes about
-      // eight seconds instead of three.
-      speed: 0.12 + Math.random() * 0.09,
-      to: ends.out[pick[pick.length - 1]] ?? null,
-      arrived: false,
-    });
-    fire(ends.in[pick[0]] ?? null);
+  /**
+   * A FORWARD PASS, NOT A PATH THROUGH IT.
+   *
+   * What this used to do: pick one unit per layer and send a single dot down
+   * that chain, input -> hidden -> hidden -> output. It looked like a network
+   * and it described something a network does not do. A layer in an MLP is one
+   * matrix multiply: every unit of layer k+1 reads every unit of layer k, all
+   * at once. There is no path, and nothing waits its turn — which is exactly
+   * how the old animation read, as layer 1 finishing before layer 2 starts.
+   *
+   * A wave instead. One gap at a time carries EVERY edge crossing it
+   * simultaneously, then the next gap, then the next. That is forward
+   * propagation, and it is also the quieter option: one coherent front the eye
+   * can follow, rather than eight independent dots on unrelated routes.
+   *
+   * It also fixes the firing. The whole input layer is the input VECTOR, so
+   * every contact icon lights when a pass begins and every section dot lights
+   * when it lands — not one of each, which quietly said the pass involved a
+   * single icon.
+   */
+  let wave = null;   // { hop, t } or null between passes
+  let rest = 1.2;    // seconds of quiet left before the next pass
+
+  const beginPass = () => {
+    if (!hops.length) return;
+    wave = { hop: 0, t: 0 };
+    ends.in.forEach(fire);
   };
 
   const stepSignals = (dt) => {
-    live = live.filter((s) => {
-      s.t += dt * s.speed;
-      // Fired on the frame it lands, before the filter drops it. The pulse and
-      // the dot reaching the rail are then the same event to a reader.
-      if (s.t >= 1 && !s.arrived) { s.arrived = true; fire(s.to); }
-      return s.t < 1;
-    });
-    signalGeo.setDrawRange(0, live.length);
-    live.forEach((s, i) => {
-      const segs = s.path.length - 1;
-      const u = s.t * segs;
-      const k = Math.min(segs - 1, Math.floor(u));
-      const a = s.path[k], b = s.path[k + 1], f = u - k;
+    if (!wave) {
+      rest -= dt;
+      if (rest <= 0) beginPass();
+      signalGeo.setDrawRange(0, 0);
+      return;
+    }
+
+    wave.t += dt / HOP_SECONDS;
+    if (wave.t >= 1) {
+      wave.hop += 1;
+      wave.t = 0;
+      if (wave.hop >= hops.length) {
+        // Landed. The output layer IS the five sections, so all five light.
+        ends.out.forEach(fire);
+        wave = null;
+        rest = REST_SECONDS;
+        signalGeo.setDrawRange(0, 0);
+        return;
+      }
+    }
+
+    const gap = hops[wave.hop];
+    // `ease` so a front leaves its layer and arrives at the next one with a
+    // settle rather than at a constant crawl. Linear read as a scanline.
+    const f = wave.t < 0.5
+      ? 2 * wave.t * wave.t
+      : 1 - ((-2 * wave.t + 2) ** 2) / 2;
+    const n = Math.min(gap.length, MAX_SIGNALS);
+    for (let i = 0; i < n; i++) {
+      const [a, b] = gap[i];
       signalPos[i * 3] = a.x + (b.x - a.x) * f;
       signalPos[i * 3 + 1] = a.y + (b.y - a.y) * f;
       signalPos[i * 3 + 2] = a.z + (b.z - a.z) * f;
-    });
+    }
+    signalGeo.setDrawRange(0, n);
     signalGeo.attributes.position.needsUpdate = true;
   };
 
@@ -572,16 +670,19 @@ export const start = () => {
     camera.lookAt(0, 0, 0);
 
     /**
-     * 0.8 a second, down from 3.2 — and the arithmetic matters, because halving
-     * the speed DOUBLES how long each activation lives, which cancels most of a
-     * spawn-rate cut.
+     * No spawn-rate roll any more: passes are paced by `stepSignals` itself,
+     * one at a time with `REST_SECONDS` of quiet between them. The randomness
+     * that used to live here was what made the old field read as weather
+     * rather than as a computation — a network does not fire a unit when a
+     * die comes up.
      *
-     *   concurrent ≈ spawn rate × lifetime
-     *   before: 3.2/s × ~3.0s  ≈ 9.6 lit at once
-     *   at 1.1: 1.1/s × ~6.1s  ≈ 6.7  — barely quieter
-     *   now:    0.8/s × ~6.1s  ≈ 4.9  — half the old field
+     * The attention budget PR #43 set still holds. It measured
+     * `concurrent ≈ spawn rate × lifetime` and landed on ~4.9 lit dots; a pass
+     * here shows 8, 16 and 12 across its three gaps and then nothing at all
+     * for 2.8s, which averages to about 6 over the cycle but spends a third of
+     * every cycle completely still. Motion that stops is far easier to read
+     * over than motion that never does.
      */
-    if (Math.random() < dt * 0.8) spawn();
     stepSignals(dt);
     renderer.render(scene, camera);
   };

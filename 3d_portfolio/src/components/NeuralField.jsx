@@ -33,7 +33,7 @@ import { useEffect, useRef } from "react";
 
 // The shape and the layer names live in netShape.js. They used to be declared
 // here AND in NeuralField3D, which is two copies of one fact: see that file.
-import { HIDDEN, LAYERS, FIRE_MS } from "./netShape";
+import { HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS } from "./netShape";
 
 const token = (el, name, alpha) => {
   const v = getComputedStyle(el).getPropertyValue(name).trim();
@@ -93,7 +93,16 @@ const NeuralField = () => {
 
     let dpr = 1, w = 0, h = 0, raf = 0, poll = 0;
     let layers = [];      // [inputs, hidden1, hidden2, outputs]
-    let signals = [];
+    // gaps[k] = every [from, to] edge crossing from layer k to layer k+1. A
+    // forward pass carries one whole gap at a time; see `gapsOf` below.
+    let gaps = [];
+    let wave = null;      // { hop, t } while a pass is in flight, else null
+    let rest = 1.2;       // seconds of quiet left before the next pass
+    // Signature of the interface the current graph was built from, so the
+    // 500ms poll can tell "nothing moved" from "rebuild". Without it the poll
+    // dropped every pass before it crossed: a pass takes ~3.5s and the poll
+    // fires every 0.5s, so the dock fired endlessly and the rail never did.
+    let lastSig = "";
 
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -123,13 +132,20 @@ const NeuralField = () => {
       if (!inputs.length || !outputs.length) return [];
 
       const x0 = inputs[0].x, x1 = outputs[0].x;
-      const midY = h / 2;
+      /* The hidden layers share the real columns' vertical band — the same
+         rule the 3D field follows. They used to span `h * 0.42` centred on the
+         viewport, which is far taller than the ~200px the docks occupy, so the
+         middle of the network bulged past the icons at either end and the band
+         moved with window height while the docks did not. Two layers read from
+         the interface and two invented from the viewport is not one diagram. */
+      const ys = [...inputs, ...outputs].map((p) => p.y);
+      const bandTop = Math.min(...ys);
+      const span = Math.max(...ys) - bandTop;
       const hidden = HIDDEN.map((count, li) => {
         const x = x0 + ((x1 - x0) * (li + 1)) / (HIDDEN.length + 1);
-        const spread = h * 0.42;
         return Array.from({ length: count }, (_, ni) => ({
           x,
-          y: midY - spread / 2 + (spread * (ni + 0.5)) / count,
+          y: count === 1 ? bandTop + span / 2 : bandTop + (span * ni) / (count - 1),
         }));
       });
       return [inputs, ...hidden, outputs];
@@ -161,17 +177,48 @@ const NeuralField = () => {
       lit.clear();
     };
 
-    // One activation travelling input -> hidden -> hidden -> output.
-    const spawn = () => {
-      if (layers.length < 2) return;
-      const path = layers.map((l) => l[Math.floor(Math.random() * l.length)]);
-      // Matched to NeuralField3D: half the old speed. This file is what a
-      // reduced-motion reader and a browser without WebGL actually see, so
-      // leaving it busy would quietly give the quiet version to nobody.
-      // `el` rides along on the endpoint nodes, so unlike the 3D field this one
-      // needs no parallel index array: these are plain objects, not Vector3s.
-      signals.push({ path, t: 0, speed: 0.13 + Math.random() * 0.1, arrived: false });
-      fire(path[0].el);
+    /**
+     * A forward pass, one layer gap at a time — the same correction the 3D
+     * field carries, and see its `stepSignals` for the full reasoning. Short
+     * version: a layer in an MLP is one matrix multiply, so every unit of
+     * layer k+1 reads every unit of layer k at once. The old single dot
+     * travelling input -> hidden -> hidden -> output drew a path through one
+     * unit per layer, which is not a thing a network does, and read exactly as
+     * "layer 1 finishes, then layer 2 starts".
+     */
+    const gapsOf = (ls) => {
+      const out = [];
+      for (let i = 0; i < ls.length - 1; i++) {
+        const from = ls[i], to = ls[i + 1], g = [];
+        from.forEach((a, ai) => {
+          const centreOf = Math.round(((ai + 0.5) / from.length) * to.length - 0.5);
+          for (const d of [0, 1]) {
+            const b = to[Math.min(to.length - 1, Math.max(0, centreOf + d))];
+            if (b) g.push([a, b]);
+          }
+        });
+        out.push(g);
+      }
+      return out;
+    };
+
+    /**
+     * Re-read the interface, and rebuild ONLY if it actually moved.
+     *
+     * A rebuild has to drop a pass in flight, because that pass holds node
+     * objects from the graph being replaced. The poll runs twice a second and
+     * a pass takes ~3.5s, so an unconditional rebuild meant no pass ever
+     * reached the output layer -- measured: the contact dock fired every
+     * ~500ms and the section rail never fired once in nine seconds.
+     */
+    const refresh = () => {
+      const next = readLayers();
+      const sig = `${w}x${h}|${next.flat().map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).join(" ")}`;
+      if (sig === lastSig) return;
+      lastSig = sig;
+      layers = next;
+      gaps = gapsOf(layers);
+      wave = null;
     };
 
     const draw = () => {
@@ -254,29 +301,32 @@ const NeuralField = () => {
           ctx.fill();
         });
 
-        // activations in flight
-        signals.forEach((s) => {
-          const segs = s.path.length - 1;
-          const at = s.t * segs;
-          const i = Math.min(segs - 1, Math.floor(at));
-          const f = at - i;
-          const a = s.path[i], b = s.path[i + 1];
-          const x = a.x + (b.x - a.x) * f;
-          const y = a.y + (b.y - a.y) * f;
+        // The gap currently carrying: every edge across it, together.
+        if (wave && gaps[wave.hop]) {
+          // Eased, so a front leaves one layer and settles into the next
+          // rather than crawling at a constant rate — linear read as a
+          // scanline sweeping the page.
+          const f = wave.t < 0.5
+            ? 2 * wave.t * wave.t
+            : 1 - ((-2 * wave.t + 2) ** 2) / 2;
+          gaps[wave.hop].forEach(([a, b]) => {
+            const x = a.x + (b.x - a.x) * f;
+            const y = a.y + (b.y - a.y) * f;
 
-          // the trail it is leaving on this segment
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(x, y);
-          ctx.strokeStyle = accent.replace(",1)", ",0.3)");
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
+            // the trail it is leaving on this edge
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = accent.replace(",1)", ",0.22)");
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
 
-          ctx.beginPath();
-          ctx.arc(x, y, 2.6, 0, Math.PI * 2);
-          ctx.fillStyle = accent.replace(",1)", ",0.85)");
-          ctx.fill();
-        });
+            ctx.beginPath();
+            ctx.arc(x, y, 2.2, 0, Math.PI * 2);
+            ctx.fillStyle = accent.replace(",1)", ",0.8)");
+            ctx.fill();
+          });
+        }
       }
     };
 
@@ -290,15 +340,29 @@ const NeuralField = () => {
         heroVisible = Math.max(0, Math.min(1, (b.bottom - h * 0.15) / (h * 0.5)));
       }
 
-      signals.forEach((s) => {
-        s.t += s.speed * 0.016;
-        // Fired on the frame it lands, before the filter drops it, so the pulse
-        // and the dot reaching the rail are one event to a reader.
-        if (s.t >= 1 && !s.arrived) { s.arrived = true; fire(s.path.at(-1).el); }
-      });
-      signals = signals.filter((s) => s.t < 1);
-      // ~0.8 a second at 60fps, matching NeuralField3D.
-      if (heroVisible > 0.05 && Math.random() < 0.013) spawn();
+      // 1/60s rather than a real delta: this loop has always stepped in fixed
+      // ticks, and a pass is paced in seconds, so the two agree.
+      const dt = 1 / 60;
+      if (!wave) {
+        // Passes stop while the hero is off screen rather than piling up
+        // behind it, and the first one after the reader returns is immediate.
+        if (heroVisible > 0.05) rest -= dt;
+        if (rest <= 0 && gaps.length) {
+          wave = { hop: 0, t: 0 };
+          layers[0]?.forEach((n) => fire(n.el)); // the whole input VECTOR
+        }
+      } else {
+        wave.t += dt / HOP_SECONDS;
+        if (wave.t >= 1) {
+          wave.hop += 1;
+          wave.t = 0;
+          if (wave.hop >= gaps.length) {
+            layers.at(-1)?.forEach((n) => fire(n.el)); // all five sections
+            wave = null;
+            rest = REST_SECONDS;
+          }
+        }
+      }
 
       draw();
       raf = requestAnimationFrame(frame);
@@ -309,7 +373,7 @@ const NeuralField = () => {
       clearInterval(poll);
       raf = 0;
       poll = 0;
-      signals = [];
+      wave = null;
       // The pulse classes sit on the rails, which this component does not own
       // and React keeps mounted. Leaving one behind outlives the field.
       unfireAll();
@@ -326,7 +390,7 @@ const NeuralField = () => {
       if (!wide.matches) return stop();
       ctx ??= c.getContext("2d");
       resize();
-      layers = readLayers();
+      refresh();
       if (reduced) {
         // one settled frame, the picture still reads, it just holds still
         draw();
@@ -335,7 +399,7 @@ const NeuralField = () => {
       if (!raf) raf = requestAnimationFrame(frame);
       // The docks appear, hide and move; re-read on a slow interval rather than
       // per frame, which would cost a layout flush 60 times a second.
-      if (!poll) poll = setInterval(() => { layers = readLayers(); }, 500);
+      if (!poll) poll = setInterval(refresh, 500);
     };
 
     /**

@@ -1,5 +1,81 @@
 # Worklog
 
+## 2026-10-15: the field draws a forward pass, not a path through one
+
+Raised by the owner, and correct: in a real network a LAYER computes at once.
+Layer k+1 is one matrix multiply over the whole of layer k — every unit reads
+every unit, simultaneously. Nothing waits its turn.
+
+The animation sent a single dot down a single chain, `input[2] -> hidden1[5] ->
+hidden2[1] -> output[3]`. That draws a path through one unit per layer, which
+is not a thing an MLP does, and it read exactly as the owner described it:
+layer 1 finishing before layer 2 starts.
+
+### A wave instead
+
+One gap at a time, every edge crossing it carrying together. Layer 1 fires,
+the whole first gap carries, layer 2 fires, and so on. That is forward
+propagation.
+
+It also fixed the control lighting, which had the same bug in miniature: the
+whole input layer IS the input vector, so all four contact icons light when a
+pass begins and all five section dots light when it lands. One of each quietly
+said a pass involved a single icon.
+
+| Measured over 14s | |
+| --- | --- |
+| Pass begins | `IN x4` — all four icons |
+| Pass lands | `OUT x5` — all five dots |
+| Pass duration | **3453ms** (3 gaps x 1.15s) |
+| Full cycle | **6255ms** (3.45s + 2.8s rest) |
+
+Same figures on the 2D fallback with WebGL denied: 3503ms and 6322ms.
+
+### It is also quieter, which was not obvious
+
+PR #43 measured the old field at ~4.9 activations lit and chose that so a
+reader notices the motion once and reads over it. A pass shows 8, 16 and 12
+dots across its three gaps — more at the peak — and then **nothing at all** for
+2.8 seconds.
+
+That is the better bargain for one attention budget. The eye is caught by
+motion that never stops, not by motion that happens and then ends. The random
+spawn roll is gone with it: a network does not fire a unit when a die comes up,
+and the randomness is most of what made the old field read as weather.
+
+### The hidden layers stopped being invented
+
+They spanned `h * 0.44` centred on the viewport — 384px on an 872px screen,
+against ~200px for the docks they connect. So the middle of the network bulged
+past the icons at both ends, and the band moved with window height while the
+docks, sized by their own content, did not. Two layers read from the interface
+and two invented from the viewport is not one diagram.
+
+The band is now read off the real controls. Measured from the GPU framebuffer
+at two sizes:
+
+| Viewport | Column | Measured x | Label x | Column y | Dock band |
+| --- | --- | ---: | ---: | --- | --- |
+| 1707x872 | HIDDEN 1 | 584.8 | 586 | 356.7–514.8 | 358–514 |
+| | HIDDEN 2 | 1105.5 | 1106 | 357.4–514.1 | |
+| 1281x883 | HIDDEN 1 | 442.8 | 444 | 362.1–520.1 | 363.7–519.7 |
+| | HIDDEN 2 | 821.5 | 822 | 362.1–519.5 | |
+
+### The bug this introduced, and the guard that fixes it properly
+
+A pass holds node objects from the graph it started on, so `build()` has to drop
+one in flight. `build()` ran unconditionally on a 500ms poll. A pass takes
+3.5s. No pass ever reached the output layer.
+
+It was visible in the instrumentation immediately: the contact dock fired every
+~500ms and the section rail **never fired once in nine seconds**.
+
+The fix is the thing that should always have been there — a signature of every
+anchor position plus the viewport, and an early return when nothing moved.
+Before, the poll rebuilt two BufferGeometries and re-made four label elements
+twice a second for a picture that was already correct.
+
+
 ## 2026-10-15: the roles deck gets a seam, and a card you can see in the dark
 
 Three complaints about the Roles section, all measured at 1512x900.
