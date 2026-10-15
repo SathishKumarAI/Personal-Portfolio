@@ -1,5 +1,77 @@
 # Worklog
 
+## 2026-10-15 (third pass): a taxonomy error, 56 tools, and a cloud matrix
+
+### The error that mattered most
+
+`Claude` was filed in the `Inference` box beside `vLLM` and `Ollama`. Reported
+by the owner, with the reason that matters: "hiring managers might catch it."
+
+They are three different kinds of thing — an inference SERVER you run, a local
+RUNTIME you install, and a HOSTED MODEL you call. The first two are
+infrastructure you operate; the third is a service you consume. Filing them
+together claims an interchangeability that does not exist, and anyone who has
+deployed an LLM reads that box and stops trusting the rest of the page.
+
+The Model plane gained `Hosted models`. More usefully, the session produced
+`docs/STACK-TAXONOMY.md`: the rule the boxes follow, all 56 tools with the
+reason each is where it is, the five placements worth arguing with, and the
+nine tools that are claims only the owner can confirm. **A placement is a
+claim**, and until that file existed the reasoning was nowhere a reader could
+check it.
+
+### The cloud matrix, and three designs discarded
+
+| Design | Why it went |
+|---|---|
+| Per-tool switch (`S3` becomes `Cloud Storage` in place) | Hid the equivalence by showing one side at a time |
+| A 33-row comparison table beside the drawing | A description of a picture that was already there — ~165 cells on top of the argument |
+| **The drawing itself, re-rendered per platform** | Kept |
+
+The owner's objection cut through the first two: "why show `Airflow -> MWAA`
+if you are only showing AWS? You can directly show the image." An arrow is
+only worth its space when both ends are visible, and a table next to a diagram
+is redundant with it.
+
+38 roles now map to AWS, Google Cloud and Azure. Four nodes come back empty on
+every platform — federated training, the classical model, the interface and
+the language it is written in — which is a finding rather than a gap: moving
+cloud does not touch your code.
+
+### Colour stopped being decoration twice
+
+- **Planes are ORDINAL**, so they are one hue at six intensities with
+  strictly monotonic luminance. Six distinct hues said "six unrelated kinds"
+  about things that are positions on one path.
+- **Platforms are CATEGORICAL** — unordered alternatives you switch between —
+  so three distinct hues are correct there. The same reasoning, opposite
+  conclusion.
+
+### Smaller, same pass
+
+- Security as a skill, not a platform row. The owner's framing: IAM is decided
+  by data engineering, data science and DevOps together and touches every
+  stage. `PII & anonymisation` sits in the DATA plane, because masking has to
+  happen before data moves on.
+- The definition card flattened to a strip above the tools, which freed the
+  band beside the heading: the token stream went 1,015x52 to 1,201x120 and now
+  runs out of "Stack".
+- `fit to screen` was a broken promise — it trimmed description lines on a
+  view whose height came from its row count. It now flows the services too,
+  and lands within 18px across all four platforms.
+- Every compact service carries its role's mark, because bare names separated
+  by interpuncts read as one run-on string.
+- An emoji cursor, scoped to the hero. An emoji has no tip, so the hotspot is
+  a guess; that cost is why it stops at the hero's bottom edge.
+
+### The measurement habit that paid again
+
+The dev server's StrictMode double-mount makes framer's `whileInView`
+unreliable, and it cost a false alarm: the Stack heading sat at `opacity: 0`
+after scripted scrolling and looked like a regression. It does not reproduce
+in a production build. **Verify layout against `vite preview`, not the dev
+server.**
+
 ## 2026-10-15 (later): planes, a colour scale, and a number that was wrong twice
 
 ### The rainbow, diagnosed

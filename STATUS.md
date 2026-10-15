@@ -4,7 +4,7 @@ Written when work stopped. Read this first on return, then `3d_portfolio/README.
 for the change-to-file table.
 
 **Last touched:** 2026-10-15
-**Branch:** `main`. **63 PRs squash-merged**, the Stack increment landing as #66 (sixteen commits squashed), branch deleted.
+**Branch:** `main`. **65 PRs squash-merged**; the Stack work landed as #66, #67 and #68. Nothing open.
 The owner asked for commits rather than a merge per fix ("try not to merge
 every time you fix everything, just commit"). One PR goes up for the whole
 Stack increment when he is satisfied with it.
@@ -126,6 +126,24 @@ construction. It now reads **"best match"** and **"51% as strong"** — a claim
 about the list, which is the only claim ranked retrieval supports. A figure
 being measured is not enough; it also has to be one a reader can act on.
 
+### The Stack section, as it now stands
+
+| | |
+|---|---|
+| Tools | **56**, each with a definition and a mark |
+| Views | tool list (default) · system diagram, with a `fit to screen` mode |
+| Diagram | 3 planes + a substrate, 17 nodes, labelled payloads between planes |
+| Cloud matrix | **38 roles** mapped to AWS, Google Cloud and Azure |
+| Honesty rail | `mine` is the only column that is a claim about him; 10 rows carry an em dash |
+| Reasoning | `docs/STACK-TAXONOMY.md` — every tool, the box it is in, and why |
+
+**The correction worth remembering:** `Claude` sat in the `Inference` box with
+`vLLM` and `Ollama`. Those are an inference *server*, a local *runtime* and a
+*hosted model* — three different kinds of thing, and a reader who deploys LLMs
+would have stopped trusting the page there. The Model plane now has a
+`Hosted models` box. Placement is a claim; `STACK-TAXONOMY.md` exists so the
+next one can be checked rather than guessed.
+
 ### The colour scale, and why the rainbow was wrong
 
 Reported as "AI slop", and the diagnosis is worth keeping: **the data is
@@ -226,15 +244,34 @@ the palette and 2D field rows against the 3D field rows, the role-deck traps
 against the three.js traps — so both were kept. Repo-wide scan: that was the
 only file affected.
 
+### Open decisions — these are the owner's, and the work is blocked on neither
+
+1. **Nine tools are unverified claims about his experience.** Added on request
+   in the 2026-10-15 session and shipped: `Snowflake`, `Databricks`,
+   `Unity Catalog`, `Guardrails`, `LangSmith`, `Ragas`, `IAM & RBAC`,
+   `Secrets management`, `PII & anonymisation`. If any is not true, delete it
+   from `stackGroups` in `src/constants/index.js` and `npm test` will name
+   everything else that has to move. See `docs/STACK-TAXONOMY.md`.
+2. **Coding assistants have no home and are named nowhere.** Claude Code,
+   Copilot and Cursor are a fourth category — tools that WRITE the code rather
+   than components of what it runs. They must not be mixed into the stack; if
+   they should appear at all they need their own block. Not decided.
+3. **The list view is 1.08 screens, not 1.00.** It was 0.99 before the
+   definition card was flattened into a strip. The trade bought a definition
+   line beside its tools and an animation four times the area. Reverting is a
+   revert, not a rebuild.
+
 ### Where the next session starts
 
-Stack is merged and live. Open, and both the owner's call:
+Stack is merged and live, with 56 tools and a 38-role cloud matrix.
 
-- **The diagram view is 1.38 screens.** The tool list holds one screen and is
-  the default. Levers: collapse the substrate band, or drop the per-node role
-  line (~40px) — which is the sentence that makes a box a slot rather than a
-  label, so it is not mine to cut.
+- The diagram has a **`fit to screen`** control, which is the answer to its
+  height rather than cutting the lines that make a box a slot. It reaches
+  ~1.1 screens; the full view is ~1.7 with a cloud selected.
 - `COD-327` — cold-loading a section link does not scroll. Still open.
+- The **emoji cursor is live on the hero only**, and nowhere else. Links and
+  buttons keep their pointer. To remove: delete the `.hero-cursor` block in
+  `index.css` and the class in `Hero.jsx`.
 
 ## The 2026-09-15 session, newest first
 
