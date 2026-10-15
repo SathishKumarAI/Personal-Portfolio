@@ -5,8 +5,9 @@ import { fadeIn } from "../utils/motion";
 import Reveal from "./Reveal";
 import { SectionWrapper } from "../hoc";
 import SectionHead from "./SectionHead";
-import TagTerm from "./TagTerm";
 import TokenStream from "./TokenStream";
+import TagTerm from "./TagTerm";
+import StackDiagram, { DiagramControls } from "./StackDiagram";
 
 // A set, not a sum: several tools appear in more than one group, and counting
 // the arrays would claim more than he lists.
@@ -17,103 +18,278 @@ const STACK_META = `${stackGroups.length} areas · ${
 const stageNo = (i) => String(i + 1).padStart(2, "0");
 
 /**
- * Where the pointer is, in card-local percent, written straight to the DOM node
- * as `--mx`/`--my` for the spotlight in `.stack-card::before`.
+ * Owns, the one place a tool's definition is read.
+ * Does not own: which tool that is — the section decides, from hover and taps.
  *
- * Imperative on purpose. Routing a pointermove through React state would
- * re-render six cards on every mouse pixel for an effect that is pure paint,
- * and the target here is a plain element rather than the motion wrapper around
- * it, so framer-motion never rewrites the style attribute out from under it.
+ * It replaced thirty-three floating popovers. Those failed twice over: the
+ * surface was `rgba(255 255 255 / 0.62)`, so a definition rendered over a card
+ * full of chips could not be read through its own background, and hover-open
+ * plus click-pin let two sit on screen overlapping each other.
+ *
+ * A fixed slot cannot cover anything, cannot be clipped by the row below, and
+ * gives a reader ONE place to look — which matters more here than anywhere
+ * else on the page, because a recruiter meeting an unfamiliar tool is exactly
+ * who this section is for.
+ *
+ * It holds its height whether or not anything is selected. A panel that
+ * appears and disappears would move the rail and the heading beside it on
+ * every hover, and the fix for a jumpy section is not a jumpier one.
  */
-const spot = (e) => {
-  const el = e.currentTarget;
-  const r = el.getBoundingClientRect();
-  el.style.setProperty("--mx", `${((e.clientX - r.left) / r.width) * 100}%`);
-  el.style.setProperty("--my", `${((e.clientY - r.top) / r.height) * 100}%`);
-};
+const DefinitionPanel = ({ entry, pinned }) => (
+  <div
+    /* OPAQUE. `bg-tertiary/40` was the first attempt and it is the very
+       fault this panel exists to fix: a translucent surface carrying prose
+       lets whatever is behind it bleed into the words. The old popover was
+       `rgba(255 255 255 / 0.62)` and unreadable for exactly that reason. */
+    className="hidden md:flex h-full min-h-[9rem] flex-col rounded-2xl border border-line bg-tertiary p-4"
+    // Announced, but politely: the reader asked for this by pointing at a
+    // chip, so it is a result, not an alert.
+    aria-live="polite"
+  >
+    {entry ? (
+      <>
+        <p className="flex items-baseline gap-2">
+          <span className="font-display text-[15px] font-semibold text-white-100 tracking-[-0.01em]">
+            {entry.name}
+          </span>
+          {pinned && (
+            <span className="font-mono text-micro uppercase tracking-[0.12em] text-accent-ink">
+              pinned
+            </span>
+          )}
+        </p>
+        {entry.full && entry.full !== entry.name && (
+          <p className="mt-0.5 font-mono text-label text-faint">{entry.full}</p>
+        )}
+        <p className="mt-2 font-sans text-data text-secondary leading-snug">
+          {entry.def}
+        </p>
+        {entry.link && (
+          <a
+            href={entry.link}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-auto pt-2 font-mono text-chip text-accent-ink hover:underline"
+          >
+            Learn more ↗
+          </a>
+        )}
+      </>
+    ) : (
+      /* The resting state says what the slot is FOR. An empty bordered box
+         reads as something that failed to load.
+
+         It is also the ONLY place the instruction is given now. There used to
+         be a separate hint line under the intro -- "Dotted terms have a
+         plain-English definition, tap one" -- which is the same sentence this
+         panel was already saying, 400px away from it, and both were desktop
+         only so a desktop reader got it twice. `TERM_HINT` moved in here
+         rather than being retyped, so there is still one string. */
+      <p className="m-auto text-center font-serif italic text-faint text-label leading-[1.5]">
+        {TERM_HINT}
+        <br />
+        Tap one to keep it here.
+      </p>
+    )}
+  </div>
+);
+
+/**
+ * The offer, and it is phrased as an offer on purpose.
+ *
+ * The owner's instruction was to let the reader choose rather than deciding
+ * for them: "let's give the chance to the user instead of just ourselves
+ * deciding to either to show stacks or like system diagram". A segmented
+ * control labelled "Tools / System" would be a setting; a question is an
+ * invitation, and the second option is the one most readers will not know is
+ * there.
+ *
+ * Both options stay rendered as real buttons rather than one button whose
+ * label flips. A control that says "See the system diagram" and then says
+ * "Back to the list" is two different controls in one position, and a reader
+ * who looks away loses track of which state they are in. Two buttons with the
+ * current one marked never has that problem, and `aria-pressed` says the same
+ * thing to a screen reader that the fill says to an eye.
+ *
+ * `lg`, matching StackDiagram itself. Offering a view that the viewport will
+ * refuse to render is worse than not offering it.
+ */
+const ViewToggle = ({ view, onChange }) => (
+  <div className="hidden lg:flex items-center gap-3">
+    {/* The invitation is only an invitation while the answer is still no.
+        Asking "would you like to see this as a system diagram?" beside a
+        system diagram the reader is already looking at reads as a control that
+        has not noticed its own state. It also does not fit: in the diagram
+        view this sits at the end of a row that already carries the `?`, the
+        platform picker and the note, and the question alone is ~300px. */}
+    {view !== "diagram" && (
+      <span className="font-serif italic text-faint text-label">
+        Would you like to see this as a system diagram?
+      </span>
+    )}
+    <div
+      role="group"
+      aria-label="Stack view"
+      className="flex items-center gap-1 rounded-full border border-line p-0.5"
+    >
+      {[
+        ["list", "Tool list"],
+        ["diagram", "System diagram"],
+      ].map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onChange(id)}
+          aria-pressed={view === id}
+          className={`rounded-full px-3 py-1 font-mono text-micro uppercase tracking-[0.12em] transition-colors ${
+            view === id
+              ? "bg-accent text-white-100"
+              : "text-faint hover:text-white-100"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  </div>
+);
 
 const Tech = () => {
   // Which group the pointer is on, or null. Drives only the rail above the
   // grid: the cards light themselves in CSS, which needs no state at all.
   const [active, setActive] = useState(null);
 
+  /**
+   * ONE definition panel for thirty-three terms.
+   *
+   * `hovered` is what the pointer is over; `pinned` is what a tap fixed in
+   * place. Pinned wins, so a reader can park a definition and keep scanning
+   * without it being stolen by whatever the cursor crosses next.
+   *
+   * Both live here rather than in the chips because "only one is showing" is a
+   * fact about the section. Thirty-three components each owning a popover is
+   * how two ended up on screen at once.
+   */
+  const [hovered, setHovered] = useState(null);
+  const [pinned, setPinned] = useState(null);
+  const shown = pinned ?? hovered;
+
+  /**
+   * Which reading of the stack is on screen. Defaults to the list, and that
+   * default is deliberate: the list is what a recruiter scanning for a
+   * keyword needs, and it is the one that works at every width. The diagram
+   * is the better answer to "do these fit together", which is a question the
+   * reader has to be interested enough to ask.
+   *
+   * Not persisted. A remembered view means a reader returning to the page
+   * lands on a diagram they chose once, weeks ago, with no memory of choosing
+   * it -- which reads as the site being broken rather than as a preference
+   * being honoured.
+   */
+  const [view, setView] = useState("list");
+
+  // Lifted out of StackDiagram because its CONTROL sits in the header, where
+  // there is free vertical space, while the thing it controls sits below the
+  // header. See PlatformPicker's own comment.
+  const [platform, setPlatform] = useState("oss");
+  const [why, setWhy] = useState(false);
+
+  // Shared by both views, so a term pinned in the list is still pinned when
+  // the reader switches to the diagram. Written once rather than inline in
+  // each view: two copies of a toggle-the-pin rule is two chances for them to
+  // disagree about what a second tap does.
+  const pinTerm = (e) => setPinned((p) => (p?.name === e.name ? null : e));
+
   return (
     <>
-      {/* The token stream lives here and nowhere else: this is the section with
-          the LLM / RAG group, so a stream of sub-word pieces illustrates the
-          content instead of decorating the page. */}
+      {/* The token stream, back and boxed.
+          It belongs here -- this is the section with the LLM / RAG group, so a
+          stream of sub-word pieces illustrates the content rather than
+          decorating the page. What was wrong was its SIZE, not its presence:
+          at `w-[52%]` it measured a 416x106px overlap with the intro paragraph
+          (the whole paragraph) and another 416x19 with the hint. Deleting it
+          was the wrong correction.
+
+          Confined to the top-right block instead, which is the one region the
+          new layout genuinely leaves empty -- above the definition panel and
+          clear of the text column. The repo's rule is that ambient work must
+          not cross text, not that it cannot exist. */}
       <TokenStream />
 
-      <SectionHead title="Stack" meta={STACK_META} />
+      {/* HEADER IN TWO COLUMNS, and the argument stays with the heading.
+          The first attempt put the intro in the right column and the panel
+          under it. That left 244px of measured dead space under "Stack" on the
+          left, because the right column was the taller of the two and the grid
+          waits for both. Reading order suffered too: the eye had to cross the
+          page to find the sentence that explains the section.
+          Heading and argument together on the left; the panel takes the right,
+          which is the half that was empty to begin with.
 
-      <motion.p
-        variants={fadeIn("", "", 0.1, 1)}
-        // Desktop only. On a phone this section is a list of tools and the
-        // argument for them is three lines the reader scrolls past to reach it.
-        className="hidden md:block mt-4 font-sans text-secondary text-lede max-w-[34rem] leading-[1.7]"
-      >
-        Not a badge collection: this is what I actually reach for, grouped by
-        where it sits on the path from raw data to a running product. I pick
-        tools that are boring in production: measurable, reproducible, and easy
-        to hand off.
-      </motion.p>
+          `items-end`, not `items-start`. Aligned to the top, the panel sat at
+          the top right while the tools it describes were ~400px below it, so
+          pointing at a chip meant reading the answer at the other end of the
+          section. Dropped to the baseline of the header it sits directly above
+          the columns, and the slack moves up beside the display-size heading,
+          where open space reads as intent rather than as a gap. */}
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:gap-x-12 md:items-stretch">
+        <div className="min-w-0">
+          <SectionHead title="Stack" meta={STACK_META} />
 
-      {/* The hint is an instruction about the interface, not part of the
-          argument the intro is making, so it gets its own line, its own voice
-          (serif italic, the reading face) and a mark. The info glyph is inline
-          rather than in icons.js: that module owns brand marks and off-site
-          destinations, not one-off affordances. */}
-      <motion.p
-        variants={fadeIn("", "", 0.18, 1)}
-        className="mt-4 flex items-start gap-2 font-serif italic text-faint text-body leading-[1.6] max-w-[32rem]"
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          aria-hidden="true"
-          className="mt-[4px] shrink-0"
-        >
-          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2a8 8 0 110 16 8 8 0 010-16zm-1 3h2v2h-2V7zm0 4h2v6h-2v-6z" />
-        </svg>
-        {TERM_HINT}
-      </motion.p>
+          <motion.p
+            variants={fadeIn("", "", 0.1, 1)}
+            // Desktop only. On a phone this section is a list of tools and the
+            // argument for them is three lines the reader scrolls past.
+            className="hidden md:block mt-4 max-w-[46rem] font-sans text-secondary text-body leading-[1.65]"
+          >
+            {view === "diagram" ? (
+              /* VIEW-SPECIFIC, and not as a trick to save height -- though it
+                 saves 56px, which is why it got looked at. The list's sentence
+                 says the tools are "grouped by where it sits on the path from
+                 raw data to a running product". In the diagram that path is
+                 drawn, with the stages named and the edges labelled, so the
+                 sentence is describing something the reader is looking at.
+                 What they need instead is how to READ the drawing. */
+              <>
+                The same tools, filed by the job they do in a system rather
+                than by what I would call the skill. Hover any one for what it
+                is; pick a platform to see what fills its role there.
+              </>
+            ) : (
+              <>
+                Not a badge collection: this is what I actually reach for,
+                grouped by where it sits on the path from raw data to a running
+                product. I pick tools that are boring in production:
+                measurable, reproducible, and easy to hand off.
+              </>
+            )}
+          </motion.p>
 
-      {/* THE PIPELINE RAIL. The intro claims the six groups are ordered along a
-          path from raw data to a running product, and until now nothing on the
-          page showed it: a 3x2 grid of cards states six categories and throws
-          the ordering away. The rail draws the claim.
+        </div>
 
-          It repeats none of the card titles on purpose — six titles above six
-          titled cards is the same six words read twice. It carries the two end
-          labels, which are the part the cards cannot say, and the six tints,
-          which double as the legend for the dots below.
+        {/* The panel is the whole right column now, and it STRETCHES to the
+            row rather than hanging off the bottom of it. Bottom-aligned it
+            left its own gap above itself once the toggle moved out; filling
+            the row also gives a long definition more room before it has to
+            wrap, which is the only thing that was ever cramped about it. */}
+        <div className="flex flex-col gap-3">
+          <DefinitionPanel entry={shown} pinned={Boolean(pinned)} />
+          {/* LIST VIEW ONLY, and it is free here. The right column holds a
+              144px panel against a 229px left column, so a 30px control fits
+              in the slack and the section does not grow. Given its own strip
+              below the header it cost a measured 54px — for a control that
+              had somewhere free to be.
 
-          aria-hidden, and correctly so: it is a picture of an ordering the
-          intro paragraph already states in words, and the cards below sit in
-          that order in the DOM. A screen reader loses nothing. */}
-      <Reveal
-        delay={0.1}
-        aria-hidden="true"
-        className="hidden md:flex items-center gap-3 mt-10 font-mono text-micro text-faint uppercase tracking-[0.14em]"
-      >
-        <span className="shrink-0">raw data</span>
-        <span className="flex flex-1 items-center gap-[3px]">
-          {stackGroups.map((g, i) => (
-            <span
-              key={g.title}
-              className="stack-seg h-[3px] flex-1 rounded-full"
-              style={{
-                background: `rgb(var(${g.tint}))`,
-                opacity: active === null ? 0.45 : active === i ? 1 : 0.16,
-                transform: active === i ? "scaleY(2.4)" : "scaleY(1)",
-              }}
-            />
-          ))}
-        </span>
-        <span className="shrink-0">running product</span>
-      </Reveal>
+              In the diagram view it moves to the end of the controls row,
+              which is where it was asked to go and where its siblings are.
+              Both positions are right-aligned and directly above the content,
+              so the control does not travel far when the view changes. */}
+          {view === "list" && (
+            <div className="hidden md:flex justify-end">
+              <ViewToggle view={view} onChange={setView} />
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Two shapes, because a phone and a desktop want different things here.
           On a phone this is one block with six labelled rows: six bordered cards
@@ -122,7 +298,22 @@ const Tech = () => {
           description to earn its place. Each row and each card still reveals on
           its own viewport entry, so the section animates as the reader arrives
           at it rather than all at once. */}
-      <div className="mt-6 sm:mt-8">
+      {/* The diagram's own controls: `?`, platform, and the view toggle at
+          the end. Rendered only for the view they act on — a vendor picker
+          above a tool list would be a control with nothing to change. */}
+      {view === "diagram" && (
+        <div className="mt-6 hidden md:block">
+          <DiagramControls
+            platform={platform}
+            onChange={setPlatform}
+            why={why}
+            onWhy={() => setWhy((v) => !v)}
+            trailing={<ViewToggle view={view} onChange={setView} />}
+          />
+        </div>
+      )}
+
+      <div className="mt-6">
         {/* phone: six labelled rows of flowing terms, no card and no chips.
             Boxed, this was thirty-three bordered rectangles about 50px tall — a
             form, not a vocabulary, and most of a screen per group. Bare terms
@@ -178,53 +369,110 @@ const Tech = () => {
             Reveal stays the motion wrapper and the card is a plain child of it,
             so the pointermove handler writes --mx/--my to an element that
             framer-motion is not also writing a style attribute to. */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 items-stretch">
+        {/* THE PATH RULE CAME OUT, and it was the fourth statement of one fact.
+
+           It was a segmented rail of six tinted bars, then a line reading
+           "FROM RAW DATA ---- TO A RUNNING PRODUCT". The columns already run
+           left to right, they are already numbered 01-06, they already carry
+           their own tint bar, and the intro paragraph directly above already
+           says "grouped by where it sits on the path from raw data to a
+           running product" -- the same words. A label with no sentence around
+           it is what made "what does RAW DATA mean here?" a fair question;
+           the sentence that answers it was always three lines up.
+
+           It also cost 41px of a section under a one-screen budget that now
+           carries 47 terms. Measured: 897px to 856px, 1.02 screens to 0.97. */}
+
+        {/* SIX COLUMNS, ONE ROW — the pipeline IS the layout.
+            A 3x2 grid of cards states six categories and throws the ordering
+            away; the rail above had to draw it back. Laid left to right, the
+            columns are the path, and the section stopped being 1.34 screens
+            tall.
+
+            Six only from `xl`. Below that the columns would be narrower than
+            the longest chip ("Exploratory analysis"), so it steps down to
+            three and then two rather than letting a tool name wrap mid-word. */}
+        {/* The diagram, when it is asked for. Below `lg` the toggle is not
+            offered and `view` can only be "list", so the grid remains the one
+            thing a tablet or a phone can reach. */}
+        {view === "diagram" && (
+          <StackDiagram onDefine={setHovered} onPin={pinTerm} shown={shown} />
+        )}
+
+        <div
+          className={`${
+            view === "diagram" ? "hidden" : "hidden md:grid"
+          } md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-x-4 gap-y-7 items-start`}
+        >
           {stackGroups.map((g, i) => (
             <Reveal
               key={g.title}
-              // Delay by column, so a row arrives as a row rather than all six
-              // off one event.
-              delay={(i % 3) * 0.07}
-              className="h-full"
+              // By column, so the row arrives as a row travelling left to
+              // right — the same direction the pipeline reads.
+              delay={(i % 6) * 0.06}
+              className="min-w-0"
             >
               <div
-                className="stack-card glass-card card-lift rounded-2xl p-5 sm:p-6 flex flex-col h-full"
+                className="flex min-w-0 flex-col"
                 style={{ "--cat": `var(${g.tint})` }}
-                onPointerMove={spot}
                 onMouseEnter={() => setActive(i)}
                 onMouseLeave={() => setActive(null)}
                 onFocus={() => setActive(i)}
                 onBlur={() => setActive(null)}
               >
-                <div className="flex items-start gap-2.5">
-                  <span
-                    className={`mt-[7px] h-2 w-2 shrink-0 rounded-full ${g.dot}`}
-                    aria-hidden="true"
-                  />
-                  {/* The heading was 12px uppercase in accent red: a dashboard
-                      label for what is the only heading inside the card. At
-                      reading size in the display face it is a heading, and the
-                      hierarchy inside a card finally runs heading > note > tools
-                      instead of three near-equal bands. */}
-                  <h3 className="font-display text-[17px] font-semibold text-white-100 tracking-[-0.01em] leading-tight">
+                {/* The tint rule is what ties a column to its segment in the
+                    rail above. It replaces the card border: six bordered boxes
+                    side by side read as a table, and the colour already does
+                    the grouping the border was doing. */}
+                <span
+                  aria-hidden="true"
+                  className="h-[3px] w-full rounded-full"
+                  style={{
+                    background: `rgb(var(${g.tint}))`,
+                    opacity: active === null ? 0.55 : active === i ? 1 : 0.2,
+                  }}
+                />
+                <div className="mt-3 flex items-baseline gap-2">
+                  <h3 className="font-display text-[15px] font-semibold text-white-100 tracking-[-0.01em] leading-tight">
                     {g.title}
                   </h3>
-                  <span className="stack-index ml-auto shrink-0 font-mono text-[26px] font-medium leading-none -mt-1">
+                  <span className="stack-index ml-auto shrink-0 font-mono text-[15px] font-medium leading-none">
                     {stageNo(i)}
                   </span>
                 </div>
                 {g.note && (
-                  <p className="mt-2.5 font-serif text-secondary text-body leading-[1.5]">
+                  <p className="mt-1.5 font-serif text-secondary text-label leading-[1.45]">
                     {g.note}
                   </p>
                 )}
-                {/* mt-auto is the whole point: grid already equalises card
-                    height, but without it the chip row floats up under a
-                    one-line note and two cards in a row disagree by up to
-                    34px. */}
-                <div className="mt-auto pt-5 flex flex-wrap gap-2">
+                {/* BARE WORDS, not boxes — the treatment this file already
+                    uses on a phone, for the reason it already gives there:
+                    "the dotted underline does all the work the border was
+                    doing... same information, a fifth of the ink."
+
+                    Boxed, a 200px column could not hold "Detection & tracking"
+                    or "Exploratory analysis" on one line, so those two chips
+                    broke across two lines and stood 45px tall against 25px for
+                    every other chip — measured. And the primary tier was a
+                    solid near-black fill, so twelve of thirty-three tools were
+                    the heaviest marks in the section, competing with the
+                    heading for no stated reason.
+
+                    Bare, a long name simply wraps as text, and the tier is
+                    carried by weight and colour the way the rest of the page
+                    carries emphasis. */}
+                <div className="mt-3 flex flex-col items-start gap-y-0.5">
                   {g.items.map((it) => (
-                    <TagTerm key={it} name={it} primary={g.primary?.includes(it)} />
+                    <TagTerm
+                      key={it}
+                      name={it}
+                      flow
+                      dense
+                      primary={g.primary?.includes(it)}
+                      onDefine={setHovered}
+                      onPin={pinTerm}
+                      active={shown?.name === it}
+                    />
                   ))}
                 </div>
               </div>

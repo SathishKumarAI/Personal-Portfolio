@@ -1,5 +1,308 @@
 # Worklog
 
+## 2026-10-15 (later): planes, a colour scale, and a number that was wrong twice
+
+### The rainbow, diagnosed
+
+Reported as "AI slop". The six category tints were already a deliberate
+cool-to-warm sweep, so the fix was not "make them nicer" — it was naming what
+was actually broken: **the data is ordinal and the palette was categorical.**
+Six distinct hues assert six unrelated kinds; these are positions on one path,
+numbered. Hue has no inherent ranking, so the one thing colour needed to carry
+was the one thing it could not. The sweep also detoured through a muddy
+yellow-olive midpoint — the `jet`-colormap failure, non-monotonic lightness
+pretending to be a scale.
+
+Replaced with one hue at six intensities. The part that matters is that the
+LUMINANCE IS MONOTONIC, and the first attempt was not:
+
+| | step 1 | 2 | 3 | 4 | 5 | 6 |
+| --- | --- | --- | --- | --- | --- | --- |
+| first attempt (dark) | 0.302 | 0.254 | 0.261 | — | — | — |
+| shipped (dark) | 0.151 | 0.162 | 0.179 | 0.205 | 0.239 | 0.281 |
+| shipped (light) | 0.284 | 0.215 | 0.164 | 0.126 | 0.103 | 0.092 |
+
+Chroma had risen while lightness stayed flat, which makes a sequence of tints,
+not a scale. Caught by computing luminance, not by looking at it. Every step
+clears 3:1 against its own ground, and the direction is monotonic in all six
+themes.
+
+### Planes, because a chain was the wrong shape
+
+A single left-to-right sequence cannot say the thing that matters about an ML
+system: part of it is a FLOW and part of it is a SUBSTRATE. Airflow runs
+before pandas runs before FastAPI. Python, Docker and MLflow sit nowhere in
+that order — everything above stands on them. Drawn as one chain, the second
+kind looked like the first.
+
+It also collapsed genuinely separate work. "Computer vision" as one box hid
+that detection and federated training are different problems with different
+constraints: one is a model on a frame, the other a training topology where
+the data is not allowed to move.
+
+Five stages became **16 nodes in 3 planes plus a substrate**. The model plane
+is marked `alternatives` rather than drawn as a chain, because most projects
+use one or two of its nodes and a connector between object detection and
+retrieval would assert a dependency that does not exist.
+
+Colour and structure are the same idea: every node in a plane shares the
+plane's intensity, because identical intensity is a claim — "same depth" — and
+a categorical palette cannot make it.
+
+### The figure that was wrong twice
+
+The retrieval panel printed a number next to each hit. Both attempts failed,
+in opposite directions, and the pair is more instructive than either:
+
+1. **Raw TF-IDF score, `3.62`.** Measured and useless. No units, no scale,
+   nothing saying what a good one looks like; the only extractable fact was an
+   ordering the bar already drew.
+2. **Share of the top score, `100%`.** Legible and misleading. A percentage
+   reads as ABSOLUTE, so it looked like "perfect match" or "fully confident"
+   when it only ever meant "this one scored highest" — and it said so on every
+   result, because the top row is 100% by construction. A figure that cannot
+   vary carries no information and still invites a false reading.
+
+Now: **"best match"** on the top row, **"51% as strong"** beneath it. A claim
+about this list, which is the only claim ranked retrieval supports.
+
+The rule this repo already had — every figure is measured or absent — turned
+out to be insufficient on its own. Both bad versions were measured. The
+missing half: **it also has to be a figure a reader can act on.**
+
+### Smaller, same session
+
+- The flow payloads between planes were lowercase faint mono beside lowercase
+  faint mono tool names, so `tables` and `features` read as three more skills.
+  They now carry an arrowhead, a dashed capsule, uppercase tracking and accent
+  ink: measured `rgb(155,20,20)` / uppercase / 1.92px against a tool at
+  `rgb(17,17,19)` / none / normal.
+- A measured 710x127px void sat between the word "Stack" and the definition
+  panel. The view toggle moved into it, then — on a second report — to the end
+  of the diagram's control row, where its siblings are. In the list view it
+  rides in the header column's slack, because a strip of its own cost 54px.
+- The crawler notice became real `<ul>`/`<li>` points. Its own docstring
+  already claimed "points rather than prose"; the code had never caught up.
+- A commit shipped with an eslint error in it. `npm run build` and `npm test`
+  were green, eslint printed "1 problem", and it was committed in the same
+  breath without reading the line. Running a check and not looking at it is
+  the same as not running it.
+
+### Where it ended
+
+| | Height | Screens at 872px |
+| --- | --- | --- |
+| Tool list | 881px | 1.00 |
+| Diagram (16 nodes) | 1207px | 1.38 |
+
+The list holds the one-screen rule; the diagram does not, and every pixel over
+is content added on request.
+
+## 2026-10-15: the Stack diagram, rebuilt around responsibilities
+
+The owner reframed it: answer this the way you would in a design interview.
+That one sentence invalidated the diagram that already existed.
+
+### The thing that was wrong
+
+Its boxes were `stackGroups` entries -- Data engineering, Data science,
+Computer vision. Those are categories of a PERSON. Nobody draws a box called
+"Data engineering" on a whiteboard, and a drawing whose boxes are the list's
+own headings is the list with arrows added, not a second reading of anything.
+
+The boxes are now the jobs the system has to do, in `systemStages`, and the
+tools are what drops into each slot. The sentence that reframing makes
+available is the whole point: *"Airflow orchestrates here; on GCP that is
+Composer, on AWS that is MWAA -- same role."*
+
+### Portability as a control, not a claim
+
+`platformSwaps` maps thirteen managed pieces onto AWS, Google Cloud and Azure,
+keyed by role. It never REPLACES a tool name, and that restraint is the
+feature: overwriting "S3" with "Cloud Storage" would have the page claiming he
+runs GCP, where showing both under a caption that says these are equivalents
+claims only that he knows what fills the role elsewhere.
+
+The first version put the swaps inside each stage box. Measured, six entries
+inside a 203px-wide `Ingest & store` took it from 254px to 386px. Consolidated
+under the diagram as a role-keyed grid it is three lines -- and after a second
+report ("could you organize them as well") an ALIGNED grid, because thirteen
+mappings separated by interpuncts was information that was right and
+unreadable. A lookup table exists to be scanned down for one row.
+
+### Two layout experiments that measured worse than they looked
+
+| Idea | Expectation | Measured |
+| --- | --- | --- |
+| Fork pair side by side | row bounded by tallest BOX, not tallest COLUMN | 979px vs 955px stacked -- narrow boxes wrap more |
+| Swap grid in two wide columns | no row ever wraps | 1113px vs 1067px for three columns |
+
+Box height is set by how much width its terms have to wrap in. Wide-and-stacked
+beats narrow-and-adjacent for a box with nine terms. Both were reverted.
+
+### "The skills are scattered"
+
+Five stages in a row gave each about 200px, and 47 tools wrapped inside 200px
+break in a different place in every box with no two sharing a left edge.
+Full-width BANDS give each stage ~1,000px: every stage is now a single aligned
+tool row at 55px.
+
+### "The tables, the features look like the same kind of skills"
+
+Correct, and the sharpest report of the session. The flow payloads were
+lowercase faint mono between two hairlines -- the exact treatment the tool
+names beside them use. A reader scanning saw `Airflow`, `PySpark`, `tables`,
+`pandas` with nothing marking one of those as not-a-tool.
+
+They now carry every signal a tool name does not: an arrowhead, a dashed
+capsule, wide uppercase tracking, and accent ink nothing in the term list uses.
+Measured: payload `rgb(155,20,20)`, uppercase, 1.92px tracking, against a tool
+at `rgb(17,17,19)`, no transform, normal tracking.
+
+### A `?`, asked for by name
+
+"Just like you have question mark for the neural network so that the user
+understands what we are trying to say here." In flow rather than as a popover,
+so it costs height only while a reader has it open and can never cover
+anything.
+
+### Removed on request
+
+A line naming the build tooling. How a thing was built and what it is made of
+are two different lists, and this page carries only the second. Stripped from
+the component, the constants and the commit message that introduced it; a
+repo-wide scan confirms the site and docs name it nowhere.
+
+### The regression I caused, and the process fault under it
+
+Making "Hugging Face" a primary tool broke `llms-mirror.test.mjs`, which
+checks `public/llms.txt` still mirrors the stack. It had been failing since the
+skills commit, because I was running the two `.mjs` suites directly instead of
+`npm test`, which runs five. The fix is one line of llms.txt; the lesson is
+that running a subset of the suite is indistinguishable from running none of
+the part you skipped. `stages.test.mjs` is now wired into `npm test` so it
+cannot be missed the same way.
+
+That test guards the real hazard here -- two hand-maintained lists of the same
+47 strings -- and it was armed before being trusted: removing one staged tool
+and one vendor cell produced three distinct failures and exit 1, then green.
+
+### Where it ended
+
+| | Height | Screens at 872px |
+| --- | --- | --- |
+| Tool list | 881px | 1.00 |
+| Diagram, default | 997px | 1.14 |
+| Diagram + a cloud | 1135px | 1.30 |
+
+The one-screen rule holds for the list and not for the diagram. Everything
+that pushed it over was content added on request, and the optional layers
+render only when asked for. Stated rather than quietly traded away.
+
+## 2026-10-15: Stack, reassessed and then given a second reading
+
+Five commits on `feat/stack-one-screen`, unmerged on the owner's instruction
+("try not to merge every time you fix everything, just commit").
+
+### The correction that set the tone
+
+> "there's a lot of bugs that you introduce now ... Don't try to believe in
+> yourself. Try to reassess everything."
+
+All five reported faults were real, and each was confirmed by measurement
+before being touched rather than after:
+
+| Reported | Measured |
+| --- | --- |
+| The token animation overlaps the intro | 416x106px over the whole paragraph, plus 416x19 over the hint |
+| "raw data" / "running product" mean nothing | two bare labels, no sentence anywhere near them |
+| Two skills take too much space | "Detection & tracking" and "Exploratory analysis" stood **45px** against 25px for every other chip |
+| PyTorch and others are black plates | 12 of 33 chips carried a solid near-black fill, the heaviest marks in the section |
+| Dead space to the right | 244px of empty column under the heading |
+
+Deleting the token stream was the wrong correction to the first of those, and
+the owner said so: "you removed the animation that I really liked it". Its
+SIZE was the fault, not its presence.
+
+### The canvas bug, which was the hero field's bug again
+
+Relocating the stream to start at the heading, `left-[33%] right-0`, measured
+**416px wide** rather than the ~1060px the insets imply. A `<canvas>` is a
+REPLACED element: with `width: auto` and both insets set it keeps its intrinsic
+width and ignores `right`. This is the same class of fault as
+`renderer.setSize(w, h, false)` in the hero, which left that canvas at its
+intrinsic 2401x1324 on a 1601x883 viewport. Explicit width fixes it; the run
+went 416px to 952px.
+
+The wave was also dying. Its baseline translated downward and wrapped over
+`h + 0.55h` at 11px/s -- a ~50s period of which only a few seconds sat inside
+the canvas -- so painted ink decayed **3.37% to 0.00%** over five seconds and
+then stayed empty. It now oscillates about the middle: 7.06, 6.91, 7.16, 7.08,
+7.39, 7.37% across six seconds.
+
+### Twelve tools, and the budget that forced three deletions
+
+Asked for the current LLM / data-science / Python tooling the six areas had
+drifted behind. Added Hugging Face, Transformers, Fine-tuning, vLLM, Jupyter,
+Polars, Plotly, Airflow, DuckDB, Weights & Biases, DVC, Pydantic, pytest and
+Streamlit -- every one with a plain-English `glossary` entry, because a term
+nobody can define is a badge and this section's own copy argues against badges.
+
+That took the section from 852px to **963px, 1.09 screens** against an 883px
+viewport. What came out to pay for it was repetition, in all three cases:
+
+- the hint line, which the definition panel was already saying 400px away
+  (**-29px**)
+- the path rule, which was the fourth statement of an ordering the columns,
+  the numerals, the tint bars and the intro paragraph all already carried
+  (**-41px**)
+- term spacing and the header-to-grid gap (**-34px**)
+
+Final: **881px, 1.00 screens**, with 47 tools instead of 33.
+
+### The invisible 120px
+
+The comment explaining the path-rule removal was written as a bare `/* */`
+inside JSX, where it is TEXT and not a comment. It rendered. `npm run build`
+passed, eslint passed, and the only symptom was 120px of blank space between
+the header and the grid -- caught because the section measured **977px** after
+an edit that should have shrunk it to 856.
+
+### The diagram
+
+Asked whether the stack could read as a system design rather than a list, and
+asked for an opinion before an implementation. The opinion: right instinct, one
+condition. A list answers "what does he know" and cannot answer "does he know
+how they fit together" -- but a generic "client to API to service to database"
+would say less than the list does. So the diagram is his six areas in the order
+they run, which is the order the section's own sentence already claims.
+
+One dataset, two readings: both views map `stackGroups` and feed the same
+definition panel. The diagram's single real assertion is that LLM / RAG and
+Computer vision are PARALLEL rather than stages three and four; MLOps is drawn
+as the floor because nothing flows into it or out of it.
+
+Connectors are LAYOUT -- flex siblings between the nodes -- not an SVG overlay
+anchored to measured boxes. That is deliberate: the measured-overlay approach
+is what the hero field does and what cost this session its longest bug.
+
+| Width | List | Diagram | Band clearance |
+| --- | --- | --- | --- |
+| 1602x883 | 881px (1.00 screens) | 841px (0.95) | 10px |
+| 1281x801 | 850px | 862px | 13px |
+| 2201x883 | 881px | 841px | 10px |
+| 501px | six mobile rows, toggle 0x0, no diagram | — | canvas hidden |
+
+Zero overlap of the canvas with the heading, intro, toggle, question or panel
+at every width, in both views.
+
+### Found on `main` while documenting
+
+`src/components/README.md` carried **two committed merge-conflict blocks**
+(`<<<<<<< HEAD` / `>>>>>>> b41aa04`) in the change-to-file table and the traps
+list. Both sides were complementary, not competing, so both were kept. A
+repo-wide scan found no other file affected.
+
 ## 2026-10-15: the field's caption followed the reader off the page
 
 Reported: the `?` that explains the hero network was showing on Stack and

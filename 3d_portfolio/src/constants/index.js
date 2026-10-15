@@ -260,6 +260,26 @@ export const glossary = {
   Neo4j: { def: "A graph database: stores data as nodes and the relationships between them, which makes connected questions cheap to ask.", link: "https://neo4j.com/", full: "Neo4j graph database" },
   Azure: { def: "Microsoft's cloud platform, the servers, storage and managed services an app runs on.", link: "https://azure.microsoft.com/", full: "Microsoft Azure" },
   Databricks: { def: "A platform for large-scale data and ML work, built around Apache Spark.", link: "https://www.databricks.com/", full: "Databricks Lakehouse Platform" },
+  // Added 2026-10-15. The six groups had drifted behind the work: the LLM area
+  // named no model hub and no serving runtime, and the data areas named no
+  // notebook and no chart library, which are the tools the day is actually
+  // spent in. Every entry here is a thing with a definition a non-specialist
+  // can read, same as the rest of this map -- a tool nobody can define is a
+  // badge, and this section's own copy argues against badges.
+  "Hugging Face": { def: "The main public hub for open models and datasets: where you find, download, and publish them.", link: "https://huggingface.co/", full: "Hugging Face Hub" },
+  Transformers: { def: "The model architecture behind nearly every modern AI system, and the Hugging Face library that runs them.", link: "https://huggingface.co/docs/transformers/index" },
+  "Fine-tuning": { def: "Taking a general pre-trained model and training it further on your own data so it fits your task.", link: "https://huggingface.co/docs/transformers/training" },
+  vLLM: { def: "A serving engine that runs open LLMs fast enough for real traffic.", link: "https://docs.vllm.ai/", full: "vLLM inference engine" },
+  Airflow: { def: "Schedules and monitors data pipelines, so each step runs in order and failures are visible.", link: "https://airflow.apache.org/", full: "Apache Airflow" },
+  DuckDB: { def: "An in-process analytics database: SQL over local files, no server to run.", link: "https://duckdb.org/" },
+  Polars: { def: "A dataframe library like pandas, built for speed on larger-than-memory data.", link: "https://pola.rs/" },
+  Jupyter: { def: "The notebook where analysis is actually done: code, charts, and notes in one document.", link: "https://jupyter.org/", full: "Project Jupyter" },
+  Plotly: { def: "Builds interactive charts you can zoom and hover, rather than a flat image.", link: "https://plotly.com/python/" },
+  "Weights & Biases": { def: "Tracks training runs and their metrics, so two experiments can be compared instead of remembered.", link: "https://wandb.ai/", full: "Weights & Biases" },
+  DVC: { def: "Git for datasets and models: versions the large files code alone cannot.", link: "https://dvc.org/", full: "Data Version Control" },
+  Pydantic: { def: "Validates incoming data against a declared shape, so bad input fails at the edge instead of deep inside.", link: "https://docs.pydantic.dev/" },
+  pytest: { def: "The standard Python testing framework.", link: "https://docs.pytest.org/" },
+  Streamlit: { def: "Turns a Python script into a shareable web app, which is how a model gets in front of someone.", link: "https://streamlit.io/" },
 };
 
 // Said once per section. The affordance used to be announced on every single
@@ -321,7 +341,7 @@ export const stackGroups = [
     dot: "bg-cat-data",
     tint: "--c-cat-data",
     primary: ["PySpark", "SQL"],
-    items: ["PySpark", "ETL pipelines", "PostgreSQL", "DynamoDB", "S3", "SQL"],
+    items: ["PySpark", "Airflow", "ETL pipelines", "PostgreSQL", "DynamoDB", "DuckDB", "S3", "SQL"],
   },
   {
     title: "Data science",
@@ -329,15 +349,15 @@ export const stackGroups = [
     dot: "bg-cat-science",
     tint: "--c-cat-science",
     primary: ["pandas", "scikit-learn"],
-    items: ["pandas", "NumPy", "scikit-learn", "Evaluation", "Exploratory analysis"],
+    items: ["pandas", "Polars", "NumPy", "scikit-learn", "Jupyter", "Plotly", "Evaluation", "Exploratory analysis"],
   },
   {
     title: "LLM / RAG",
     note: "Grounded answers with citations, offline-first.",
     dot: "bg-cat-llm",
     tint: "--c-cat-llm",
-    primary: ["LangChain", "LangGraph"],
-    items: ["LangChain", "LangGraph", "Ollama", "Claude", "Pinecone", "Embeddings"],
+    primary: ["Hugging Face", "LangChain"],
+    items: ["Hugging Face", "Transformers", "LangChain", "LangGraph", "Fine-tuning", "vLLM", "Ollama", "Claude", "Pinecone", "Embeddings"],
   },
   {
     title: "Computer vision",
@@ -353,7 +373,7 @@ export const stackGroups = [
     dot: "bg-cat-mlops",
     tint: "--c-cat-mlops",
     primary: ["MLflow", "Docker"],
-    items: ["MLflow", "Docker", "GitHub Actions", "Kubernetes", "Helm"],
+    items: ["MLflow", "Weights & Biases", "DVC", "Docker", "GitHub Actions", "Kubernetes", "Helm"],
   },
   {
     title: "Backend & apps",
@@ -361,7 +381,7 @@ export const stackGroups = [
     dot: "bg-cat-backend",
     tint: "--c-cat-backend",
     primary: ["Python", "FastAPI"],
-    items: ["Python", "FastAPI", "Next.js", "React", "TypeScript", "Tauri"],
+    items: ["Python", "FastAPI", "Pydantic", "pytest", "Streamlit", "Next.js", "React", "TypeScript", "Tauri"],
   },
 ];
 
@@ -432,4 +452,299 @@ export const projects = [
     source_code_link: `${GH}/pb-card-deck`,
     live_link: "https://pb-card-deck.vercel.app/",
   },
+];
+
+/* ---------------------------------------------------------------------------
+   THE SAME 47 TOOLS, AS A LAYERED ARCHITECTURE.
+
+   `stackGroups` above answers "what does he know" and its boxes are areas of
+   HIS experience. This answers "how does it fit together", and its boxes are
+   the jobs a system has to do.
+
+   WHY PLANES AND NOT ONE CHAIN. The first version of this was five stages in a
+   row, and a single chain cannot say the thing that actually matters about an
+   ML system: some of it is a FLOW and some of it is a SUBSTRATE. Airflow runs
+   before pandas runs before FastAPI — that is a flow. Python, Docker and
+   MLflow do not sit anywhere in that order; everything above stands on them.
+   Drawing all of it as one left-to-right sequence made the second kind look
+   like the first.
+
+   It also collapsed work that is genuinely separate. "Computer vision" as one
+   box hides that detection and federated training are different problems with
+   different constraints — one is a model on a frame, the other is a training
+   topology where the data is not allowed to move. Same for language: adapting
+   a model and indexing a corpus for retrieval are not one activity.
+
+   So: three planes that pass work downward, and a substrate underneath them
+   that everything runs on. Within a plane, `parallel` says whether the nodes
+   are a sequence or alternatives running side by side.
+
+   EVERY TOOL IN `stackGroups` APPEARS HERE EXACTLY ONCE, and
+   `utils/stages.test.mjs` fails the test run if that stops being true.
+--------------------------------------------------------------------------- */
+
+export const systemPlanes = [
+  {
+    id: "data",
+    title: "Data plane",
+    role: "Get it, keep it, understand it",
+    flow: "--c-flow-1",
+    out: "features & findings",
+    nodes: [
+      {
+        id: "ingest",
+        title: "Ingest & orchestrate",
+        role: "Move it, on a schedule",
+        items: ["Airflow", "ETL pipelines", "PySpark"],
+      },
+      {
+        id: "store",
+        title: "Store",
+        role: "Keep it addressable",
+        items: ["S3", "PostgreSQL", "DynamoDB", "DuckDB", "SQL"],
+      },
+      {
+        id: "shape",
+        title: "Shape & analyse",
+        role: "Make it a table you can trust",
+        items: ["pandas", "Polars", "NumPy", "Exploratory analysis"],
+      },
+      {
+        id: "express",
+        title: "Visualise",
+        role: "Show what it supports",
+        items: ["Jupyter", "Plotly", "Streamlit"],
+      },
+    ],
+  },
+  {
+    id: "model",
+    title: "Model plane",
+    role: "Learn something from it",
+    flow: "--c-flow-2",
+    out: "weights & an index",
+    // ALTERNATIVES, not steps. These five do not run in order and most
+    // projects use one or two of them; drawing them as a chain would claim a
+    // dependency between object detection and retrieval that does not exist.
+    parallel: true,
+    nodes: [
+      {
+        id: "detect",
+        title: "Vision — detect & track",
+        role: "Find it in a frame, follow it",
+        items: ["PyTorch", "YOLOv8", "OpenCV", "Detection & tracking"],
+      },
+      {
+        id: "federated",
+        title: "Vision — federated",
+        role: "Train where the data already is",
+        items: ["Federated learning"],
+      },
+      {
+        id: "classical",
+        title: "Classical ML",
+        role: "When a smaller model is the honest answer",
+        items: ["scikit-learn"],
+      },
+      {
+        id: "adapt",
+        title: "Language — adapt",
+        role: "Take a general model, fit it to the task",
+        items: ["Hugging Face", "Transformers", "Fine-tuning"],
+      },
+      {
+        id: "retrieve",
+        title: "Language — retrieve",
+        role: "Ground the answer in real sources",
+        items: ["Embeddings", "Pinecone", "LangChain", "LangGraph"],
+      },
+    ],
+  },
+  {
+    id: "serve",
+    title: "Serving plane",
+    role: "Put it in front of someone",
+    flow: "--c-flow-3",
+    nodes: [
+      {
+        id: "inference",
+        title: "Inference",
+        role: "Run the model on real traffic",
+        items: ["vLLM", "Ollama", "Claude"],
+      },
+      {
+        id: "api",
+        title: "API",
+        role: "A contract, and bad input stopped at the edge",
+        items: ["FastAPI", "Pydantic"],
+      },
+      {
+        id: "interface",
+        title: "Interface",
+        role: "The screen a person actually uses",
+        items: ["Next.js", "React", "TypeScript", "Tauri"],
+      },
+    ],
+  },
+];
+
+/**
+ * NOT A PLANE. Nothing flows into it and nothing flows out of it: it is what
+ * the three planes above are standing on, which is why it is drawn underneath
+ * them, in neutral, with no arrow into it.
+ *
+ * The owner's own framing: "Python is a language where I can use for the
+ * coding, Docker, Kubernetes for the MLOps" — those are not steps, they are
+ * the ground.
+ */
+export const systemSubstrate = {
+  title: "Substrate",
+  role: "Everything above runs on this",
+  nodes: [
+    {
+      id: "language",
+      title: "Language & tests",
+      role: "What all of it is written and checked in",
+      items: ["Python", "pytest"],
+    },
+    {
+      id: "package",
+      title: "Package & run",
+      role: "Same behaviour on a laptop and a cluster",
+      items: ["Docker", "Kubernetes", "Helm"],
+    },
+    {
+      id: "deliver",
+      title: "Deliver",
+      role: "Every change built and shipped the same way",
+      items: ["GitHub Actions"],
+    },
+    {
+      id: "track",
+      title: "Track & evaluate",
+      role: "Know which run produced which number",
+      items: ["MLflow", "Weights & Biases", "DVC", "Evaluation"],
+    },
+  ],
+};
+
+export const PLATFORMS = [
+  // The default is what he actually runs. Everything else is an equivalence,
+  // and the UI says so -- see `PLATFORM_NOTE`.
+  { id: "oss", label: "Open source", short: "OSS" },
+  { id: "aws", label: "AWS", short: "AWS" },
+  { id: "gcp", label: "Google Cloud", short: "GCP" },
+  { id: "azure", label: "Azure", short: "Azure" },
+];
+
+/**
+ * The honesty line, and it is not optional.
+ *
+ * This page's rule is that absent beats invented, and a grid of cloud service
+ * names next to a person's photograph reads as "I have run all of these" to
+ * anyone skimming. It is not that. It is the mapping any engineer should be
+ * able to recite -- the role is the knowledge, the vendor is a lookup -- and
+ * the interface has to say which of the two it is showing.
+ */
+export const PLATFORM_NOTE =
+  "Role stays, vendor changes. The open-source column is what actually runs; the rest are equivalents.";
+
+/**
+ * tool -> the role it fills, and the managed service that fills it elsewhere.
+ *
+ * Only the tools that are genuinely vendor-specific are here. pandas, PyTorch
+ * and FastAPI run the same everywhere, and inventing a "GCP equivalent" for
+ * them would be noise that makes the real swaps harder to see.
+ */
+export const platformSwaps = {
+  Airflow: { role: "Orchestration", aws: "MWAA", gcp: "Cloud Composer", azure: "Data Factory" },
+  PySpark: { role: "Batch compute", aws: "EMR", gcp: "Dataproc", azure: "Synapse Spark" },
+  S3: { role: "Object store", aws: "S3", gcp: "Cloud Storage", azure: "Blob Storage" },
+  PostgreSQL: { role: "Relational store", aws: "RDS", gcp: "Cloud SQL", azure: "Azure SQL" },
+  DynamoDB: { role: "Key-value store", aws: "DynamoDB", gcp: "Firestore", azure: "Cosmos DB" },
+  DuckDB: { role: "Analytics engine", aws: "Athena", gcp: "BigQuery", azure: "Synapse" },
+  Jupyter: { role: "Notebooks", aws: "SageMaker Studio", gcp: "Vertex AI Workbench", azure: "Azure ML Studio" },
+  Pinecone: { role: "Vector index", aws: "OpenSearch k-NN", gcp: "Vertex Vector Search", azure: "AI Search" },
+  Claude: { role: "Managed LLM", aws: "Bedrock", gcp: "Vertex AI", azure: "Azure OpenAI" },
+  vLLM: { role: "Model serving", aws: "SageMaker Endpoints", gcp: "Vertex AI Endpoints", azure: "ML Endpoints" },
+  MLflow: { role: "Experiment tracking", aws: "SageMaker Experiments", gcp: "Vertex AI Experiments", azure: "Azure ML" },
+  Kubernetes: { role: "Container runtime", aws: "EKS", gcp: "GKE", azure: "AKS" },
+  "GitHub Actions": { role: "CI/CD", aws: "CodePipeline", gcp: "Cloud Build", azure: "Azure Pipelines" },
+};
+
+/**
+ * `out` is what LEAVES a stage, and it is the point of drawing this at all.
+ *
+ * A bare arrow between two boxes is decoration; it says "and then". A labelled
+ * arrow says what the next stage receives, which is the one thing a tool list
+ * structurally cannot express no matter how it is arranged.
+ */
+export const systemStages = [
+  {
+    id: "ingest",
+    title: "Ingest & store",
+    role: "Raw data in, addressable",
+    tint: "--c-cat-data",
+    items: ["Airflow", "ETL pipelines", "PySpark", "S3", "PostgreSQL", "DynamoDB", "DuckDB", "SQL"],
+    out: "tables",
+  },
+  {
+    id: "prepare",
+    title: "Explore & prepare",
+    role: "What the data supports",
+    tint: "--c-cat-science",
+    items: ["pandas", "Polars", "NumPy", "scikit-learn", "Jupyter", "Plotly", "Exploratory analysis"],
+    out: "features",
+  },
+  // The fork. Both of these read the same prepared data and both feed Serve,
+  // which is the structural claim the six-column list cannot make.
+  {
+    id: "vision",
+    title: "Vision models",
+    role: "Detect and track on footage",
+    tint: "--c-cat-vision",
+    parallel: true,
+    items: ["PyTorch", "YOLOv8", "OpenCV", "Detection & tracking", "Federated learning"],
+  },
+  {
+    id: "language",
+    title: "Language models & retrieval",
+    role: "Answers, grounded in sources",
+    tint: "--c-cat-llm",
+    parallel: true,
+    items: ["Hugging Face", "Transformers", "Fine-tuning", "Embeddings", "Pinecone", "LangChain", "LangGraph", "Claude", "Ollama"],
+    out: "weights + index",
+  },
+  {
+    id: "serve",
+    title: "Serve & interface",
+    role: "Behind an API and a screen",
+    tint: "--c-cat-backend",
+    items: ["vLLM", "FastAPI", "Pydantic", "Streamlit", "Next.js", "React", "TypeScript", "Tauri"],
+  },
+];
+
+/* Not a stage: nothing flows into it and nothing flows out. It is the floor
+   every stage above stands on, which is why it is drawn as a band rather than
+   as a sixth box in the chain. */
+export const systemFloor = {
+  title: "Ship & observe",
+  role: "Everything above runs on this",
+  tint: "--c-cat-mlops",
+  items: ["Python", "Docker", "Kubernetes", "Helm", "GitHub Actions", "pytest", "MLflow", "Weights & Biases", "DVC", "Evaluation"],
+};
+
+/**
+ * WHY THE STACK IS ALSO DRAWN AS A SYSTEM, in the reader's words rather than
+ * the code's. Opened from a `?` beside the diagram, the same affordance the
+ * hero field uses -- a visualisation that needs explaining should carry its
+ * own explanation rather than assuming the reader shares the author's mental
+ * model.
+ */
+export const DIAGRAM_WHY = [
+  "A tool list answers what I know. It cannot answer whether the pieces fit together, which is the question an interview actually asks.",
+  "So the boxes here are not my skill areas — they are the jobs a system has to do. Three planes pass work downward; inside a plane, nodes are either a sequence or alternatives. Same 47 tools; only the filing changes.",
+  "The arrows carry what moves between stages, two stages run in parallel rather than in sequence, and the band underneath is what everything else stands on.",
+  "Colour is depth, not category: one hue getting warmer as the work moves from raw data to a shipped product. The substrate sits off that scale, in neutral, because it is not a position on the path.",
+  "Every managed piece is a role, not a lock-in: pick a platform to see what fills each one on AWS, Google Cloud or Azure.",
 ];

@@ -55,4 +55,47 @@ export const CONCEPT_ICONS = {
   "Detection & tracking": { d: "M9.5 9.5h6v6h-6z M5 19.5c2.5-.6 4.2-1.8 5.5-3.4", s: 1 },
   // Looking before concluding.
   "Exploratory analysis": { d: "M11 5a6 6 0 1 0 0 12 6 6 0 0 0 0-12z M15.4 15.4L20 20 M9 11h.01 M12.5 9.5h.01", s: 1 },
+
+  /* THREE PRODUCTS, DRAWN AS STRUCTURES. These are the exception the rest of
+     this file does not need, and the reasoning matters because the generator
+     refuses to do what looks like the same thing.
+
+     DynamoDB, S3 and Pinecone have no mark in simple-icons -- verified against
+     the installed 16.31.0, which carries no `amazon`, `aws`, `azure` or
+     `pinecone` entry at all, because the project removed several large
+     corporate logos over trademark policy. So there was no mark to generate,
+     and `gen-tool-icons.mjs` correctly maps all three to `null`.
+
+     Leaving them bare was the old answer and it was visibly wrong: measured in
+     the Stack grid, 30 of 33 terms rendered a glyph and exactly these three did
+     not, which reads as three broken images rather than as a distinction. That
+     is the same fault this file's opening paragraph was written about.
+
+     Drawing their BRAND marks from memory would be the error the generator
+     guards against -- a claim about someone else's identity that is simply
+     right or wrong. These are not that. Each draws what the product IS, in the
+     same line vocabulary as every mark above: a bucket of objects, a table of
+     key-value pairs, a nearest-neighbour cluster. None resembles the company's
+     logo and none is meant to. */
+
+  // Object storage: a bucket with objects in it. "Bucket" is the product's own
+  // word for the container, so the shape is the concept, not the branding.
+  S3: { d: "M4.5 7.5h15l-1.6 12.5H6.1z M4.5 7.5l1.2-3.5h12.6l1.2 3.5 M9.8 12.5h.01 M14.2 12.5h.01 M12 16h.01", s: 1 },
+  // Key-value store: a table whose rows are a key and its value, which is the
+  // one structural thing that separates it from the SQL cylinder above.
+  DynamoDB: { d: "M3.5 5.5h17v13h-17z M3.5 9.5h17 M10 9.5v9 M6.3 13h.01 M14.2 13h.01 M6.3 16h.01 M14.2 16h.01", s: 1 },
+  /* The two terms added with the 2026-10-15 skills pass that have no upstream
+     mark. `transformers` and `fine-tuning` are not companies, so simple-icons
+     has nothing for them and never will -- which puts them squarely in this
+     file's own remit rather than in the exception below. */
+  // Attention: three tokens on a line, and the one in the middle reaching back
+  // to both of the others. That reaching IS the architecture.
+  Transformers: { d: "M5 19.5v-3 M12 19.5v-7 M19 19.5v-4 M5 16.5Q8.5 8 12 12.5 M19 15.5Q15.5 8 12 12.5", s: 1 },
+  // Two sliders at different settings. A dial was the first draft and it read
+  // as MLOps' loop at 14px; sliders share no silhouette with anything here.
+  "Fine-tuning": { d: "M4 9h16 M4 15h16 M9.5 7v4 M15 13v4", s: 1 },
+
+  // Vector index: a query point and the neighbours it returns. Embeddings
+  // above is the vector itself; this is the search over many of them.
+  Pinecone: { d: "M12 12h.01 M12 12l4.5-3.5 M12 12l-5 2.5 M12 12l3 5 M12 12m-7.5 0a7.5 7.5 0 1 0 15 0 7.5 7.5 0 1 0-15 0", s: 1 },
 };

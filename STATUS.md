@@ -4,8 +4,12 @@ Written when work stopped. Read this first on return, then `3d_portfolio/README.
 for the change-to-file table.
 
 **Last touched:** 2026-10-15
-**Branch:** `main`. **62 PRs squash-merged** in total, fourteen of them on
-2026-10-15, every branch deleted, no PR open.
+**Branch:** `feat/stack-one-screen` — **fifteen commits.**
+The owner asked for commits rather than a merge per fix ("try not to merge
+every time you fix everything, just commit"). One PR goes up for the whole
+Stack increment when he is satisfied with it.
+**62 PRs squash-merged** in total, fourteen of them on 2026-10-15, every
+merged branch deleted.
 **Live:** <https://sathishkumarai.github.io/> — GitHub Pages, built from `main`
 by Actions in the OTHER repo, **`workflow_dispatch` only**. A merge here does
 NOT deploy. Trigger it with:
@@ -14,7 +18,9 @@ NOT deploy. Trigger it with:
 what `main` builds. The CDN serves the previous bundle for ~15-60s after a
 successful deploy; poll until the hash matches rather than trusting the green
 tick.
-**Working tree:** clean. `download.png` sits untracked at the root, left alone.
+**Working tree:** `download.png` sits untracked at the root, left alone.
+**NOT deployed since the Stack work.** Everything below the 2026-10-15 merge
+list is live; the five Stack commits are not.
 **The site is `3d_portfolio/`.** Everything else here is supporting material.
 
 ## The 2026-10-15 session, newest first
@@ -70,9 +76,156 @@ measurement is the one with a bug in it until proven otherwise.**
 - **`sepia` is the weakest theme** for field contrast at 32.5 resting against
   34.6 on dark. Deliberately soft palette; it is the floor, not a bug.
 
+## Stack, on `feat/stack-one-screen` (unmerged)
+
+Five commits. The section holds **one screen in both of its views**, which is
+the constraint every decision below was traded against.
+
+| Commit | What changed | The number that mattered |
+| --- | --- | --- |
+| `c5c5cdd` | Stack condensed to a single screen | 1166px → 852px |
+| `5d89e03` | The six reported faults reassessed and measured | token band overlap **416x106 → 0**; ink stopped decaying to 0.00 |
+| `dbc8cfd` | DynamoDB, S3 and Pinecone given marks | terms with a glyph **30/33 → 33/33** |
+| `1fa491d` | Twelve current tools added across five areas | **33 → 47 tools**, section held at **1.00 screens** |
+| `180076f` | The same stack offered as a system diagram | list **881px**, diagram **841px** |
+| `8aa364f` | The closing band ranks the page's own passages | bars settle 100 / 50.6 / 40%, plays once |
+| `6a6274d` | Diagram redrawn by RESPONSIBILITY, and made portable | list **881px** / diagram **997px** |
+| `2f430d7` | Flow payloads stopped looking like tool names | payload accent/uppercase/1.92px vs tool near-black/normal |
+| `ca36f3c` | The crawler notice became points, as its docstring already claimed | 6 items, 15 points, 6 real nested lists |
+| `1140d11`, `8f837b6` | The retrieval figure, wrong twice, finally ranked not scored | `3.62` → `100%` → **"best match" / "51% as strong"** |
+| `52a3343` | The hole beside the heading closed; controls seated together | **710x127px** void filled; list back to 881px |
+| `42734ea` | Diagram layered into planes; colour became a measurement | 5 stages → **16 nodes**; luminance monotonic in 6 themes |
+
+**The one-screen rule holds for the list only, and that is stated rather than
+hidden.** Measured at 1707x872: tool list **881px (1.00 screens)**; diagram
+**1207px (1.38)** with sixteen nodes. Everything that pushed it over was
+content added on request — role lines, labelled edges, the swap table, the
+`?` explainer, then the finer layering. The optional layers render only when a
+reader asks for them. Levers left, both the owner's call: collapse the
+substrate band, or drop the per-node role line (~40px), which is the sentence
+that makes a box a slot rather than a label.
+
+### The closing band now does something
+
+`RetrievalRank` runs **TF-IDF ranked retrieval over the page's own passages**,
+reusing `utils/answer.js` — the index the Ctrl-K palette already uses, so
+adding a project changes the ranking with no second list to maintain. Pick a
+question, it scores every passage, quotes the best three verbatim and links to
+where they live. It plays once and stops; the observer disconnects after the
+first hit.
+
+**Its figure was wrong twice, in opposite directions, and that is the lesson.**
+The raw TF-IDF score (`3.62`) was measured and useless — no units, no scale. A
+share of the top score was legible and misleading: a percentage reads as
+ABSOLUTE, so `100%` looked like "perfect match" when it only ever meant "this
+scored highest", and it said so on every result because the top row is 100% by
+construction. It now reads **"best match"** and **"51% as strong"** — a claim
+about the list, which is the only claim ranked retrieval supports. A figure
+being measured is not enough; it also has to be one a reader can act on.
+
+### The colour scale, and why the rainbow was wrong
+
+Reported as "AI slop", and the diagnosis is worth keeping: **the data is
+ordinal and the palette was categorical.** Six distinct hues say "six
+unrelated kinds"; these are positions on one path. Hue carries no inherent
+ranking — nobody can say whether olive precedes teal without a legend — so the
+one thing colour had to encode was the one thing it could not. The sweep also
+passed through a muddy yellow-olive midpoint, the `jet`-colormap failure.
+
+It is now **one hue at six intensities with strictly monotonic luminance**,
+which is the part that makes it a scale rather than six tints. The first
+attempt was NOT monotonic (step 2 at 0.254 against step 3 at 0.261 — chroma
+rose while lightness stayed flat) and that was caught by measuring, not by
+looking. Measured across all six themes: rising 0.151→0.281 on dark grounds,
+falling 0.284→0.092 on light, every step clearing 3:1 against its own ground.
+
+Meaning, in the page's own terms: **temperature.** Raw data arrives cold and
+undifferentiated, each plane commits to more, and what ships lands on the
+accent. The substrate is off the scale entirely, in neutral, because it is not
+a position on the path.
+
+### The diagram, after the interview reframing
+
+The owner's framing was "answer this like a Google interview". That killed the
+first diagram: its boxes were `stackGroups` entries — Data engineering, Data
+science, Computer vision — which are categories of a PERSON. Nobody draws a
+box called "Data engineering" on a whiteboard.
+
+The boxes are now the **jobs the system has to do**, and the tools are what
+drops into each slot. That is what makes the useful sentence available:
+*"Airflow orchestrates here; on GCP that is Composer, on AWS that is MWAA —
+same role."*
+
+| Decision | Why, and what it cost |
+| --- | --- |
+| Stages = responsibilities | The only thing that makes this a second READING rather than a second filing |
+| Labelled flow payloads | A bare arrow repeats the 01-06 numerals; `features` says what the next stage RECEIVES |
+| Payloads styled as capsules | They were faint lowercase mono beside faint lowercase mono tool names and read as three more skills |
+| Vision ‖ Language share a row | The one claim the six-column list structurally cannot make |
+| `Ship & observe` is the floor | Nothing flows into it or out of it, so it gets no step above it |
+| Full-width bands, not columns | Five boxes at ~200px wrapped 47 tools raggedly — reported as "the skills are scattered" |
+| Three planes + a substrate, 16 nodes | A single chain cannot say that part of an ML system is a FLOW and part is a SUBSTRATE. Docker and Python sit nowhere in the order; everything stands on them |
+| Model plane marked `alternatives` | Detection and retrieval are not sequential, and most projects use one or two. A connector would claim a dependency that is not there |
+| Vision split: detect vs federated | Different problems with different constraints — one is a model on a frame, the other a topology where data may not move |
+| `platformSwaps` never REPLACES a name | Overwriting "S3" with "Cloud Storage" would claim he runs GCP. Absent beats invented |
+| Build tooling named nowhere | How a thing was built and what it is made of are two different lists |
+
+### What the Stack section is now
+
+- **Two views over one dataset.** `Tech.jsx` owns the tool list and the toggle;
+  `StackDiagram.jsx` owns the system reading. Both map `stackGroups` and both
+  call the same `setHovered`/`pinTerm`, so a term is defined once and a pin
+  survives a view switch. The toggle is `lg` and up; a phone gets the list.
+- **The diagram asserts one thing the list cannot:** LLM / RAG and Computer
+  vision are PARALLEL, not stages three and four of six. MLOps is the floor
+  under all of them, not a fifth stage — nothing flows into it or out of it.
+- **Its connectors are layout, not a measured overlay.** Flex siblings cannot
+  drift from the boxes they sit between, which is the failure mode the hero
+  field has.
+- **47 tools, every one with a glyph and a plain-English definition.** 37 brand
+  marks are generated from simple-icons; the rest are drawn in
+  `conceptIcons.js`, including S3, DynamoDB and Pinecone, which have no
+  upstream mark and are therefore drawn as what they ARE rather than as a
+  recalled logo.
+
+### What was cut to make room, and why
+
+Each of these was a REPETITION, not a sacrifice — the budget just forced
+someone to notice:
+
+- The hint line "Dotted terms have a plain-English definition, tap one" was the
+  same instruction the definition panel was already giving, 400px away, both
+  desktop-only. `TERM_HINT` moved into the panel. **−29px.**
+- The path rule "FROM RAW DATA — TO A RUNNING PRODUCT" was the fourth statement
+  of one fact: the columns run left to right, are numbered 01-06, each carry a
+  tint bar, and the intro paragraph three lines above says those exact words.
+  **−41px.**
+- The diagram's two termini said it a fifth time, and cost ~200px of the row's
+  WIDTH — which is what the nodes needed in order to wrap in fewer lines.
+  Row **314px → 231px.**
+
+### Three traps this branch added to the directory README
+
+- **A `<canvas>` is a replaced element: `left` + `right` does not stretch it.**
+  `TokenStream` measured 416px against the ~1060px its insets implied.
+- **A bare `/* */` in JSX children renders as text.** One dropped `{}` added
+  120px of invisible space; build and eslint both passed.
+- **The token band's clearance is not constant across breakpoints.** The
+  toggle's question wraps below 1536px and lifts it from y=178 to y=161, so the
+  band height is responsive.
+
+### Fixed in passing, and it was on `main`
+
+`3d_portfolio/src/components/README.md` had **two committed merge-conflict
+blocks** (`<<<<<<< HEAD` / `>>>>>>> b41aa04`) sitting in the change-to-file
+table and the traps list. Both sides were complementary rather than competing —
+the palette and 2D field rows against the 3D field rows, the role-deck traps
+against the three.js traps — so both were kept. Repo-wide scan: that was the
+only file affected.
+
 ### Where the next session starts
 
-The owner's next target is the **Stack** section.
+Open the PR for the Stack increment once the owner has looked at both views.
 
 ## The 2026-09-15 session, newest first
 
@@ -117,7 +270,7 @@ copy cut to campaign length. Two acts of that are built; three are not.
 | **Scenes** | every other section paints a full-bleed ground with hairline edges; heads at 76px | `SectionWrapper.jsx`, `main > section:nth-of-type(even)` in `index.css` — `even` since the spec band was deleted |
 | **About** | three claims, each naming the project that proves it and linking to that card. It no longer reprints the project's own sentence | `About.jsx` |
 | **Roles** | a sticky deck; only the card being read is lit, the covered ones dim | `Experience.jsx` |
-| **Stack** | 25 brand logos and 16 drawn category marks; the six category colours are one cool-to-warm ramp along the pipeline | `TagTerm.jsx`, `toolIcons.js`, `conceptIcons.js` |
+| **Stack** | 47 tools in six areas, readable as a list or as a system diagram at the reader's choice; 37 brand logos and the rest drawn | `Tech.jsx`, `StackDiagram.jsx`, `toolIcons.js`, `conceptIcons.js` |
 
 ### Names, because two sections had two each
 

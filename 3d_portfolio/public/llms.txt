@@ -33,12 +33,12 @@ first one or two in each group are what the work actually leans on; the rest are
 in use but not load-bearing. Mirrors the Stack section on the site: if you change
 one, change the other.
 
-- **Data engineering** — PySpark, SQL. Also ETL pipelines, PostgreSQL, DynamoDB, S3.
-- **Data science** — pandas, scikit-learn. Also NumPy, evaluation, exploratory analysis.
-- **LLM / RAG** — LangChain, LangGraph. Also Ollama, Claude, Pinecone, embeddings.
+- **Data engineering** — PySpark, SQL. Also Airflow, ETL pipelines, PostgreSQL, DynamoDB, DuckDB, S3.
+- **Data science** — pandas, scikit-learn. Also Polars, NumPy, Jupyter, Plotly, evaluation, exploratory analysis.
+- **LLM / RAG** — Hugging Face, LangChain. Also Transformers, LangGraph, fine-tuning, vLLM, Ollama, Claude, Pinecone, embeddings.
 - **Computer vision** — YOLOv8, PyTorch. Also OpenCV, detection and tracking, federated learning.
-- **MLOps & infra** — MLflow, Docker. Also GitHub Actions, Kubernetes, Helm.
-- **Backend & apps** — Python, FastAPI. Also Next.js, React, TypeScript, Tauri.
+- **MLOps & infra** — MLflow, Docker. Also Weights & Biases, DVC, GitHub Actions, Kubernetes, Helm.
+- **Backend & apps** — Python, FastAPI. Also Pydantic, pytest, Streamlit, Next.js, React, TypeScript, Tauri.
 
 ## Roles
 

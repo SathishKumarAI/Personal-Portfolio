@@ -21,41 +21,61 @@
    category dots, and the project-cover canvas, which is the same dark ground in
    every theme by design. A theme may override any of it. */
 :root[data-scheme="light"] {
-  /* The six categories are a RAMP, not a set. See the note above the dark
-     values for why; these are the same sweep at the contrast a white ground
-     needs. */
-  --c-cat-data: 46 96 140;
-  --c-cat-science: 34 112 108;
-  --c-cat-llm: 132 108 40;
-  --c-cat-vision: 158 98 44;
-  --c-cat-mlops: 168 74 50;
-  --c-cat-backend: 176 42 30;
+  /* Same scale as the dark scheme — see the note there — at the contrast a
+     white ground needs. */
+  --c-cat-data: 138 146 158;
+  --c-cat-science: 144 122 130;
+  --c-cat-llm: 150 99 102;
+  --c-cat-vision: 156 75 74;
+  --c-cat-mlops: 162 52 46;
+  --c-cat-backend: 168 28 18;
+  --c-flow-1: var(--c-cat-data);
+  --c-flow-2: var(--c-cat-llm);
+  --c-flow-3: var(--c-cat-backend);
+  --c-flow-off: var(--c-line-strong);
 }
 
 :root[data-scheme="dark"] {
-  /* THE SIX CATEGORY COLOURS ARE ONE RAMP, COOL TO WARM.
-     -----------------------------------------------------------------------
-     They were six unrelated hues — steel blue, teal, terracotta, mauve, olive,
-     periwinkle — in no order, on a page that otherwise holds to a single lava
-     accent. Six hues with no relationship is what made the section look
-     unconsidered next to the rest.
+  /* ONE HUE, SIX DEPTHS — a sequential scale, not a categorical palette.
 
-     They now run one sweep from cool to warm, ending a step away from
-     `--c-accent`. That is not decoration: the rail above the cards is a PATH
-     from raw data to a running product, and the colour now moves along it. The
-     last group, Backend & apps — the one that ships — lands on the brand
-     colour.
+     These were six distinct hues sweeping blue, teal, olive, orange, red. That
+     was already a deliberate cool-to-warm ramp and it still read as a rainbow,
+     for a reason worth writing down: the data here is ORDINAL and the palette
+     was CATEGORICAL. Six hues say "six unrelated kinds"; the stages are a path
+     with an order, numbered 01-06. Hue carries no inherent ranking — nobody
+     can say whether olive comes before or after teal without a legend — so the
+     one thing the colour needed to encode was the one thing it could not. It
+     also detoured through a muddy yellow-olive midpoint, which is the
+     `jet`-colormap failure: non-monotonic lightness pretending to be a scale.
 
-     Order matters more than the individual values here. Reordering
-     `stackGroups` without reordering these would leave a ramp that climbs and
-     then jumps back, which is worse than six arbitrary hues because it looks
-     like a mistake rather than a choice. */
-  --c-cat-data: 122 152 186;
-  --c-cat-science: 126 172 166;
-  --c-cat-llm: 198 176 118;
-  --c-cat-vision: 214 150 104;
-  --c-cat-mlops: 220 118 92;
-  --c-cat-backend: 228 96 76;
+     Now it is one hue at six intensities, running cool grey to the brand
+     accent, and the LUMINANCE IS STRICTLY MONOTONIC — which is the part that
+     makes it a scale rather than six tints. Measured on the first attempt it
+     was NOT: step 2 sat at 0.254 against step 3 at 0.261, because chroma rose
+     while lightness stayed flat, and a ramp that is merely more colourful is
+     not ordered. These values rise 0.151 to 0.281 on the dark ground and fall
+     0.284 to 0.092 on the light one, every step clearing 3:1 against its own
+     ground. The order therefore survives being printed, dimmed, or read by
+     someone colour-blind — none of which was true of the hue sweep.
+
+     WHAT IT MEANS, in the page's own terms: temperature. Raw data arrives
+     cold and undifferentiated; each stage commits to more, and the thing that
+     ships lands on the accent the rest of the site already uses for "this is
+     the point". The substrate is off the ramp entirely, in neutral, because it
+     is not a position on the path — it is the floor under all of it. */
+  --c-cat-data: 96 110 126;
+  --c-cat-science: 126 107 114;
+  --c-cat-llm: 156 104 101;
+  --c-cat-vision: 185 102 89;
+  --c-cat-mlops: 215 99 76;
+  --c-cat-backend: 245 96 64;
+  /* The diagram's three planes read the same ramp, spread across it, so the
+     two views cannot drift apart: one hue, three depths. The substrate is
+     deliberately NOT on it. */
+  --c-flow-1: var(--c-cat-data);
+  --c-flow-2: var(--c-cat-llm);
+  --c-flow-3: var(--c-cat-backend);
+  --c-flow-off: var(--c-line-strong);
 }
 
 :root {
@@ -87,12 +107,16 @@
      chroma is a rainbow, and the dot is there to let the eye find a category
      again, not to rank it. Decorative only, they carry no text, so no AA floor. */
   /* Same ramp as `[data-scheme="light"]`; see the note on the dark values. */
-  --c-cat-data: 46 96 140;
-  --c-cat-science: 34 112 108;
-  --c-cat-llm: 132 108 40;
-  --c-cat-vision: 158 98 44;
-  --c-cat-mlops: 168 74 50;
-  --c-cat-backend: 176 42 30;
+  --c-cat-data: 138 146 158;
+  --c-cat-science: 144 122 130;
+  --c-cat-llm: 150 99 102;
+  --c-cat-vision: 156 75 74;
+  --c-cat-mlops: 162 52 46;
+  --c-cat-backend: 168 28 18;
+  --c-flow-1: var(--c-cat-data);
+  --c-flow-2: var(--c-cat-llm);
+  --c-flow-3: var(--c-cat-backend);
+  --c-flow-off: var(--c-line-strong);
 
   /* Primary tool chip: filled, inverted against the outline chips. Inverted
      rather than literally dark-on-light in both themes, because a dark fill on
@@ -119,12 +143,19 @@
   --c-canvas-ink: 140 150 155; /* 5.20:1 on the canvas ground */
 
   /* Same ramp as `[data-scheme="dark"]`; see the note there. */
-  --c-cat-data: 122 152 186;
-  --c-cat-science: 126 172 166;
-  --c-cat-llm: 198 176 118;
-  --c-cat-vision: 214 150 104;
-  --c-cat-mlops: 220 118 92;
-  --c-cat-backend: 228 96 76;
+  --c-cat-data: 96 110 126;
+  --c-cat-science: 126 107 114;
+  --c-cat-llm: 156 104 101;
+  --c-cat-vision: 185 102 89;
+  --c-cat-mlops: 215 99 76;
+  --c-cat-backend: 245 96 64;
+  /* The diagram's three planes read the same ramp, spread across it, so the
+     two views cannot drift apart: one hue, three depths. The substrate is
+     deliberately NOT on it. */
+  --c-flow-1: var(--c-cat-data);
+  --c-flow-2: var(--c-cat-llm);
+  --c-flow-3: var(--c-cat-backend);
+  --c-flow-off: var(--c-line-strong);
 
   --c-chip-solid: 228 225 218;
   --c-chip-solid-ink: 15 34 40; /* 13.9:1 on the fill */
@@ -1275,5 +1306,105 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
   :root.theme-switching *::before,
   :root.theme-switching *::after {
     transition: none !important;
+  }
+}
+
+
+/* ==== retrieval rank panel — RetrievalRank.jsx ===========================
+   The closing band's one visualisation: TF-IDF scores over this page's own
+   passages, drawn as a bar ranking that resolves into links.
+
+   THE RESTING STATE IS THE FINISHED STATE. Everything below is an enhancement
+   layered on top of a panel that is already complete and readable: no JS, no
+   IntersectionObserver, or reduced motion all land here, and they land on the
+   whole thing rather than on an empty box. The held state is applied only
+   when the component has decided it can animate, which is also why there is
+   no frame of finished-then-rewound on first paint.
+
+   It plays ONCE — about 1.3s — and stops. See the motion-budget note in the
+   component; `netShape.js` makes the same argument for the hero field. */
+.rr-track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(var(--c-line));
+}
+
+/* Width carries the score; the transform carries the animation. Animating
+   `width` instead would lay the row out again on every frame, and the quote
+   underneath it would reflow sixty times a second for no visible gain. */
+.rr-bar {
+  height: 100%;
+  border-radius: 3px;
+  transform-origin: left center;
+  background: rgb(var(--c-accent) / 0.85);
+  opacity: 0.78;
+  transition: opacity 180ms ease;
+}
+
+/* `ask()` drops anything scoring under a third of the top hit. The tick is
+   that rule, drawn where it actually falls: a third across a bar scaled to
+   the top score is always a third across the track. 3px of overhang each way
+   so a 6px bar still has a visible mark. */
+.rr-cut {
+  position: absolute;
+  left: 33.3333%;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: rgb(var(--c-line-strong));
+  opacity: 0.8;
+}
+
+.rr[data-phase="arm"] .rr-fx {
+  opacity: 0;
+}
+.rr[data-phase="arm"] .rr-bar {
+  transform: scaleX(0);
+}
+
+.rr[data-phase="go"] .rr-fx {
+  animation: rr-in 480ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: calc(var(--rr-at, 0) * 1ms);
+}
+.rr[data-phase="go"] .rr-bar {
+  animation: rr-grow 700ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: calc(var(--rr-at, 0) * 1ms);
+}
+
+@keyframes rr-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rr-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Same specificity as the two held rules above and later in the file, so this
+   wins without `!important`. The component already refuses to arm itself for
+   a reader who asked for less motion; this is the belt to that pair of
+   braces, and it is what guarantees ONE correct still frame rather than a
+   panel stuck at opacity 0. */
+@media (prefers-reduced-motion: reduce) {
+  .rr[data-phase] .rr-fx,
+  .rr[data-phase] .rr-bar {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .rr[data-phase] .rr-bar {
+    opacity: 0.78;
   }
 }
