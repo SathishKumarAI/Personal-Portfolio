@@ -26,6 +26,19 @@ const CLAIMS = [
 const CLAIM_START = 620;
 const CLAIM_GAP = 180;
 
+/**
+ * The rule under the status row DRAWS ITSELF, left to right, as the row
+ * arrives. Borrowed deliberately from `Availability`, which already does this
+ * and already says why: "a line being drawn reads as something being written
+ * down". It is the one piece of motion in the hero that is not a fade, which
+ * is exactly why it is spent here, on the row that was otherwise a label
+ * floating in dead space.
+ */
+const rule = {
+  hidden: { scaleX: 0 },
+  show: { scaleX: 1, transition: { duration: 0.55, ease: [0.2, 0.65, 0.3, 0.9] } },
+};
+
 const rise = {
   hidden: { y: 16, opacity: 0 },
   show: { y: 0, opacity: 1, transition: { duration: 0.6, ease: [0.2, 0.65, 0.3, 0.9] } },
@@ -47,7 +60,7 @@ const Hero = () => {
        392px while every section <h2> started at 320px; at 2545px both numbers
        held the same 72px gap. Below 1280px the two were identical, which is
        why a 1280-wide laptop never showed it. */
-    <section className={`${styles.paddingX} relative w-full min-h-screen min-h-[100svh] flex items-start pt-28 sm:pt-32`} aria-label="Intro">
+    <section className={`${styles.paddingX} relative w-full min-h-screen min-h-[100svh] flex items-start pt-20 sm:pt-24`} aria-label="Intro">
       {/* Something behind the headline. See `.bloom` in index.css: the page had
           nothing between the type and a flat ground, which is most of why it
           read as older than it is. */}
@@ -68,12 +81,43 @@ const Hero = () => {
             been the last thing after the call to action.
             The full name still appears in the page title, the footer
             colophon, and the AgentNote block written for crawlers. */}
+        {/* Tighter than it was. Measured at 1707x872 the navbar ended at 76px
+            and this row began at 128 — a 39px row floating in a 147px band,
+            which reads as dead space rather than as breathing room. The top
+            padding comes down 32px and the margin below it 16px; the hero is
+            `items-start` inside `min-h-screen`, so the slack moves to the
+            bottom where the scroll cue already lives. */}
         <motion.div
           variants={rise}
-          className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line pb-4 mb-10 sm:mb-14"
+          className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pb-4 mb-8 sm:mb-10"
         >
-          <AvailabilityCompact />
+          {/* A LINK, not a label. "Open to AI engineering roles" is the one
+              fact on this page a recruiter acts on, and it was a dead <span>:
+              the obvious next move after reading it had nowhere to go. */}
+          <a
+            href="#contact"
+            className="group inline-flex items-center gap-2 rounded-lg -mx-1 px-1 transition-colors hover:text-live focus-visible:text-live"
+          >
+            <AvailabilityCompact />
+            {/* Slides out on hover rather than sitting there: an arrow that is
+                always visible is a second CTA competing with the real one. */}
+            <span
+              aria-hidden="true"
+              className="font-sans text-[13px] text-live opacity-0 -translate-x-1 transition duration-200 group-hover:opacity-100 group-hover:translate-x-0 group-focus-visible:opacity-100 group-focus-visible:translate-x-0"
+            >
+              Get in touch →
+            </span>
+          </a>
           <LiveClock className="text-label hidden sm:inline" />
+          {/* `border-b` replaced by a drawn rule: a border cannot animate its
+              own length, and `scaleX` on a 1px span is a compositor-only
+              transform. `origin-left` is what makes it draw rather than grow
+              from the middle. */}
+          <motion.span
+            aria-hidden="true"
+            variants={rule}
+            className="absolute inset-x-0 bottom-0 h-px origin-left bg-line"
+          />
         </motion.div>
 
         <motion.h1
