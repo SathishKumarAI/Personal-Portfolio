@@ -1,5 +1,40 @@
 # Worklog
 
+## 2026-10-15: the field's caption followed the reader off the page
+
+Reported: the `?` that explains the hero network was showing on Stack and
+Roles too. It was showing on every section.
+
+`FieldLegend` is `fixed` and had no scroll awareness, so it offered to explain
+a diagram that had faded out a screen earlier. The field itself was already
+scoped -- both modules fade the canvas and the layer labels as the hero leaves
+-- and the caption simply never got the same treatment.
+
+An IntersectionObserver on the hero rather than a scroll threshold. The field
+uses a scroll fade, and duplicating that arithmetic in a second file is two
+numbers to keep in step; intersection asks the plain question instead, which is
+"is the thing I describe still on screen". `threshold: 0.25`, because by the
+time the hero is a strip at the top the field has already faded to nothing and
+a sliver would let the caption outlive it. The panel also closes on the way
+out, so it cannot be parked open over the wrong section.
+
+### The bug inside the fix
+
+The first version set the `hidden` ATTRIBUTE. That would have been silently
+ignored on exactly the widths where this element exists: `hidden` is a
+UA-stylesheet `display: none` carrying no `!important`, and the element also
+has `rail:block`, which sets `display: block` from 1024px and wins on
+specificity.
+
+Toggling the display CLASS is what works -- dropping `rail:block` leaves plain
+`hidden`, which has nothing to fight. Caught before it shipped only because the
+check was "is it visible on each section" rather than "did the attribute get
+set".
+
+Verified across the whole page: visible on the hero, hidden on About, Roles,
+Stack, Projects and Contact, visible again on returning to the top.
+
+
 ## 2026-10-15: the About reveal waits for the section to finish arriving
 
 Asked for twice, and both asks were the same underlying fault: *"wait till all
