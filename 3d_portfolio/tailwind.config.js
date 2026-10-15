@@ -87,7 +87,13 @@ export default {
         card: "0 1px 2px rgb(var(--c-strong) / 0.06), 0 12px 32px -16px rgb(var(--c-strong) / 0.28)",
         glow: "0 0 0 1px rgb(var(--c-accent) / 0.3)",
       },
-      screens: { xs: "450px", rail: "1024px" },
+      // `bar` is the width the full top bar actually fits in, not a round
+      // number. It ran on `md` (768px) and did not fit there: measured at a
+      // 768px viewport the links group was 615px wide starting at x=197, so it
+      // ended at 811px and the last 58px — Contact, the Ask chip and both
+      // toggles — hung off the right edge, unreachable. 900px leaves ~40px of
+      // slack over the widest measured layout.
+      screens: { xs: "450px", bar: "900px", rail: "1024px" },
       letterSpacing: { label: "0.18em" },
     },
   },
