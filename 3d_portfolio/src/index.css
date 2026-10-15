@@ -33,6 +33,9 @@
   --c-flow-2: var(--c-cat-llm);
   --c-flow-3: var(--c-cat-backend);
   --c-flow-off: var(--c-line-strong);
+  --c-plat-aws: 163 98 16;
+  --c-plat-gcp: 36 90 170;
+  --c-plat-azure: 16 108 116;
 }
 
 :root[data-scheme="dark"] {
@@ -76,6 +79,18 @@
   --c-flow-2: var(--c-cat-llm);
   --c-flow-3: var(--c-cat-backend);
   --c-flow-off: var(--c-line-strong);
+  /* PLATFORM IDENTITY — and here a categorical palette is the CORRECT one.
+     The planes above are ordinal, which is why they are one hue at six
+     intensities. AWS, GCP and Azure are not ordered: they are unordered
+     alternatives you switch between, never ranked against each other, so
+     distinct hues are exactly right. The same reasoning that made six hues
+     wrong for the planes makes three hues right here.
+     Readable rather than literal brand colours: GCP and Azure are both blue in
+     real life, so they separate by HUE (blue against teal) instead of by
+     luminance, which they cannot do. */
+  --c-plat-aws: 242 174 96;
+  --c-plat-gcp: 132 180 244;
+  --c-plat-azure: 112 204 202;
 }
 
 :root {
@@ -117,6 +132,9 @@
   --c-flow-2: var(--c-cat-llm);
   --c-flow-3: var(--c-cat-backend);
   --c-flow-off: var(--c-line-strong);
+  --c-plat-aws: 163 98 16;
+  --c-plat-gcp: 36 90 170;
+  --c-plat-azure: 16 108 116;
 
   /* Primary tool chip: filled, inverted against the outline chips. Inverted
      rather than literally dark-on-light in both themes, because a dark fill on
@@ -156,6 +174,18 @@
   --c-flow-2: var(--c-cat-llm);
   --c-flow-3: var(--c-cat-backend);
   --c-flow-off: var(--c-line-strong);
+  /* PLATFORM IDENTITY — and here a categorical palette is the CORRECT one.
+     The planes above are ordinal, which is why they are one hue at six
+     intensities. AWS, GCP and Azure are not ordered: they are unordered
+     alternatives you switch between, never ranked against each other, so
+     distinct hues are exactly right. The same reasoning that made six hues
+     wrong for the planes makes three hues right here.
+     Readable rather than literal brand colours: GCP and Azure are both blue in
+     real life, so they separate by HUE (blue against teal) instead of by
+     luminance, which they cannot do. */
+  --c-plat-aws: 242 174 96;
+  --c-plat-gcp: 132 180 244;
+  --c-plat-azure: 112 204 202;
 
   --c-chip-solid: 228 225 218;
   --c-chip-solid-ink: 15 34 40; /* 13.9:1 on the fill */
@@ -1407,4 +1437,116 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
   .rr[data-phase] .rr-bar {
     opacity: 0.78;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   The platform swap in the Stack diagram.
+
+   Switching cloud replaces the contents of fourteen boxes at once, and without
+   a cue that reads as the page glitching rather than as an answer to what was
+   just clicked. A short staggered rise, left to right down each node, makes
+   the change legible as a change. `--i` is the row's index inside its node, so
+   the stagger is per box rather than across the whole drawing -- 14 boxes
+   cascading in sequence would take over a second and become a performance.
+--------------------------------------------------------------------------- */
+.cloud-in {
+  animation: cloud-in 260ms cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+@keyframes cloud-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud-in { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   The attention walk through the Stack diagram.
+
+   Sixteen boxes appearing at once is a wall; the reader has no idea where to
+   start. A short pulse travelling node by node in flow order draws the eye
+   along the path the drawing is about, then stops — it runs ONCE on mount,
+   which is a deliberate click, never on a loop. The repo's standing rule:
+   get attention, then hand off.
+
+   `--w` is the node's index in the whole drawing, so the pulse genuinely
+   travels rather than firing per plane.
+--------------------------------------------------------------------------- */
+.node-walk {
+  animation: node-walk 760ms ease-out backwards;
+  animation-delay: calc(var(--w, 0) * 70ms);
+}
+@keyframes node-walk {
+  0%   { opacity: 0; transform: translateY(6px); }
+  45%  { opacity: 1; transform: none; box-shadow: 0 0 0 2px rgb(var(--walk) / 0.35); }
+  100% { opacity: 1; transform: none; box-shadow: 0 0 0 0 rgb(var(--walk) / 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .node-walk { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   THE EMOJI CURSOR, AND WHY IT IS ONLY HERE.
+
+   Scoped to the hero, which is the one screen on this page that is not asking
+   the reader to do anything precise. Everywhere else they are pointing at
+   47 hoverable terms, a definition panel and six small controls, and an emoji
+   is a blob with NO TIP: the hotspot has to be guessed, so every click lands
+   slightly off from where the face looks like it is pointing. That is a
+   measurable cost, not a matter of taste, and it is why this stops at the
+   hero's bottom edge.
+
+   No `*` and no `!important`, deliberately. Links and buttons set their own
+   `cursor: pointer`, so they keep it — inside the hero the contact rail, the
+   CTA and the nav all still say "clickable" the normal way. The emoji appears
+   only over the parts of the hero where there is nothing to click, which is
+   exactly where a joke costs nothing.
+
+   `8 8` is the hotspot: the pixel that actually points, placed at the top-left
+   of the glyph where a reader's instinct puts an arrow tip. Browsers cap
+   cursor images at 32x32 on Windows and fall back SILENTLY to the normal
+   cursor if the image is refused, so this is decoration that is allowed to
+   not arrive.
+
+   To remove it: delete this block and the `hero-cursor` class in Hero.jsx.
+--------------------------------------------------------------------------- */
+.hero-cursor {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><text x="1" y="25" font-size="25">%F0%9F%98%80</text></svg>') 8 8, auto;
+}
+@media (hover: none) {
+  /* A touch screen has no cursor to replace, and the rule would only cost a
+     data URI nobody renders. */
+  .hero-cursor { cursor: auto; }
+}
+
+/* ---------------------------------------------------------------------------
+   EMOJI CURSOR — an experiment, OFF by default.
+
+   Turn it on from the console:
+     document.documentElement.dataset.cursor = 'emoji'      // smile
+     document.documentElement.dataset.cursor = 'emoji-all'  // over buttons too
+     delete document.documentElement.dataset.cursor         // back to normal
+
+   The emoji is drawn into an SVG and handed to `cursor:` as a data URI. Two
+   things are worth knowing before this ever ships:
+
+   - The number after the URL is the HOTSPOT — the pixel inside the image that
+     actually points. An emoji has no tip, so wherever it is put is a guess,
+     and the user's click lands somewhere they did not aim. That is the real
+     cost, and it is not a style question.
+   - Browsers cap cursor images (32x32 is the safe size; Windows ignores
+     larger ones) and fall back silently to `auto` if the file is refused, so
+     it can work on your machine and not on a reader's.
+
+   `-all` deliberately overrides the pointer on links and buttons, which is
+   why it is a separate switch: losing the hand cursor means losing the only
+   signal that something is clickable.
+--------------------------------------------------------------------------- */
+:root[data-cursor="emoji"] body,
+:root[data-cursor="emoji-all"] body {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><text x="0" y="26" font-size="26">%F0%9F%98%80</text></svg>') 6 6, auto;
+}
+:root[data-cursor="emoji-all"] * {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><text x="0" y="26" font-size="26">%F0%9F%98%80</text></svg>') 6 6, auto !important;
 }

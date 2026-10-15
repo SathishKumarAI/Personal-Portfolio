@@ -207,10 +207,18 @@ const TokenStream = () => {
          but y=161 at 1281px, because its question wrapped to two lines -- so
          the height had to be responsive to chase it.
 
-         The toggle has moved beside the heading and the definition panel now
-         stretches from the header's top edge, which is y=152 at every width.
-         So the only thing this band has to clear sits at a constant y, and
-         80px + 56px = 136px clears it by 16px everywhere.
+         IT RUNS OUT OF THE HEADING NOW, which is where it was asked to be
+         from the start -- "start the animation from stack and flow it
+         right". It could not, while the definition card occupied the
+         header's right column: the only strip clear of everything was a
+         52px ribbon up in the section's padding. Flattening that card to a
+         line above the tools freed a band roughly 1,400x130px beside the
+         title, and the stream moved into it.
+
+         It stops ABOVE the intro paragraph rather than beside it. The intro
+         runs to ~46rem, so a band that cleared it horizontally would start
+         halfway across the page; stopping 12px short of its first line
+         keeps the full width instead. Re-measure both if the header changes.
 
          A long thin ribbon rather than a short wide block, and that is the
          right trade for this effect: the ask was for the stream to "take more
@@ -225,7 +233,7 @@ const TokenStream = () => {
          this was `left-[33%] right-0`: 416px wide instead of the ~1060px the
          insets implied, which put it straight back over the heading. The hero
          field hit the identical trap with `renderer.setSize(w, h, false)`. */
-      className="pointer-events-none absolute top-[5rem] left-[33%] w-[60%] -z-10 hidden rail:block h-[3.5rem] opacity-[0.95]"
+      className="pointer-events-none absolute top-[4.25rem] left-[26%] w-[71%] -z-10 hidden rail:block h-[7.5rem] opacity-[0.95]"
     />
   );
 };

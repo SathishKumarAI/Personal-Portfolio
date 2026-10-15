@@ -19,7 +19,7 @@ import {
   stackGroups,
   systemPlanes,
   systemSubstrate,
-  platformSwaps,
+  platformMatrix,
   PLATFORMS,
   glossary,
 } from "../constants/index.js";
@@ -93,32 +93,50 @@ const test_every_node_states_a_responsibility = () => {
   assert.deepEqual(bare, [], `nodes missing a title or role: ${bare.join(", ")}`);
 };
 
-// The swap table is the diagram's whole claim about portability. A row missing
-// a vendor renders as a gap in one platform and not the others, which reads as
+// The matrix is the diagram's whole claim about portability. A row missing a
+// vendor renders as a gap in one column and not the others, which reads as
 // "there is no equivalent" rather than "someone forgot a cell".
-const test_every_swap_covers_every_platform = () => {
-  const vendors = PLATFORMS.filter((p) => p.id !== "oss").map((p) => p.id);
-  for (const [tool, swap] of Object.entries(platformSwaps)) {
-    assert.ok(swap.role, `${tool}: swap has no role`);
-    for (const v of vendors) {
+const test_every_role_covers_every_cloud = () => {
+  for (const r of platformMatrix) {
+    for (const k of ["aws", "gcp", "azure"]) {
       assert.ok(
-        typeof swap[v] === "string" && swap[v].length > 0,
-        `${tool}: no ${v} equivalent`
+        typeof r[k] === "string" && r[k].length > 0,
+        `${r.role}: no ${k} equivalent`
       );
     }
   }
 };
 
-// A swap for a tool the section never renders is dead weight that still costs
-// a reader a row to scan.
-const test_every_swap_names_a_staged_tool = () => {
-  const stages = new Set(stageTools());
-  const orphans = Object.keys(platformSwaps).filter((t) => !stages.has(t));
+// `mine` is the ONLY column that is a claim about the owner, so it may only
+// name something he actually lists. The cloud columns are claims about the
+// platforms and are deliberately not held to that.
+const test_the_mine_column_only_names_real_tools = () => {
+  const list = listTools();
+  const invented = platformMatrix
+    .filter((r) => r.mine && !list.has(r.mine))
+    .map((r) => `${r.role}: ${r.mine}`);
   assert.deepEqual(
-    orphans,
+    invented,
     [],
-    `swap defined for an unstaged tool: ${orphans.join(", ")}`
+    `"what I use" names something absent from the stack: ${invented.join(", ")}`
   );
+};
+
+// A role listed twice is two rows a reader has to reconcile.
+const test_no_role_is_listed_twice = () => {
+  const roles = platformMatrix.map((r) => r.role);
+  const dupes = [...new Set(roles.filter((x, i) => roles.indexOf(x) !== i))];
+  assert.deepEqual(dupes, [], `role listed more than once: ${dupes.join(", ")}`);
+};
+
+// Every row belongs to one of the diagram's planes, so the table can be
+// grouped the same way the drawing is.
+const test_every_role_sits_in_a_known_plane = () => {
+  const known = new Set([...systemPlanes.map((p) => p.title.split(" ")[0]), "Substrate"]);
+  const stray = [...new Set(platformMatrix.map((r) => r.plane))].filter(
+    (p) => !known.has(p)
+  );
+  assert.deepEqual(stray, [], `unknown plane in the matrix: ${stray.join(", ")}`);
 };
 
 const tests = [
@@ -128,8 +146,10 @@ const tests = [
   test_every_staged_tool_is_a_listed_tool,
   test_no_tool_is_staged_twice,
   test_every_staged_tool_has_a_definition,
-  test_every_swap_covers_every_platform,
-  test_every_swap_names_a_staged_tool,
+  test_every_role_covers_every_cloud,
+  test_the_mine_column_only_names_real_tools,
+  test_no_role_is_listed_twice,
+  test_every_role_sits_in_a_known_plane,
 ];
 
 let failed = 0;
