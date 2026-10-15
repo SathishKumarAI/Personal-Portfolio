@@ -118,7 +118,26 @@ export const FIELD_ALPHA = {
  * scheme rather than per theme keeps it to one number, since `data-scheme` is
  * already the axis every structural rule in index.css reads.
  */
-export const LIGHT_BOOST = 2.8;
+export const LIGHT_BOOST = 3.4;
+
+/**
+ * How much taller the HIDDEN layers stand than the two real columns.
+ *
+ * 1 puts every layer in exactly the dock's band, which is where this started:
+ * correct, anchored, and visually flat. The docks span roughly 156px while the
+ * network spans about 1450px across, so at 1 the whole lattice is a 10:1 strip
+ * and the edges read as near-horizontal scan lines rather than as a network.
+ *
+ * The span is still READ FROM THE REAL CONTROLS and merely scaled — it is
+ * their band times this number, centred on their midpoint. That is the part
+ * that matters: a hidden layer still cannot move unless a dock moves, and
+ * nothing here is derived from viewport height. The previous `h * 0.44` was
+ * the opposite, and it is why the band drifted whenever the window did.
+ *
+ * Centred rather than grown downward, so the funnel still converges
+ * symmetrically on the section rail from both sides.
+ */
+export const HIDDEN_SPREAD = 2.9;
 
 /**
  * Resting and lit intensity of an edge, as a multiplier on its alpha. Shared,
@@ -127,6 +146,74 @@ export const LIGHT_BOOST = 2.8;
  */
 export const EDGE_REST = 0.62;
 export const EDGE_LIT = 1;
+
+/**
+ * Which token the field is drawn in, per scheme.
+ *
+ * Dark grounds use `--c-line-strong` (95 134 148 on 15 34 40) and separate
+ * well. Light grounds used the same token and it is the wrong one there: at
+ * 143 135 118 on white it is a mid-tan, the palest ink in the theme, and no
+ * amount of alpha makes a pale line on a white page read.
+ *
+ * `--c-faint` is the token the themes already use for their 10-13px labels --
+ * 104 114 119 on `light`, 4.93:1, deliberately quiet but legible. That is
+ * exactly the register an ambient diagram wants, and it is ~16% further from
+ * the page than `--c-line-strong` before a single point of alpha is spent.
+ */
+export const inkToken = (scheme) =>
+  scheme === "light" ? "--c-faint" : "--c-line-strong";
+
+/**
+ * Every edge crossing one layer gap, as [from, to] pairs.
+ *
+ * Lives here because both fields drew this and each had its own copy of the
+ * rule -- two chances for the wiring to diverge between the WebGL field and
+ * the fallback, which is the thing this module exists to stop.
+ *
+ * TWO PASSES, AND THE SECOND ONE IS THE BUG FIX.
+ *
+ * The first pass is the original rule: each source reaches the two units
+ * opposite it in the next layer, not all of them. Fully connected is what an
+ * MLP actually is, and at 110 edges it reads as a mesh laid over the headline.
+ *
+ * That rule alone leaves units stranded whenever a layer EXPANDS. From four
+ * inputs into eight hidden units each source claims two, which covers seven of
+ * the eight -- and the last source wastes its second edge on a duplicate,
+ * because `centreOf + 1` clamps to the final index it already took. So HIDDEN
+ * 1's top unit was drawn with no incoming connection at all, and the gap
+ * carried one fewer activation than it had edges to show.
+ *
+ * The second pass fixes it: any target nothing reached gets an edge to the
+ * source opposite IT. A drawn unit with no wires is not a quiet unit, it is a
+ * drawing of something that is not a network.
+ *
+ * The `seen` set also drops the duplicates the first pass produces, so a pair
+ * is never drawn twice at double brightness.
+ */
+export const edgesFor = (from, to) => {
+  const pairs = [];
+  const seen = new Set();
+  const reached = new Array(to.length).fill(false);
+  const add = (fi, ti) => {
+    const key = `${fi}:${ti}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    reached[ti] = true;
+    pairs.push([from[fi], to[ti]]);
+  };
+  const clamp = (v, n) => Math.min(n - 1, Math.max(0, v));
+
+  from.forEach((_, fi) => {
+    const c = Math.round(((fi + 0.5) / from.length) * to.length - 0.5);
+    for (const d of [0, 1]) add(fi, clamp(c + d, to.length));
+  });
+  to.forEach((_, ti) => {
+    if (reached[ti]) return;
+    const c = Math.round(((ti + 0.5) / to.length) * from.length - 0.5);
+    add(clamp(c, from.length), ti);
+  });
+  return pairs;
+};
 
 /** The alphas as they should render on a given `data-scheme`. */
 export const alphaFor = (scheme) => {

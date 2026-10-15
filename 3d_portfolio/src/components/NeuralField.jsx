@@ -35,7 +35,7 @@ import { useEffect, useRef } from "react";
 // here AND in NeuralField3D, which is two copies of one fact: see that file.
 import {
   HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS,
-  FIELD_ALPHA, alphaFor, EDGE_REST, EDGE_LIT,
+  FIELD_ALPHA, alphaFor, EDGE_REST, EDGE_LIT, HIDDEN_SPREAD, inkToken, edgesFor,
 } from "./netShape";
 
 const token = (el, name, alpha) => {
@@ -142,13 +142,15 @@ const NeuralField = () => {
          moved with window height while the docks did not. Two layers read from
          the interface and two invented from the viewport is not one diagram. */
       const ys = [...inputs, ...outputs].map((p) => p.y);
-      const bandTop = Math.min(...ys);
-      const span = Math.max(...ys) - bandTop;
+      const bandMid = (Math.min(...ys) + Math.max(...ys)) / 2;
+      // Scaled by HIDDEN_SPREAD and re-centred, matching the 3D field.
+      const span = (Math.max(...ys) - Math.min(...ys)) * HIDDEN_SPREAD;
+      const bandTop = bandMid - span / 2;
       const hidden = HIDDEN.map((count, li) => {
         const x = x0 + ((x1 - x0) * (li + 1)) / (HIDDEN.length + 1);
         return Array.from({ length: count }, (_, ni) => ({
           x,
-          y: count === 1 ? bandTop + span / 2 : bandTop + (span * ni) / (count - 1),
+          y: count === 1 ? bandMid : bandTop + (span * ni) / (count - 1),
         }));
       });
       return [inputs, ...hidden, outputs];
@@ -191,17 +193,7 @@ const NeuralField = () => {
      */
     const gapsOf = (ls) => {
       const out = [];
-      for (let i = 0; i < ls.length - 1; i++) {
-        const from = ls[i], to = ls[i + 1], g = [];
-        from.forEach((a, ai) => {
-          const centreOf = Math.round(((ai + 0.5) / from.length) * to.length - 0.5);
-          for (const d of [0, 1]) {
-            const b = to[Math.min(to.length - 1, Math.max(0, centreOf + d))];
-            if (b) g.push([a, b]);
-          }
-        });
-        out.push(g);
-      }
+      for (let i = 0; i < ls.length - 1; i++) out.push(edgesFor(ls[i], ls[i + 1]));
       return out;
     };
 
@@ -228,7 +220,8 @@ const NeuralField = () => {
       // A frame can still be in flight when the 3D module takes over, and this
       // canvas then has no 2D context at all.
       if (!ctx) return;
-      const ink = token(root, "--c-line-strong", 1);
+      const scheme = root.getAttribute("data-scheme") === "light" ? "light" : "dark";
+      const ink = token(root, inkToken(scheme), 1);
       const accent = token(root, "--c-accent", 1);
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -252,7 +245,7 @@ const NeuralField = () => {
            `gaps` is already the sparse set, built by gapsOf() from the same
            rule, so the fix is to draw what the animation is already using. */
         ctx.lineWidth = 0.9;
-        const a = alphaFor(root.getAttribute("data-scheme") === "light" ? "light" : "dark");
+        const a = alphaFor(scheme);
         gaps.forEach((gap, k) => {
           const lit = wave && wave.hop === k
             ? EDGE_REST + (EDGE_LIT - EDGE_REST) * Math.sin(Math.PI * Math.min(1, wave.t))
@@ -311,8 +304,8 @@ const NeuralField = () => {
         // hidden units
         layers.slice(1, -1).flat().forEach((n) => {
           ctx.beginPath();
-          ctx.arc(n.x, n.y, 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = ink.replace(",1)", `,${alphaFor(root.getAttribute("data-scheme") === "light" ? "light" : "dark").node})`);
+          ctx.arc(n.x, n.y, 2.9, 0, Math.PI * 2);
+          ctx.fillStyle = ink.replace(",1)", `,${alphaFor(scheme).node})`);
           ctx.fill();
         });
 
@@ -321,24 +314,29 @@ const NeuralField = () => {
           // Eased, so a front leaves one layer and settles into the next
           // rather than crawling at a constant rate — linear read as a
           // scanline sweeping the page.
-          const f = wave.t < 0.5
-            ? 2 * wave.t * wave.t
-            : 1 - ((-2 * wave.t + 2) ** 2) / 2;
-          gaps[wave.hop].forEach(([a, b]) => {
-            const x = a.x + (b.x - a.x) * f;
-            const y = a.y + (b.y - a.y) * f;
+          gaps[wave.hop].forEach(([a, b], i) => {
+            // Per-edge phase and a glow that rises and falls across the
+            // crossing -- the same wave the 3D field draws, and for the same
+            // reason: one rigid front sweeping the page read as a scanline.
+            const phase = ((i % 5) / 5) * 0.1;
+            const tt = Math.max(0, Math.min(1, (wave.t - phase) / (1 - 0.1)));
+            const ff = tt < 0.5 ? 2 * tt * tt : 1 - ((-2 * tt + 2) ** 2) / 2;
+            const glow = Math.sin(Math.PI * tt) ** 0.6;
+            if (glow <= 0.01) return;
+            const x = a.x + (b.x - a.x) * ff;
+            const y = a.y + (b.y - a.y) * ff;
 
             // the trail it is leaving on this edge
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(x, y);
-            ctx.strokeStyle = accent.replace(",1)", `,${FIELD_ALPHA.trail})`);
+            ctx.strokeStyle = accent.replace(",1)", `,${(FIELD_ALPHA.trail * glow).toFixed(3)})`);
             ctx.lineWidth = 1.2;
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(x, y, 2.2, 0, Math.PI * 2);
-            ctx.fillStyle = accent.replace(",1)", `,${FIELD_ALPHA.signal})`);
+            ctx.arc(x, y, 2.6, 0, Math.PI * 2);
+            ctx.fillStyle = accent.replace(",1)", `,${(FIELD_ALPHA.signal * glow).toFixed(3)})`);
             ctx.fill();
           });
         }
