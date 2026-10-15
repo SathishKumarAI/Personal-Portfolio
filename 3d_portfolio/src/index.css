@@ -560,7 +560,12 @@ main > section:nth-of-type(even) {
    `opacity` and `transform`, both compositor properties, so four cards changing
    state during a scroll cost no layout and no paint. */
 li[data-covered="true"] > .role-card {
-  transform: scale(0.988);
+  /* 0.976, not 0.988. At 0.988 a 672px card insets 4px a side, which is under
+     the width of its own border — the step back was real in the stylesheet and
+     invisible on the screen. At 0.976 it insets 8px, so a strip of the page
+     shows down both edges of the buried card and the pile has depth you can
+     point at rather than depth you are told about. */
+  transform: scale(0.976);
 }
 
 /* The CONTENT recedes, the card does not.
@@ -591,11 +596,48 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
   border: 1px solid rgb(var(--c-line));
   /* The same three-layer elevation the other cards use: a tight contact
      shadow, a wide ambient one, and the inner highlight that makes a surface
-     read as above the page rather than printed on it. */
+     read as above the page rather than printed on it.
+
+     The FOURTH layer is new, and it is the one that fixes the transition. It
+     throws shade UPWARD, onto whatever is behind this card's top edge — which
+     in a sticky deck is always the card being covered.
+
+     The complaint it answers: mid-transition, the outgoing card's bottom and
+     the incoming card's top sat at 491px and 474px, a 17px overlap with
+     identical fills either side of it. There was no gap because there is
+     nowhere to put one: the deck REQUIRES the cards to overlap. So the
+     separation has to be drawn rather than spaced, and a cast shadow is what
+     a real stack of cards would do anyway. */
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 -12px 24px -8px rgb(var(--c-strong) / 0.45),
     0 2px 6px -2px rgb(var(--c-strong) / 0.35),
     0 24px 48px -28px rgb(var(--c-strong) / 0.65);
+}
+
+/* A DARK GROUND DOES NOT TAKE A SHADOW.
+   -------------------------------------------------------------------------
+   Measured in the dark theme: the card fill was rgb(20 44 51) against a page
+   of rgb(15 34 40) — five, ten and eleven points apart — and all three shadow
+   layers are near-black on near-black, so they contributed nothing a reader
+   could see. The deck read as one flat panel divided by hairlines, which is
+   exactly the "background looks crazy" this was reported as.
+
+   Elevation on a dark ground is carried by a LIGHTER fill, not by a darker
+   shadow; that is the one place the light-mode recipe does not transfer. The
+   mix lifts the card roughly four times further from the page than the raw
+   token did, and the top highlight goes up with it because a brighter surface
+   needs a brighter edge to still read as lit from above.
+
+   `color-mix` on the token rather than a hand-written triple, so a theme that
+   retunes `--c-tertiary` takes its role cards with it. */
+:root[data-scheme="dark"] .role-card {
+  background: color-mix(in srgb, rgb(var(--c-tertiary)) 94%, white);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.09),
+    0 -12px 24px -8px rgb(0 0 0 / 0.55),
+    0 2px 6px -2px rgb(0 0 0 / 0.45),
+    0 24px 48px -28px rgb(0 0 0 / 0.75);
 }
 
 /* The role being read now: a light that runs around the card's edge.

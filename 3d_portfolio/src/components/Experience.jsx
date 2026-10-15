@@ -75,7 +75,15 @@ const Role = ({ role, index, trackIndex = null, stage = null, className = "", st
   return (
   <Reveal
     as="li"
-    delay={index * 0.08}
+    /* Dealt, not listed. 0.12s apart rather than 0.08 and a touch longer each,
+       so four cards arrive as a hand being dealt instead of as a list fading
+       in together — at 0.08 the last card started before the first had
+       settled, which is the same instant to a reader.
+       The scale and the extra travel are only for the ROLES deck: education
+       renders through this same component as a plain list and keeps the
+       page's ordinary reveal, because a two-entry list is not a deck. */
+    delay={index * (trackIndex === null ? 0.08 : 0.12)}
+    {...(trackIndex === null ? {} : { y: 26, scale: 0.985, duration: 0.68 })}
     // Only set for jobs. The margin diagram keys off this, and education
     // renders through this same component: sharing the numbering pointed the
     // diagram at the wrong entry.
@@ -300,10 +308,22 @@ const useCoveredCards = (listRef) => {
       const tops = cards.map((c) => c.getBoundingClientRect().top);
       const heights = cards.map((c) => c.offsetHeight);
       cards.forEach((card, i) => {
-        // Covered when the next card has climbed more than halfway up this
-        // one's face: at that point it is painting over the content, not
-        // merely sitting below it.
-        const covered = i + 1 < cards.length && tops[i + 1] - tops[i] < heights[i] * 0.55;
+        /* 0.78, up from 0.55 — the card steps back once the next one has
+           climbed a QUARTER of its face, not half of it.
+           -----------------------------------------------------------------
+           Measured at 1512x900, scrolled to 1684: card 02's bottom sat at
+           491px with card 03's top at 474px — a 17px overlap, card 03
+           painting over it — and card 02 was still `data-covered="false"`,
+           so it sat at full strength with its last line sliced in half. At
+           0.55 the step back arrives long after the damage: the reader spends
+           the whole first half of the transition looking at a cut sentence
+           that reads as broken text rather than as a card behind.
+
+           Not higher than this. At 0.9 the card dims while its bottom edge is
+           still clear of the incoming card, so the thing being read fades
+           while it is still the thing being read. A quarter is where the
+           slicing actually starts to cost something. */
+        const covered = i + 1 < cards.length && tops[i + 1] - tops[i] < heights[i] * 0.78;
         const want = covered ? "true" : "false";
         // Writing the same value still invalidates style in some engines.
         if (card.dataset.covered !== want) card.dataset.covered = want;
