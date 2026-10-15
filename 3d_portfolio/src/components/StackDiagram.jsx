@@ -331,7 +331,7 @@ const StackDiagram = ({ onDefine, onPin, shown }) => {
        list. */
     <Reveal delay={0.1} className="hidden lg:block">
       <div className="flex flex-col gap-2">
-        {systemPlanes.map((plane, i) => {
+        {systemPlanes.map((plane) => {
           const offset = n;
           n += plane.nodes.length;
           return (
