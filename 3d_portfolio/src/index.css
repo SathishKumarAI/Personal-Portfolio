@@ -693,6 +693,50 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
   }
 }
 
+/* A control the hero field has just fired through.
+   -------------------------------------------------------------------------
+   The field claims the four contact icons are its input layer and the five
+   section dots its output. Every version of that claim before this one was
+   made in WORDS — a label reading "INPUT 4" under a column of dots, which
+   tells a reader the name of a thing they have no reason to believe is real.
+
+   This is the claim made as a DEMONSTRATION instead. An activation leaves an
+   icon and that icon pulses; eight seconds later it reaches a section dot and
+   that dot pulses. Nobody has to be told what the backdrop is for, because
+   they watched it happen on a control they recognise.
+
+   One rule for both rails on purpose. A box-shadow ring follows whatever
+   border-radius the element already has, so the 44px glass tile and the 40px
+   rail link each get a ring in their own shape with no structural coupling
+   between this file and either component. `NeuralField3D` and `NeuralField`
+   both add the class; `FIRE_MS` in netShape.js is the same 900ms, because a
+   class pulled before its animation ends cuts the ring off mid-flight. */
+.net-fire {
+  animation: net-fire 900ms ease-out;
+  /* The dock tile already carries this radius; the rail link carries none, and
+     a box-shadow follows whatever radius its element has — so without this the
+     left edge pulsed a rounded square and the right edge pulsed a hard one. */
+  border-radius: 0.75rem;
+}
+
+@keyframes net-fire {
+  from {
+    box-shadow: 0 0 0 0 rgb(var(--c-accent) / 0.5);
+  }
+  to {
+    box-shadow: 0 0 0 12px rgb(var(--c-accent) / 0);
+  }
+}
+
+/* The 3D field never runs under reduced motion, but the 2D fallback does, and
+   it fires the same controls. A ring expanding out of a navigation control is
+   exactly the kind of unrequested motion that setting is for. */
+@media (prefers-reduced-motion: reduce) {
+  .net-fire {
+    animation: none;
+  }
+}
+
 /* Reduced motion keeps the ring and stops the travelling. Belt and braces: the
    global reduced-motion reset near the top of this file already forces
    `animation-duration: 0.001ms !important` on everything, which lands the angle

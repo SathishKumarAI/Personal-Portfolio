@@ -1,5 +1,129 @@
 # Worklog
 
+## 2026-10-15: the hero field finally draws the diagram it has been claiming
+
+The backdrop's whole premise: the four contact icons down the left edge are a
+network's INPUT layer, the five section dots down the right are its OUTPUT
+layer, two hidden layers sit between. Every word of that was in the file
+headers. Almost none of it was on the screen.
+
+### The bug was one line, and it had been there since the 3D field shipped
+
+```js
+const toWorld = (p, z = 0) => new Vector3(p.x - w / 2, h / 2 - p.y, z);
+```
+
+Correct at `z = 0`. Wrong everywhere else — and the two hidden layers live at
+`z = +170` and `z = -190`.
+
+A perspective camera at distance `d` projects a point at depth `z` to
+`offset * d / (d - z)`. So every hidden node was carefully computed in pixels
+and then silently rescaled on the way to the screen: the near layer by 1.21x,
+the far one by 0.84x. The labels were placed from the **pixel** values, so each
+one named a column that was not there.
+
+| Measured at 1512x900 | Label at | Nodes drew at | Column fan |
+| --- | ---: | ---: | ---: |
+| HIDDEN 1 | 512 | 460 – 465 | 4.8px |
+| HIDDEN 2 | 987 | 949 – 954 | 3.8px |
+
+Dividing by the same factor the projection will multiply by cancels it.
+Verified twice, because the first check only proved the code agreed with
+itself: once by projecting the real nodes through the real camera
+(`Vector3.project(camera)`), and once by reading the actual GPU framebuffer
+with `gl.readPixels` and finding the ink peaks.
+
+| After | Label at | Node ink peak | Off by |
+| --- | ---: | ---: | ---: |
+| HIDDEN 1 | 586 | **586.8** | 0.8px |
+| HIDDEN 2 | 1106 | **1104.9** | 1.1px |
+
+Column fan, both layers: **0.00px**.
+
+The depth survives all of it. Points still attenuate, edges still foreshorten,
+the parallax still moves the volume. Only the lie is gone.
+
+### The icons are the nodes now, rather than having nodes drawn on them
+
+Nine of the scene's 23 nodes were painted at the exact centre of a control —
+under an opaque tile at `z-40`, while the canvas sits at `z-0`. Nobody ever saw
+one. Worse, drawing them quietly contradicted the claim: if the node is a dot
+hidden behind the icon, the icon is not the node.
+
+Both fields now anchor to the control's **edge** plus 6px and draw no node
+there at all. The edge runs out of the tile and stops at the dot.
+
+### And the reader is told none of this
+
+An activation lights the real control it leaves and the real control it
+arrives at — `.net-fire`, one `box-shadow` ring that follows whatever radius
+the element already has, so one rule serves a 44px glass tile and a 40px rail
+link with no coupling to either component.
+
+That is the whole explanation. A caption claiming "the dock is the input
+layer" is an assertion; watching your own GitHub icon pulse and a section dot
+answer eight seconds later is a demonstration, and the reader did the
+inferring. The layer labels gained a gloss for the two layers that have a
+counterpart in the interface (`INPUT / ways to reach me / 4`) and the hidden
+ones deliberately did not — they are the part with no counterpart, and
+inventing one would be the diagram lying again.
+
+A `?` marker bottom-left carries the sentences for anyone who wants them. It
+lives in React rather than in either field module, because there are two
+fields: putting it in the WebGL one would have given the explanation only to
+the readers least likely to need it.
+
+### Staying wired, in real time
+
+The 500ms poll was the only thing re-reading the docks. Half a second of the
+network lagging its own anchor, on every frame of a window drag.
+
+| Signal | Catches |
+| --- | --- |
+| `ResizeObserver` on both docks | the fast path — a drag, a reflow |
+| `visualViewport` resize | pinch zoom, which fires no `window.resize` |
+| `syncPixelRatio()` | browser zoom, and dragging to a monitor at another scale |
+| the 500ms poll, still there | the dock hiding itself, a font swap, the text-size control |
+
+`devicePixelRatio` was read once at start and never again, so either of those
+last two left the drawing buffer sized for the old ratio.
+
+Measured: perturbing a dock cell re-anchored every column **within 2 frames**
+(~33ms) — input port 66 to 94, INPUT label 66 to 94, HIDDEN 1 521.3 to 540,
+HIDDEN 2 976.7 to 986, OUTPUT unmoved — and restored exactly on the way back.
+
+### One comment was lying, and is now the measurement
+
+> The pointer moves the camera, not the scene: moving the scene would slide the
+> input layer off the dock it is anchored to, which is the one thing this
+> drawing promises.
+
+`camera.lookAt(0, 0, 0)` rotates as well as translates, and a rotation fixes
+only the world origin. The anchored layers are the furthest off-centre things
+in the scene, so they skew most:
+
+| Pointer sweep | swing |
+| --- | ---: |
+| INPUT | 17.1px |
+| HIDDEN 1 | -3.8px |
+| HIDDEN 2 | 5.2px |
+| OUTPUT | 14.2px |
+
+The two layers that should be nailed down move four times as much as the two
+that are free. **Kept anyway, on the owner's call, after being shown those
+numbers** — it is small, it only happens under a moving pointer, and the depth
+it sells is why the scene is 3D. `PARALLAX` is now a named knob: set both axes
+to 0 and the anchored layers are pixel-exact at every pointer position.
+
+### Deliberately not done
+
+- The 131kB of three.js still buys depth and parallax and nothing else. The
+  owner is deciding after seeing this run.
+- `HIDDEN` and `LAYERS` moved into `netShape.js`; the two field modules had
+  carried their own copies of both, which is two chances to renumber a layer in
+  one and not the other.
+
+
 ## 2026-10-15: the hero field kept its captions after its subject left
 
 Below the `rail` breakpoint (1024px) both docks are `display:none`, so the field

@@ -11,6 +11,7 @@ import ContactRail from "./components/ContactRail";
 import AgentNote from "./components/AgentNote";
 import Collaborate from "./components/Collaborate";
 import NeuralField from "./components/NeuralField";
+import FieldLegend from "./components/FieldLegend";
 
 function App() {
   return (
@@ -53,6 +54,9 @@ function App() {
           <Footer />
           <SideRail />
           <ContactRail />
+          {/* Explains the two rails above it: they are the field's input and
+              output layers. Desktop only, like the field and the docks. */}
+          <FieldLegend />
           <BackToTop />
           <CommandPalette />
         </div>
