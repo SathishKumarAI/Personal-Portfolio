@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   systemStages,
   systemFloor,
@@ -192,13 +191,22 @@ const PlatformPicker = ({ platform, onChange }) => (
  * these are equivalents, claims only that he knows what fills the role
  * elsewhere. That is the difference between a portfolio and a fabrication.
  */
-const SwapBlock = ({ platform, onChange, why, onWhy }) => {
+/* EXPORTED, and rendered by `Tech` rather than from inside the diagram.
+   The section's controls were in two places -- the view toggle up beside the
+   heading, the `?` and the platform picker down here -- so a reader met the
+   mode switch, then the drawing's own controls, 400px apart. They are all
+   controls over the same drawing and now share one strip, with the toggle
+   handed in as `trailing` so this row keeps ownership of its own layout. */
+export const DiagramControls = ({ platform, onChange, why, onWhy, trailing }) => {
   const vendor = PLATFORMS.find((p) => p.id === platform);
   return (
     <div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <WhyPanel open={why} onToggle={onWhy} />
         <PlatformPicker platform={platform} onChange={onChange} />
+        {/* `trailing` is the view toggle, handed down so it can sit at the end
+            of this row rather than in a strip of its own. The row owns its own
+            layout, so the caller supplies the control and not its placement. */}
         {platform === "oss" ? (
           <p className="min-w-0 flex-1 font-serif italic text-label leading-[1.5] text-faint">
             {PLATFORM_NOTE}
@@ -212,6 +220,7 @@ const SwapBlock = ({ platform, onChange, why, onWhy }) => {
             </span>
           </p>
         )}
+        {trailing && <div className="ml-auto shrink-0">{trailing}</div>}
       </div>
       {platform !== "oss" && (
         /* Three columns, not two. Two wide columns never wrapped a row but
@@ -281,8 +290,7 @@ const WhyPanel = ({ open, onToggle }) => (
   </>
 );
 
-const StackDiagram = ({ platform = "oss", onPlatform, onDefine, onPin, shown }) => {
-  const [why, setWhy] = useState(false);
+const StackDiagram = ({ onDefine, onPin, shown }) => {
   const pass = { onDefine, onPin, shown };
 
   return (
@@ -297,12 +305,6 @@ const StackDiagram = ({ platform = "oss", onPlatform, onDefine, onPin, shown }) 
           one small control. Both are controls over the same drawing, so they
           share a line, and each expands its panel underneath only when a
           reader asks for it. */}
-      <SwapBlock
-        platform={platform}
-        onChange={onPlatform}
-        why={why}
-        onWhy={() => setWhy((v) => !v)}
-      />
 
       <div className="mt-3">
         <Band stage={stageById.ingest} index={0} {...pass} />

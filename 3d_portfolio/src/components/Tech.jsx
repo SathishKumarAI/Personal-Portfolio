@@ -7,7 +7,7 @@ import { SectionWrapper } from "../hoc";
 import SectionHead from "./SectionHead";
 import TokenStream from "./TokenStream";
 import TagTerm from "./TagTerm";
-import StackDiagram from "./StackDiagram";
+import StackDiagram, { DiagramControls } from "./StackDiagram";
 
 // A set, not a sum: several tools appear in more than one group, and counting
 // the arrays would claim more than he lists.
@@ -41,7 +41,7 @@ const DefinitionPanel = ({ entry, pinned }) => (
        fault this panel exists to fix: a translucent surface carrying prose
        lets whatever is behind it bleed into the words. The old popover was
        `rgba(255 255 255 / 0.62)` and unreadable for exactly that reason. */
-    className="hidden md:flex min-h-[9rem] flex-col rounded-2xl border border-line bg-tertiary p-4"
+    className="hidden md:flex h-full min-h-[9rem] flex-col rounded-2xl border border-line bg-tertiary p-4"
     // Announced, but politely: the reader asked for this by pointing at a
     // chip, so it is a result, not an alert.
     aria-live="polite"
@@ -116,9 +116,17 @@ const DefinitionPanel = ({ entry, pinned }) => (
  */
 const ViewToggle = ({ view, onChange }) => (
   <div className="hidden lg:flex items-center gap-3">
-    <span className="font-serif italic text-faint text-label">
-      Would you like to see this as a system diagram?
-    </span>
+    {/* The invitation is only an invitation while the answer is still no.
+        Asking "would you like to see this as a system diagram?" beside a
+        system diagram the reader is already looking at reads as a control that
+        has not noticed its own state. It also does not fit: in the diagram
+        view this sits at the end of a row that already carries the `?`, the
+        platform picker and the note, and the question alone is ~300px. */}
+    {view !== "diagram" && (
+      <span className="font-serif italic text-faint text-label">
+        Would you like to see this as a system diagram?
+      </span>
+    )}
     <div
       role="group"
       aria-label="Stack view"
@@ -184,6 +192,7 @@ const Tech = () => {
   // there is free vertical space, while the thing it controls sits below the
   // header. See PlatformPicker's own comment.
   const [platform, setPlatform] = useState("oss");
+  const [why, setWhy] = useState(false);
 
   // Shared by both views, so a term pinned in the list is still pinned when
   // the reader switches to the diagram. Written once rather than inline in
@@ -222,7 +231,7 @@ const Tech = () => {
           section. Dropped to the baseline of the header it sits directly above
           the columns, and the slack moves up beside the display-size heading,
           where open space reads as intent rather than as a gap. */}
-      <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:gap-x-12 md:items-end">
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:gap-x-12 md:items-stretch">
         <div className="min-w-0">
           <SectionHead title="Stack" meta={STACK_META} />
 
@@ -257,19 +266,28 @@ const Tech = () => {
 
         </div>
 
-        {/* THE OFFER GOES IN THE RIGHT COLUMN, and it is free there.
-            Under the intro it read well and cost 44px: the left column was
-            already the taller of the two, so anything added to it is added to
-            the section. The right column holds a 144px panel against a 229px
-            left column, so there was 85px of slack sitting there -- the
-            toggle fits inside it and the section height does not move.
-            It is also where it was asked for: "let's show another option on
-            side". */}
+        {/* The panel is the whole right column now, and it STRETCHES to the
+            row rather than hanging off the bottom of it. Bottom-aligned it
+            left its own gap above itself once the toggle moved out; filling
+            the row also gives a long definition more room before it has to
+            wrap, which is the only thing that was ever cramped about it. */}
         <div className="flex flex-col gap-3">
-          <motion.div variants={fadeIn("", "", 0.22, 1)}>
-            <ViewToggle view={view} onChange={setView} />
-          </motion.div>
           <DefinitionPanel entry={shown} pinned={Boolean(pinned)} />
+          {/* LIST VIEW ONLY, and it is free here. The right column holds a
+              144px panel against a 229px left column, so a 30px control fits
+              in the slack and the section does not grow. Given its own strip
+              below the header it cost a measured 54px — for a control that
+              had somewhere free to be.
+
+              In the diagram view it moves to the end of the controls row,
+              which is where it was asked to go and where its siblings are.
+              Both positions are right-aligned and directly above the content,
+              so the control does not travel far when the view changes. */}
+          {view === "list" && (
+            <div className="hidden md:flex justify-end">
+              <ViewToggle view={view} onChange={setView} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -280,6 +298,21 @@ const Tech = () => {
           description to earn its place. Each row and each card still reveals on
           its own viewport entry, so the section animates as the reader arrives
           at it rather than all at once. */}
+      {/* The diagram's own controls: `?`, platform, and the view toggle at
+          the end. Rendered only for the view they act on — a vendor picker
+          above a tool list would be a control with nothing to change. */}
+      {view === "diagram" && (
+        <div className="mt-6 hidden md:block">
+          <DiagramControls
+            platform={platform}
+            onChange={setPlatform}
+            why={why}
+            onWhy={() => setWhy((v) => !v)}
+            trailing={<ViewToggle view={view} onChange={setView} />}
+          />
+        </div>
+      )}
+
       <div className="mt-6">
         {/* phone: six labelled rows of flowing terms, no card and no chips.
             Boxed, this was thirty-three bordered rectangles about 50px tall — a
@@ -363,13 +396,7 @@ const Tech = () => {
             offered and `view` can only be "list", so the grid remains the one
             thing a tablet or a phone can reach. */}
         {view === "diagram" && (
-          <StackDiagram
-            platform={platform}
-            onPlatform={setPlatform}
-            onDefine={setHovered}
-            onPin={pinTerm}
-            shown={shown}
-          />
+          <StackDiagram onDefine={setHovered} onPin={pinTerm} shown={shown} />
         )}
 
         <div

@@ -201,12 +201,16 @@ const TokenStream = () => {
          The view toggle moved into the header's right column, which put a
          control a reader is meant to read and click inside this band: measured
          187x47px of canvas over the button group and 185x38 over its question.
-         The clearance is NOT constant across widths, which is why this height
-         is responsive. Below 1536px the toggle's question wraps to two lines,
-         which makes the header's right column taller and lifts the toggle:
-         measured top y=178 at 1601px wide but y=161 at 1281px, where a flat
-         4rem band overlapped it by 7px. 2.75rem clears the tight case by 13px
-         and 4rem clears the roomy one by 10px.
+         ONE FIXED CLEARANCE NOW, and that is a consequence of the header
+         change rather than a tuning choice. The band used to have to clear the
+         view toggle, whose top moved with the breakpoint -- y=178 at 1601px
+         but y=161 at 1281px, because its question wrapped to two lines -- so
+         the height had to be responsive to chase it.
+
+         The toggle has moved beside the heading and the definition panel now
+         stretches from the header's top edge, which is y=152 at every width.
+         So the only thing this band has to clear sits at a constant y, and
+         80px + 56px = 136px clears it by 16px everywhere.
 
          A long thin ribbon rather than a short wide block, and that is the
          right trade for this effect: the ask was for the stream to "take more
@@ -221,7 +225,7 @@ const TokenStream = () => {
          this was `left-[33%] right-0`: 416px wide instead of the ~1060px the
          insets implied, which put it straight back over the heading. The hero
          field hit the identical trap with `renderer.setSize(w, h, false)`. */
-      className="pointer-events-none absolute top-[6.5rem] left-[33%] w-[60%] -z-10 hidden rail:block h-[2.75rem] 2xl:h-[4rem] opacity-[0.95]"
+      className="pointer-events-none absolute top-[5rem] left-[33%] w-[60%] -z-10 hidden rail:block h-[3.5rem] opacity-[0.95]"
     />
   );
 };
