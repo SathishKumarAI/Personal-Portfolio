@@ -21,7 +21,15 @@ const Hero = () => {
   // was only ever visible at the top. An explicit top padding puts the gap
   // where it was chosen rather than where the arithmetic landed.
   return (
-    <section className="relative w-full min-h-screen min-h-[100svh] flex items-start pt-28 sm:pt-32" aria-label="Intro">
+    /* `styles.paddingX` is on the STAGE, not on the measure — the same split
+       `SectionWrapper` and `Navbar` use. It used to sit on the `max-w-7xl` div
+       below, which put the gutter INSIDE the 1280px cap, so the hero indented
+       itself by a further 72px the moment the viewport passed 1280px and
+       nothing else on the page did. Measured at 1920px: the h1 started at
+       392px while every section <h2> started at 320px; at 2545px both numbers
+       held the same 72px gap. Below 1280px the two were identical, which is
+       why a 1280-wide laptop never showed it. */
+    <section className={`${styles.paddingX} relative w-full min-h-screen min-h-[100svh] flex items-start pt-28 sm:pt-32`} aria-label="Intro">
       {/* Something behind the headline. See `.bloom` in index.css: the page had
           nothing between the type and a flat ground, which is most of why it
           read as older than it is. */}
@@ -31,7 +39,7 @@ const Hero = () => {
         variants={container}
         initial={reduced ? false : "hidden"}
         animate="show"
-        className={`${styles.paddingX} relative z-10 max-w-7xl mx-auto w-full`}
+        className="relative z-10 max-w-7xl mx-auto w-full"
       >
         <motion.div
           variants={rise}

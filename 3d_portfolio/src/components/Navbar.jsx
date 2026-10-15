@@ -202,11 +202,11 @@ const Navbar = () => {
           </span>
           <p className="text-white-100 font-sans text-[17px] font-semibold tracking-[-0.02em] flex items-center">
             Sathish
-            <span className="md:inline hidden font-normal text-faint">&nbsp;· AI Engineer</span>
+            <span className="bar:inline hidden font-normal text-faint">&nbsp;· AI Engineer</span>
           </p>
         </a>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden bar:flex items-center gap-8">
           <ul className="list-none flex flex-row gap-9">
             {navLinks.map((n) => (
               <li key={n.id}>
@@ -244,7 +244,7 @@ const Navbar = () => {
           <ThemeToggle />
         </div>
 
-        <div className="md:hidden flex flex-1 justify-end items-center gap-2">
+        <div className="bar:hidden flex flex-1 justify-end items-center gap-2">
           <ThemeToggle />
           <button
             onClick={() => setToggle(!toggle)}
@@ -276,7 +276,7 @@ const Navbar = () => {
               // scrolling could reach it. Auto margins centre the same way when
               // there is room and collapse to 0 when there is not, which is the
               // whole difference.
-              className="fixed inset-0 z-50 md:hidden bg-primary flex flex-col justify-start px-8 py-24 overflow-y-auto"
+              className="fixed inset-0 z-50 bar:hidden bg-primary flex flex-col justify-start px-8 py-24 overflow-y-auto"
             >
               {/* Fixed, not absolute. Absolute inside a scroll container scrolls
                   with the content: at the bottom of the menu this button sat at

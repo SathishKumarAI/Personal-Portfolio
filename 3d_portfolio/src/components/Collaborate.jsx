@@ -1,4 +1,5 @@
 import { contact, SITE_REPO } from "../constants";
+import { styles } from "../styles";
 import Reveal from "./Reveal";
 
 /**
@@ -26,9 +27,10 @@ const Collaborate = () => (
     // Desktop only. On a phone this lives in the menu instead: the job of the
     // mobile page is who he is, what he has built and where he has worked, and
     // an invitation to contribute is not that.
-    className="hidden md:block w-full border-t border-line bg-tertiary/40"
+    // Gutter on the stage, measure inside it — see `Footer`.
+    className={`${styles.paddingX} hidden md:block w-full border-t border-line bg-tertiary/40`}
   >
-    <div className="max-w-7xl mx-auto px-6 sm:px-16 py-12 sm:py-16">
+    <div className="max-w-7xl mx-auto py-12 sm:py-16">
       <Reveal>
         <p className="font-sans text-[12px] font-medium uppercase tracking-[0.09em] text-faint">
           Open to collaborators

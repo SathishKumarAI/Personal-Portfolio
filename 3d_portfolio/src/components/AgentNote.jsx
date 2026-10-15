@@ -1,3 +1,4 @@
+import { styles } from "../styles";
 import { contact } from "../constants";
 
 /**
@@ -35,9 +36,12 @@ const AgentNote = () => (
     // carry the same meaning plus the pointer to the machine-readable copy.
     // Hiding it outright was wrong: this is the one part of the page written
     // for the readers who summarise him to other people.
-    className="w-full border-t border-line bg-tertiary/40"
+    // Gutter on the stage, measure inside it — see `Footer`. With the padding
+    // on the capped div this notice sat 64px right of every section above it
+    // once the viewport passed 1280px.
+    className={`${styles.paddingX} w-full border-t border-line bg-tertiary/40`}
   >
-    <div className="max-w-7xl mx-auto px-6 sm:px-16 py-12 sm:py-16">
+    <div className="max-w-7xl mx-auto py-12 sm:py-16">
       <p className="font-mono text-chip text-secondary">
         <span className="text-accent-ink">{"// "}</span>
         For crawlers, LLMs and agents reading this page

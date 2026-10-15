@@ -1,5 +1,59 @@
 # Worklog
 
+## 2026-10-15: the gutter was inside the cap, so four blocks indented past every section
+
+`styles.paddingX` is the page's gutter. `SectionWrapper` puts it on the
+**stage** — the full-bleed `<section>` — and leaves the `max-w-7xl` measure
+inside it clean. Four places had it the other way round, on the capped div
+itself, which applies the gutter *inside* the 1280px cap and indents the
+content by a further 72px once the viewport is wide enough for the cap to bind.
+
+### Measured, at three widths
+
+| Width | Section `<h2>` starts at | Hero `<h1>` started at |
+| --- | ---: | ---: |
+| 1280 | 320px | 320px — identical, which is why a laptop never showed it |
+| 1920 | 320px | **392px** |
+| 2546 | 633px | **705px** |
+
+Below 1280px the two agree exactly. That is the whole reason this survived
+forty-nine merges: the machine it was built on could not display it.
+
+Four blocks were wrong — `Hero`, `Footer`, `AgentNote`, `Collaborate` — and the
+fix is the same line in each: move `styles.paddingX` from the capped div to the
+element that paints the ground.
+
+`sm:pr-24` stays on the footer's measure rather than moving with the gutter. It
+is clearance for the fixed `BackToTop` button, not a gutter, and the two things
+only looked alike.
+
+### After
+
+Every anchor on the page starts at the same x, at every width:
+
+| At 2546px | x |
+| --- | ---: |
+| navbar brand | 633 |
+| hero `<h1>` | 633 |
+| About / Roles / Stack / Projects / Contact `<h2>` | 633 |
+| AgentNote, Collaborate, footer | 633 |
+
+### The navbar breakpoint was never measured
+
+Separate defect found in the same pass, fixed here because it is the same
+class of thing — a breakpoint chosen for being a round number rather than for
+fitting.
+
+The full top bar ran on `md` (768px) and **did not fit at 768px**. Measured
+there: the links group is 615px wide starting at x=197, so it ends at 811px and
+the last 58px — Contact, the Ask chip and both toggles — hung off the right edge
+with no way to reach them.
+
+`bar: 900px` is a new breakpoint named for the thing it gates, with ~40px of
+slack over the widest measured layout. `md:` was load-bearing for nothing else
+in the bar.
+
+
 ## 2026-09-15: `react-tilt` out, one dependency for one hover
 
 A runtime dependency existed so that project cards lean 8 degrees toward the
