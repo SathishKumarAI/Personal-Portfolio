@@ -226,8 +226,26 @@ const RetrievalRank = () => {
                     <span className="font-sans text-data text-white-100 transition-colors group-hover:text-accent-ink group-hover:underline underline-offset-4">
                       {r.label}
                     </span>
-                    <span className="ml-auto font-mono text-micro text-faint tabular-nums">
-                      {r.score.toFixed(2)}
+                    {/* A SHARE OF THE BEST MATCH, not the raw TF-IDF score.
+                        `3.36` was printed here and it is unreadable: there are
+                        no units, no scale, and nothing on the page says what a
+                        good one looks like, so a reader can only tell that 3.36
+                        beats 2.43 -- which the bar beside it already said, more
+                        legibly. This page's rule is that a figure is measured
+                        or absent; it should also be a figure someone can act
+                        on.
+
+                        The share is the quantity the bar already draws AND the
+                        quantity the cut is defined against, so all three now
+                        agree: the top hit is 100%, the tick sits at 33%, and
+                        "a third of the top score" is something the reader can
+                        verify by looking. The raw score stays in the title
+                        attribute for anyone who wants it. */}
+                    <span
+                      className="ml-auto font-mono text-micro text-faint tabular-nums"
+                      title={`TF-IDF score ${r.score.toFixed(2)}`}
+                    >
+                      {top > 0 ? Math.round((r.score / top) * 100) : 0}%
                     </span>
                   </div>
 
@@ -237,7 +255,10 @@ const RetrievalRank = () => {
                   <div className="rr-track mt-2">
                     <div
                       className="rr-bar group-hover:opacity-100"
-                      style={{ width: `${Math.max(2, (r.score / top) * 100)}%`, "--rr-at": at + AT_BAR }}
+                      style={{
+                        width: `${Math.max(2, top > 0 ? (r.score / top) * 100 : 0)}%`,
+                        "--rr-at": at + AT_BAR,
+                      }}
                     />
                     <span className="rr-cut" />
                   </div>
@@ -264,8 +285,10 @@ const RetrievalRank = () => {
             );
           })}
           <li className="font-mono text-micro text-faint leading-[1.6]">
-            The tick on each bar is the cut: a third of the top score. Anything
-            under it is noise sitting below a real answer, so it is not shown.
+            Each figure is that passage&apos;s score as a share of the best
+            match, so the top hit is always 100%. The tick is the cut at 33%:
+            anything under it is noise sitting below a real answer, so it is
+            not shown.
           </li>
         </ol>
       </div>
