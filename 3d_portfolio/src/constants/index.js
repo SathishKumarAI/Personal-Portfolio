@@ -631,7 +631,7 @@ export const systemSubstrate = {
 export const PLATFORMS = [
   // The default is what he actually runs. Everything else is an equivalence,
   // and the UI says so -- see `PLATFORM_NOTE`.
-  { id: "oss", label: "Open source", short: "OSS" },
+  { id: "oss", label: "What I use", short: "What I use" },
   { id: "aws", label: "AWS", short: "AWS" },
   { id: "gcp", label: "Google Cloud", short: "GCP" },
   { id: "azure", label: "Azure", short: "Azure" },
@@ -646,6 +646,21 @@ export const PLATFORMS = [
  * able to recite -- the role is the knowledge, the vendor is a lookup -- and
  * the interface has to say which of the two it is showing.
  */
+/**
+ * The provider's own architecture reference, one link per platform.
+ *
+ * Deliberately NOT a deep link per service. Ninety-nine service doc URLs is
+ * ninety-nine chances to ship a dead link onto someone's portfolio, and cloud
+ * vendors reorganise their docs constantly. These three roots are stable and
+ * are the thing the owner actually asked for -- the provider's own material,
+ * for a reader who wants to go further than a service name.
+ */
+export const PLATFORM_DOCS = {
+  aws: { label: "AWS Architecture Center", href: "https://aws.amazon.com/architecture/" },
+  gcp: { label: "Google Cloud Architecture Center", href: "https://cloud.google.com/architecture" },
+  azure: { label: "Azure Architecture Center", href: "https://learn.microsoft.com/azure/architecture/" },
+};
+
 export const PLATFORM_NOTE =
   "One row per job a production system has to do. “What I use” is the only column that is a claim about me; the rest is what fills that slot on each platform. An em dash means the slot is real and I am not claiming it.";
 
@@ -671,47 +686,47 @@ export const PLATFORM_NOTE =
  */
 export const platformMatrix = [
   // --- data plane ---------------------------------------------------------
-  { plane: "Data", role: "Orchestration", mine: "Airflow", aws: "MWAA", gcp: "Cloud Composer", azure: "Data Factory" },
-  { plane: "Data", role: "Batch compute", mine: "PySpark", aws: "EMR", gcp: "Dataproc", azure: "Synapse Spark" },
-  { plane: "Data", role: "Managed ETL", mine: "ETL pipelines", aws: "Glue", gcp: "Dataflow", azure: "Data Factory flows" },
-  { plane: "Data", role: "Streaming & events", mine: null, aws: "Kinesis / MSK", gcp: "Pub/Sub", azure: "Event Hubs" },
-  { plane: "Data", role: "Object store", mine: "S3", aws: "S3", gcp: "Cloud Storage", azure: "Blob Storage" },
-  { plane: "Data", role: "Relational store", mine: "PostgreSQL", aws: "RDS", gcp: "Cloud SQL", azure: "Azure SQL" },
-  { plane: "Data", role: "Key-value store", mine: "DynamoDB", aws: "DynamoDB", gcp: "Firestore", azure: "Cosmos DB" },
-  { plane: "Data", role: "Warehouse", mine: "SQL", aws: "Redshift", gcp: "BigQuery", azure: "Synapse" },
-  { plane: "Data", role: "Query engine", mine: "DuckDB", aws: "Athena", gcp: "BigQuery", azure: "Synapse serverless" },
-  { plane: "Data", role: "Catalog & governance", mine: null, aws: "Glue Catalog / Lake Formation", gcp: "Dataplex", azure: "Purview" },
-  { plane: "Data", role: "Notebooks", mine: "Jupyter", aws: "SageMaker Studio", gcp: "Vertex AI Workbench", azure: "Azure ML Studio" },
+  { plane: "Data", role: "Orchestration", node: "ingest", mine: "Airflow", aws: "MWAA", gcp: "Cloud Composer", azure: "Data Factory" },
+  { plane: "Data", role: "Batch compute", node: "ingest", mine: "PySpark", aws: "EMR", gcp: "Dataproc", azure: "Synapse Spark" },
+  { plane: "Data", role: "Managed ETL", node: "ingest", mine: "ETL pipelines", aws: "Glue", gcp: "Dataflow", azure: "Data Factory flows" },
+  { plane: "Data", role: "Streaming & events", node: "ingest", mine: null, aws: "Kinesis / MSK", gcp: "Pub/Sub", azure: "Event Hubs" },
+  { plane: "Data", role: "Object store", node: "store", mine: "S3", aws: "S3", gcp: "Cloud Storage", azure: "Blob Storage" },
+  { plane: "Data", role: "Relational store", node: "store", mine: "PostgreSQL", aws: "RDS", gcp: "Cloud SQL", azure: "Azure SQL" },
+  { plane: "Data", role: "Key-value store", node: "store", mine: "DynamoDB", aws: "DynamoDB", gcp: "Firestore", azure: "Cosmos DB" },
+  { plane: "Data", role: "Warehouse", node: "store", mine: "SQL", aws: "Redshift", gcp: "BigQuery", azure: "Synapse" },
+  { plane: "Data", role: "Query engine", node: "shape", mine: "DuckDB", aws: "Athena", gcp: "BigQuery", azure: "Synapse serverless" },
+  { plane: "Data", role: "Catalog & governance", node: "store", mine: null, aws: "Glue Catalog / Lake Formation", gcp: "Dataplex", azure: "Purview" },
+  { plane: "Data", role: "Notebooks", node: "shape", mine: "Jupyter", aws: "SageMaker Studio", gcp: "Vertex AI Workbench", azure: "Azure ML Studio" },
   // The owner's own example, and a fair one: Power BI is what an Azure shop
   // actually puts in front of people, where this stack reaches for Plotly.
-  { plane: "Data", role: "BI & dashboards", mine: "Plotly", aws: "QuickSight", gcp: "Looker", azure: "Power BI" },
+  { plane: "Data", role: "BI & dashboards", node: "express", mine: "Plotly", aws: "QuickSight", gcp: "Looker", azure: "Power BI" },
 
   // --- model plane --------------------------------------------------------
-  { plane: "Model", role: "Training jobs", mine: "PyTorch", aws: "SageMaker Training", gcp: "Vertex AI Training", azure: "Azure ML Jobs" },
-  { plane: "Model", role: "Experiment tracking", mine: "MLflow", aws: "SageMaker Experiments", gcp: "Vertex AI Experiments", azure: "Azure ML" },
-  { plane: "Model", role: "Model registry", mine: "MLflow", aws: "SageMaker Model Registry", gcp: "Vertex AI Model Registry", azure: "Azure ML Registry" },
-  { plane: "Model", role: "ML pipelines", mine: null, aws: "SageMaker Pipelines", gcp: "Vertex AI Pipelines", azure: "Azure ML Pipelines" },
-  { plane: "Model", role: "Feature store", mine: null, aws: "SageMaker Feature Store", gcp: "Vertex AI Feature Store", azure: "Azure ML Feature Store" },
-  { plane: "Model", role: "Vector index", mine: "Pinecone", aws: "OpenSearch k-NN", gcp: "Vertex Vector Search", azure: "AI Search" },
-  { plane: "Model", role: "Managed LLM", mine: "Claude", aws: "Bedrock", gcp: "Vertex AI", azure: "Azure OpenAI" },
-  { plane: "Model", role: "Document & vision AI", mine: "OpenCV", aws: "Textract / Rekognition", gcp: "Document AI / Vision AI", azure: "AI Document Intelligence" },
+  { plane: "Model", role: "Training jobs", node: "detect", mine: "PyTorch", aws: "SageMaker Training", gcp: "Vertex AI Training", azure: "Azure ML Jobs" },
+  { plane: "Model", role: "Experiment tracking", node: "track", mine: "MLflow", aws: "SageMaker Experiments", gcp: "Vertex AI Experiments", azure: "Azure ML" },
+  { plane: "Model", role: "Model registry", node: "track", mine: "MLflow", aws: "SageMaker Model Registry", gcp: "Vertex AI Model Registry", azure: "Azure ML Registry" },
+  { plane: "Model", role: "ML pipelines", node: "track", mine: null, aws: "SageMaker Pipelines", gcp: "Vertex AI Pipelines", azure: "Azure ML Pipelines" },
+  { plane: "Model", role: "Feature store", node: "shape", mine: null, aws: "SageMaker Feature Store", gcp: "Vertex AI Feature Store", azure: "Azure ML Feature Store" },
+  { plane: "Model", role: "Vector index", node: "retrieve", mine: "Pinecone", aws: "OpenSearch k-NN", gcp: "Vertex Vector Search", azure: "AI Search" },
+  { plane: "Model", role: "Managed LLM", node: "adapt", mine: "Claude", aws: "Bedrock", gcp: "Vertex AI", azure: "Azure OpenAI" },
+  { plane: "Model", role: "Document & vision AI", node: "detect", mine: "OpenCV", aws: "Textract / Rekognition", gcp: "Document AI / Vision AI", azure: "AI Document Intelligence" },
 
   // --- serving plane ------------------------------------------------------
-  { plane: "Serving", role: "Model serving", mine: "vLLM", aws: "SageMaker Endpoints", gcp: "Vertex AI Endpoints", azure: "Azure ML Endpoints" },
-  { plane: "Serving", role: "Serverless functions", mine: null, aws: "Lambda", gcp: "Cloud Run functions", azure: "Azure Functions" },
-  { plane: "Serving", role: "Containers on demand", mine: "Docker", aws: "ECS / Fargate", gcp: "Cloud Run", azure: "Container Apps" },
-  { plane: "Serving", role: "API gateway", mine: "FastAPI", aws: "API Gateway", gcp: "Apigee", azure: "API Management" },
-  { plane: "Serving", role: "Queue", mine: null, aws: "SQS", gcp: "Pub/Sub", azure: "Service Bus" },
-  { plane: "Serving", role: "Cache", mine: null, aws: "ElastiCache", gcp: "Memorystore", azure: "Cache for Redis" },
+  { plane: "Serving", role: "Model serving", node: "inference", mine: "vLLM", aws: "SageMaker Endpoints", gcp: "Vertex AI Endpoints", azure: "Azure ML Endpoints" },
+  { plane: "Serving", role: "Serverless functions", node: "api", mine: null, aws: "Lambda", gcp: "Cloud Run functions", azure: "Azure Functions" },
+  { plane: "Serving", role: "Containers on demand", node: "package", mine: "Docker", aws: "ECS / Fargate", gcp: "Cloud Run", azure: "Container Apps" },
+  { plane: "Serving", role: "API gateway", node: "api", mine: "FastAPI", aws: "API Gateway", gcp: "Apigee", azure: "API Management" },
+  { plane: "Serving", role: "Queue", node: "api", mine: null, aws: "SQS", gcp: "Pub/Sub", azure: "Service Bus" },
+  { plane: "Serving", role: "Cache", node: "api", mine: null, aws: "ElastiCache", gcp: "Memorystore", azure: "Cache for Redis" },
 
   // --- substrate ----------------------------------------------------------
-  { plane: "Substrate", role: "Container runtime", mine: "Kubernetes", aws: "EKS", gcp: "GKE", azure: "AKS" },
-  { plane: "Substrate", role: "Container registry", mine: null, aws: "ECR", gcp: "Artifact Registry", azure: "ACR" },
-  { plane: "Substrate", role: "CI/CD", mine: "GitHub Actions", aws: "CodePipeline", gcp: "Cloud Build", azure: "Azure Pipelines" },
-  { plane: "Substrate", role: "Secrets", mine: null, aws: "Secrets Manager", gcp: "Secret Manager", azure: "Key Vault" },
-  { plane: "Substrate", role: "Identity & access", mine: null, aws: "IAM", gcp: "IAM", azure: "Entra ID" },
-  { plane: "Substrate", role: "Monitoring & logs", mine: null, aws: "CloudWatch", gcp: "Cloud Monitoring", azure: "Azure Monitor" },
-  { plane: "Substrate", role: "Cost & budgets", mine: null, aws: "Cost Explorer", gcp: "Billing / FinOps", azure: "Cost Management" },
+  { plane: "Substrate", role: "Container runtime", node: "package", mine: "Kubernetes", aws: "EKS", gcp: "GKE", azure: "AKS" },
+  { plane: "Substrate", role: "Container registry", node: "package", mine: null, aws: "ECR", gcp: "Artifact Registry", azure: "ACR" },
+  { plane: "Substrate", role: "CI/CD", node: "deliver", mine: "GitHub Actions", aws: "CodePipeline", gcp: "Cloud Build", azure: "Azure Pipelines" },
+  { plane: "Substrate", role: "Secrets", node: "package", mine: null, aws: "Secrets Manager", gcp: "Secret Manager", azure: "Key Vault" },
+  { plane: "Substrate", role: "Identity & access", node: "package", mine: null, aws: "IAM", gcp: "IAM", azure: "Entra ID" },
+  { plane: "Substrate", role: "Monitoring & logs", node: "track", mine: null, aws: "CloudWatch", gcp: "Cloud Monitoring", azure: "Azure Monitor" },
+  { plane: "Substrate", role: "Cost & budgets", node: "track", mine: null, aws: "Cost Explorer", gcp: "Billing / FinOps", azure: "Cost Management" },
 ];
 
 /**

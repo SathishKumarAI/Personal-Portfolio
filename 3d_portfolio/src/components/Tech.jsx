@@ -192,7 +192,7 @@ const Tech = () => {
   // there is free vertical space, while the thing it controls sits below the
   // header. See PlatformPicker's own comment.
   const [why, setWhy] = useState(false);
-  const [clouds, setClouds] = useState(false);
+  const [platform, setPlatform] = useState("oss");
 
   // Shared by both views, so a term pinned in the list is still pinned when
   // the reader switches to the diagram. Written once rather than inline in
@@ -308,8 +308,8 @@ const Tech = () => {
               <DiagramControls
                 why={why}
                 onWhy={() => setWhy((v) => !v)}
-                clouds={clouds}
-                onClouds={() => setClouds((v) => !v)}
+                platform={platform}
+                onPlatform={setPlatform}
               />
             </div>
             <ViewToggle view={view} onChange={setView} />
@@ -400,7 +400,12 @@ const Tech = () => {
             offered and `view` can only be "list", so the grid remains the one
             thing a tablet or a phone can reach. */}
         {view === "diagram" && (
-          <StackDiagram onDefine={setHovered} onPin={pinTerm} shown={shown} />
+          <StackDiagram
+            platform={platform}
+            onDefine={setHovered}
+            onPin={pinTerm}
+            shown={shown}
+          />
         )}
 
         <div

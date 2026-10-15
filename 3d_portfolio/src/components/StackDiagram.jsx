@@ -4,6 +4,7 @@ import {
   platformMatrix,
   PLATFORMS,
   PLATFORM_NOTE,
+  PLATFORM_DOCS,
   DIAGRAM_WHY,
 } from "../constants";
 import Reveal from "./Reveal";
@@ -101,39 +102,79 @@ const Step = ({ label }) => (
  * identical intensity is a claim ("same stage"), and a categorical palette
  * cannot make it.
  */
-const Node = ({ node, index, flow, onDefine, onPin, shown }) => (
-  <div
-    className="flex min-w-0 flex-1 flex-col rounded-lg border border-line border-t-[3px] bg-tertiary/50 px-3 py-2"
-    style={{ borderTopColor: `rgb(var(${flow}))` }}
-  >
-    <h4 className="flex items-baseline gap-2 font-display text-[13px] font-semibold leading-tight tracking-[-0.01em] text-white-100">
-      <span
-        aria-hidden="true"
-        className="font-mono text-[10px] font-medium leading-none"
-        style={{ color: `rgb(var(${flow}))` }}
-      >
-        {nodeNo(index)}
-      </span>
-      {node.title}
-    </h4>
-    <p className="mt-1 font-serif text-label leading-[1.35] text-faint">
-      {node.role}
-    </p>
-    <div className="mt-2 flex flex-wrap content-start gap-x-3 gap-y-0.5">
-      {node.items.map((it) => (
-        <TagTerm
-          key={it}
-          name={it}
-          flow
-          dense
-          onDefine={onDefine}
-          onPin={onPin}
-          active={shown?.name === it}
-        />
-      ))}
+const Node = ({ node, index, flow, platform, onDefine, onPin, shown }) => {
+  const cloud = platform !== "oss";
+  const roles = cloud
+    ? platformMatrix.filter((r) => r.node === node.id)
+    : [];
+  return (
+    <div
+      className="flex min-w-0 flex-1 flex-col rounded-lg border border-line border-t-[3px] bg-tertiary/50 px-3 py-2"
+      style={{ borderTopColor: `rgb(var(${flow}))` }}
+    >
+      <h4 className="flex items-baseline gap-2 font-display text-[13px] font-semibold leading-tight tracking-[-0.01em] text-white-100">
+        <span
+          aria-hidden="true"
+          className="font-mono text-[10px] font-medium leading-none"
+          style={{ color: `rgb(var(${flow}))` }}
+        >
+          {nodeNo(index)}
+        </span>
+        {node.title}
+      </h4>
+      <p className="mt-1 font-serif text-label leading-[1.35] text-faint">
+        {node.role}
+      </p>
+
+      {/* THE SAME BOX, FILLED FOR THE CHOSEN PLATFORM.
+          This used to be a separate table of `Airflow -> MWAA` rows, and the
+          owner's objection to it was exact: with only AWS on screen the arrow
+          is pointless, and the drawing already exists -- so render the drawing
+          on AWS instead of describing it beside one. The architecture holds
+          still and only the slots change, which is the actual claim: the
+          system is the same, the managed pieces are swappable. */}
+      {cloud ? (
+        roles.length ? (
+          <ul className="mt-2 list-none space-y-1">
+            {roles.map((r, i) => (
+              <li
+                key={r.role}
+                className="cloud-in font-mono text-micro leading-[1.5]"
+                style={{ "--i": i }}
+              >
+                <span className="block text-faint opacity-70">{r.role}</span>
+                <span className="block text-secondary">{r[platform]}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          /* NOT A GAP — a finding. Federated training, the classical model,
+             the interface and the language it is all written in have no
+             managed equivalent, because they are not platform choices. Moving
+             cloud does not touch them, and saying so is more useful than
+             leaving the box looking unfinished. */
+          <p className="cloud-in mt-2 font-serif text-label leading-[1.4] text-faint opacity-80">
+            Unchanged — not a platform choice.
+          </p>
+        )
+      ) : (
+        <div className="mt-2 flex flex-wrap content-start gap-x-3 gap-y-0.5">
+          {node.items.map((it) => (
+            <TagTerm
+              key={it}
+              name={it}
+              flow
+              dense
+              onDefine={onDefine}
+              onPin={onPin}
+              active={shown?.name === it}
+            />
+          ))}
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 /**
  * A plane: a row of nodes that sit at the same depth, with the plane's own
@@ -145,7 +186,7 @@ const Node = ({ node, index, flow, onDefine, onPin, shown }) => (
  * a connector between "object detection" and "retrieval" would claim a
  * dependency that does not exist.
  */
-const Plane = ({ plane, offset, onDefine, onPin, shown }) => (
+const Plane = ({ plane, offset, platform, onDefine, onPin, shown }) => (
   <section className="flex items-stretch gap-3" aria-label={plane.title}>
     <div className="w-[9.5rem] shrink-0 self-center">
       <h3
@@ -170,6 +211,7 @@ const Plane = ({ plane, offset, onDefine, onPin, shown }) => (
           node={node}
           index={offset + i}
           flow={plane.flow}
+          platform={platform}
           onDefine={onDefine}
           onPin={onPin}
           shown={shown}
@@ -180,109 +222,72 @@ const Plane = ({ plane, offset, onDefine, onPin, shown }) => (
 );
 
 /**
- * THE CLOUD MATRIX, and why it is a table rather than a switch.
+ * THE PLATFORM PICKER, which now redraws the diagram rather than a table.
  *
- * It was a picker: choose AWS, and every row rewrote itself to AWS. That is
- * compact and it hid the one thing the table exists to show. The claim being
- * made is an EQUIVALENCE -- S3, Cloud Storage and Blob Storage are the same
- * slot -- and a reader could only ever see one side of it at a time, then had
- * to flip and hold the other in memory. Reported, and correct: the control was
- * preventing the comparison it was built to enable.
+ * Three designs, and the third is the one that earned its place. First a
+ * per-tool switch that rewrote `S3` to `Cloud Storage` in place — compact, and
+ * it hid the equivalence by only ever showing one side. Then a 33-row
+ * comparison table beside the drawing, which showed both sides and put ~165
+ * cells on top of the thing that was actually the argument.
  *
- * All four columns are now on screen together, which is the whole point.
+ * The owner's objection cut through both: "why show `Airflow -> MWAA` if you
+ * are only showing AWS? You can directly show the image." Right on both
+ * counts. The arrow is only worth its space when both ends are visible, and a
+ * table next to a diagram is a description of a picture that is already there.
  *
- * It stays behind ONE disclosure, and the button is named rather than
- * mysterious. Thirty-three rows by four columns is reference material; inline
- * it would be ~130 cells sitting on top of the drawing that is actually the
- * argument. A reader who wants the mapping opens it; a reader who does not is
- * not made to scroll past it.
+ * So the DIAGRAM is the view. Pick a platform and the same architecture fills
+ * with that platform's services — the planes, the nodes and the flow hold
+ * still, and only the slots change. That is the claim stated as a demo rather
+ * than as a mapping: the system is the same, the managed pieces are swappable.
  */
-const MatrixTable = () => {
-  const planes = [...new Set(platformMatrix.map((r) => r.plane))];
+export const DiagramControls = ({ why, onWhy, platform, onPlatform }) => {
+  const docs = PLATFORM_DOCS[platform];
   return (
-    <div className="mt-3 overflow-x-auto rounded-lg border border-line">
-      <table className="w-full min-w-[56rem] border-collapse text-left">
-        <caption className="px-3 pt-3 text-left font-serif italic text-label leading-[1.5] text-faint">
-          {PLATFORM_NOTE}
-        </caption>
-        <thead>
-          <tr className="border-b border-line">
-            <th scope="col" className="px-3 py-2 font-mono text-micro uppercase tracking-[0.12em] text-faint">
-              Role
-            </th>
-            <th scope="col" className="px-3 py-2 font-mono text-micro uppercase tracking-[0.12em] text-secondary">
-              What I use
-            </th>
-            {PLATFORMS.filter((p) => p.id !== "oss").map((p) => (
-              <th
-                key={p.id}
-                scope="col"
-                className="px-3 py-2 font-mono text-micro uppercase tracking-[0.12em] text-faint"
-              >
-                {p.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        {planes.map((plane) => (
-          <tbody key={plane}>
-            <tr>
-              {/* The plane headings repeat the diagram's own grouping, so a
-                  reader who has just looked at the drawing meets the rows in
-                  the order the drawing put them. */}
-              <th
-                scope="colgroup"
-                colSpan={5}
-                className="border-y border-line bg-tertiary/40 px-3 py-1.5 text-left font-display text-[12px] font-semibold uppercase tracking-[0.1em] text-secondary"
-              >
-                {plane}
-              </th>
-            </tr>
-            {platformMatrix
-              .filter((r) => r.plane === plane)
-              .map((r) => (
-                <tr key={r.role} className="border-b border-line/50 last:border-b-0">
-                  <th scope="row" className="px-3 py-1.5 font-sans text-label font-medium text-white-100">
-                    {r.role}
-                  </th>
-                  <td className="px-3 py-1.5 font-mono text-micro text-secondary">
-                    {/* An em dash, not a blank. A blank reads as an oversight;
-                        a dash says the slot is real and unclaimed. */}
-                    {r.mine ?? <span className="text-faint opacity-60">—</span>}
-                  </td>
-                  {["aws", "gcp", "azure"].map((k) => (
-                    <td key={k} className="px-3 py-1.5 font-mono text-micro text-faint">
-                      {r[k]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-          </tbody>
-        ))}
-      </table>
+    <div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <WhyPanel open={why} onToggle={onWhy} />
+        <div
+          role="group"
+          aria-label="Platform"
+          className="flex shrink-0 items-center gap-1 rounded-full border border-line p-0.5"
+        >
+          {PLATFORMS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onPlatform(p.id)}
+              aria-pressed={platform === p.id}
+              className={`rounded-full px-2.5 py-1 font-mono text-micro uppercase tracking-[0.1em] transition-colors ${
+                platform === p.id
+                  ? "bg-accent text-white-100"
+                  : "text-faint hover:text-white-100"
+              }`}
+            >
+              {p.short}
+            </button>
+          ))}
+        </div>
+        {/* The provider's own reference, which is what was asked for. One
+            stable root per platform rather than 99 deep service links: cloud
+            vendors reorganise docs constantly and a dead link on a portfolio
+            is worse than no link. */}
+        {docs && (
+          <a
+            href={docs.href}
+            target="_blank"
+            rel="noreferrer"
+            className="shrink-0 font-mono text-micro text-accent-ink hover:underline"
+          >
+            {docs.label} ↗
+          </a>
+        )}
+      </div>
+      <p className="mt-2 font-serif italic text-label leading-[1.5] text-faint">
+        {PLATFORM_NOTE}
+      </p>
     </div>
   );
 };
-
-export const DiagramControls = ({ why, onWhy, clouds, onClouds }) => (
-  <div>
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <WhyPanel open={why} onToggle={onWhy} />
-      {/* NAMED, not a mystery button. It says what is behind it and how much
-          of it there is, so opening it is a decision rather than a gamble. */}
-      <button
-        type="button"
-        onClick={onClouds}
-        aria-expanded={clouds}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-2.5 py-1 font-mono text-micro uppercase tracking-[0.1em] text-faint transition-colors hover:text-white-100"
-      >
-        <span aria-hidden="true">{clouds ? "−" : "+"}</span>
-        the same {platformMatrix.length} roles on AWS, GCP & Azure
-      </button>
-    </div>
-    {clouds && <MatrixTable />}
-  </div>
-);
 
 /**
  * The `?`, and it is the same affordance the hero field carries.
@@ -324,8 +329,8 @@ const WhyPanel = ({ open, onToggle }) => (
   </>
 );
 
-const StackDiagram = ({ onDefine, onPin, shown }) => {
-  const pass = { onDefine, onPin, shown };
+const StackDiagram = ({ platform = "oss", onDefine, onPin, shown }) => {
+  const pass = { platform, onDefine, onPin, shown };
   // Running count, so the node numbers read 01..16 straight down the drawing
   // rather than restarting inside every plane.
   let n = 0;
