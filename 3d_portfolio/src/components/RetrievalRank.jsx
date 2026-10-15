@@ -226,26 +226,33 @@ const RetrievalRank = () => {
                     <span className="font-sans text-data text-white-100 transition-colors group-hover:text-accent-ink group-hover:underline underline-offset-4">
                       {r.label}
                     </span>
-                    {/* A SHARE OF THE BEST MATCH, not the raw TF-IDF score.
-                        `3.36` was printed here and it is unreadable: there are
-                        no units, no scale, and nothing on the page says what a
-                        good one looks like, so a reader can only tell that 3.36
-                        beats 2.43 -- which the bar beside it already said, more
-                        legibly. This page's rule is that a figure is measured
-                        or absent; it should also be a figure someone can act
-                        on.
+                    {/* RANKED AGAINST THE BEST MATCH, and the top row says so
+                        in words rather than printing a number.
 
-                        The share is the quantity the bar already draws AND the
-                        quantity the cut is defined against, so all three now
-                        agree: the top hit is 100%, the tick sits at 33%, and
-                        "a third of the top score" is something the reader can
-                        verify by looking. The raw score stays in the title
-                        attribute for anyone who wants it. */}
+                        This has now been wrong twice. First it printed the raw
+                        TF-IDF score (`3.36`), which has no units and no scale,
+                        so the only thing a reader could extract was an ordering
+                        the bar already showed. Then it printed a share of the
+                        top score, and the owner asked what `100%` meant — which
+                        is the whole problem: a percentage reads as ABSOLUTE.
+                        `100%` looks like "perfect match" or "fully confident",
+                        when all it ever meant was "this one scored highest",
+                        and it said so on every result because the top row is
+                        100% by construction. A figure that cannot vary carries
+                        no information and still invites a false reading.
+
+                        So the best match is labelled, not scored, and the rows
+                        under it are given relative to it — "61% as strong" is a
+                        claim about this list, which is the only claim the maths
+                        supports. The raw score stays in the title for anyone
+                        who wants it. */}
                     <span
-                      className="ml-auto font-mono text-micro text-faint tabular-nums"
+                      className="ml-auto shrink-0 font-mono text-micro text-faint tabular-nums"
                       title={`TF-IDF score ${r.score.toFixed(2)}`}
                     >
-                      {top > 0 ? Math.round((r.score / top) * 100) : 0}%
+                      {i === 0
+                        ? "best match"
+                        : `${top > 0 ? Math.round((r.score / top) * 100) : 0}% as strong`}
                     </span>
                   </div>
 
@@ -285,10 +292,11 @@ const RetrievalRank = () => {
             );
           })}
           <li className="font-mono text-micro text-faint leading-[1.6]">
-            Each figure is that passage&apos;s score as a share of the best
-            match, so the top hit is always 100%. The tick is the cut at 33%:
-            anything under it is noise sitting below a real answer, so it is
-            not shown.
+            Results are ranked against each other, not scored out of ten:
+            &ldquo;61% as strong&rdquo; means relative to the best match on
+            this question. The tick is the cut at a third of it — anything
+            under that is noise sitting below a real answer, so it is not
+            shown.
           </li>
         </ol>
       </div>
