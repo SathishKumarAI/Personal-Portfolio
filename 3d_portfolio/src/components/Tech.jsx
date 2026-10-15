@@ -35,13 +35,13 @@ const stageNo = (i) => String(i + 1).padStart(2, "0");
  * appears and disappears would move the rail and the heading beside it on
  * every hover, and the fix for a jumpy section is not a jumpier one.
  */
-const DefinitionPanel = ({ entry, pinned }) => (
+const DefinitionPanel = ({ entry, pinned, compact }) => (
   <div
     /* OPAQUE. `bg-tertiary/40` was the first attempt and it is the very
        fault this panel exists to fix: a translucent surface carrying prose
        lets whatever is behind it bleed into the words. The old popover was
        `rgba(255 255 255 / 0.62)` and unreadable for exactly that reason. */
-    className="hidden md:flex h-full min-h-[9rem] flex-col rounded-2xl border border-line bg-tertiary p-4"
+    className={`hidden md:flex h-full ${compact ? "min-h-[6rem] p-3" : "min-h-[9rem] p-4"} flex-col rounded-2xl border border-line bg-tertiary`}
     // Announced, but politely: the reader asked for this by pointing at a
     // chip, so it is a result, not an alert.
     aria-live="polite"
@@ -200,6 +200,7 @@ const Tech = () => {
   // header. See PlatformPicker's own comment.
   const [why, setWhy] = useState(false);
   const [platform, setPlatform] = useState("oss");
+  const [compact, setCompact] = useState(false);
 
   // Shared by both views, so a term pinned in the list is still pinned when
   // the reader switches to the diagram. Written once rather than inline in
@@ -246,7 +247,9 @@ const Tech = () => {
             variants={fadeIn("", "", 0.1, 1)}
             // Desktop only. On a phone this section is a list of tools and the
             // argument for them is three lines the reader scrolls past.
-            className="hidden md:block mt-4 max-w-[46rem] font-sans text-secondary text-body leading-[1.65]"
+            className={`${
+              view === "diagram" && compact ? "hidden" : "hidden md:block"
+            } mt-4 max-w-[46rem] font-sans text-secondary text-body leading-[1.65]`}
           >
             {view === "diagram" ? (
               /* VIEW-SPECIFIC, and not as a trick to save height -- though it
@@ -279,7 +282,7 @@ const Tech = () => {
             the row also gives a long definition more room before it has to
             wrap, which is the only thing that was ever cramped about it. */}
         <div className="flex flex-col gap-3">
-          <DefinitionPanel entry={shown} pinned={Boolean(pinned)} />
+          <DefinitionPanel entry={shown} pinned={Boolean(pinned)} compact={view === "diagram" && compact} />
           {/* LIST VIEW ONLY, and it is free here. The right column holds a
               144px panel against a 229px left column, so a 30px control fits
               in the slack and the section does not grow. Given its own strip
@@ -317,6 +320,8 @@ const Tech = () => {
                 onWhy={() => setWhy((v) => !v)}
                 platform={platform}
                 onPlatform={setPlatform}
+                compact={compact}
+                onCompact={() => setCompact((v) => !v)}
               />
             </div>
             <ViewToggle view={view} onChange={setView} />
@@ -409,6 +414,7 @@ const Tech = () => {
         {view === "diagram" && (
           <StackDiagram
             platform={platform}
+            compact={compact}
             onDefine={setHovered}
             onPin={pinTerm}
             shown={shown}

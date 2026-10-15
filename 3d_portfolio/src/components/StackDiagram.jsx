@@ -5,6 +5,7 @@ import {
   PLATFORMS,
   PLATFORM_NOTE,
   PLATFORM_DOCS,
+  PLATFORM_CHECKED,
   DIAGRAM_WHY,
 } from "../constants";
 import Reveal from "./Reveal";
@@ -73,7 +74,20 @@ const platTint = (platform) =>
  * outline is also the convention for a thing in transit rather than a thing
  * that exists, which is what these are.
  */
-const Step = ({ label }) => (
+const Step = ({ label, compact }) =>
+  compact ? (
+    /* In compact the payload keeps its words and loses its box: the capsule,
+       the two stubs and the vertical padding are 34px each, and three of them
+       is most of a plane row. */
+    <div className="flex items-center justify-center gap-1.5 py-[1px]">
+      <svg width="7" height="7" viewBox="0 0 8 8" aria-hidden="true" className="shrink-0 fill-accent-ink">
+        <path d="M4 8 0 0h8z" />
+      </svg>
+      <span className="font-mono text-micro uppercase tracking-[0.12em] text-accent-ink">
+        {label}
+      </span>
+    </div>
+  ) : (
   <div className="flex flex-col items-center">
     <span aria-hidden="true" className="h-1.5 w-px bg-line" />
     <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-accent/45 px-2.5 py-[3px]">
@@ -96,7 +110,7 @@ const Step = ({ label }) => (
     </span>
     <span aria-hidden="true" className="h-1.5 w-px bg-line" />
   </div>
-);
+  );
 
 /**
  * One node: a job the system has to do, and what fills it.
@@ -107,12 +121,12 @@ const Step = ({ label }) => (
  * identical intensity is a claim ("same stage"), and a categorical palette
  * cannot make it.
  */
-const Node = ({ node, index, flow, platform, onDefine, onPin, shown }) => {
+const Node = ({ node, index, flow, platform, compact, onDefine, onPin, shown }) => {
   const cloud = platform !== "oss";
   const roles = cloud ? platformMatrix.filter((r) => r.node === node.id) : [];
   return (
     <div
-      className="node-walk flex min-w-0 flex-1 flex-col rounded-lg border border-line border-t-[3px] bg-tertiary/50 px-3 py-2"
+      className={`node-walk flex min-w-0 flex-1 flex-col rounded-lg border border-line border-t-[3px] bg-tertiary/50 px-3 ${compact ? "py-1.5" : "py-2"}`}
       style={{
         borderTopColor: `rgb(var(${flow}))`,
         "--w": index,
@@ -136,15 +150,21 @@ const Node = ({ node, index, flow, platform, onDefine, onPin, shown }) => {
         </span>
         {node.title}
       </h4>
-      <p className="mt-0.5 font-serif italic text-label leading-[1.3] text-faint">
-        {node.role}
-      </p>
+      {/* COMPACT drops the responsibility line, which is the single biggest
+          thing in the card after its contents. It is the sentence that makes
+          a box a slot rather than a label, so it is the reader's to discard —
+          not mine. */}
+      {!compact && (
+        <p className="mt-0.5 font-serif italic text-label leading-[1.3] text-faint">
+          {node.role}
+        </p>
+      )}
 
       {/* A LITERAL RULE between the card's argument and its contents. The
           reported fault was that the explanation and the tool names ran
           together; a hairline is the cheapest unambiguous separation there
           is, and it costs one pixel. */}
-      <div className="mt-2 border-t border-line/60 pt-2">
+      <div className={`${compact ? "mt-1.5 pt-1.5" : "mt-2 pt-2"} border-t border-line/60`}>
         {cloud ? (
           roles.length ? (
             <ul className="list-none space-y-[3px]">
@@ -155,14 +175,31 @@ const Node = ({ node, index, flow, platform, onDefine, onPin, shown }) => {
                    the pair fits on one line, which halves it. */
                 <li
                   key={r.role}
-                  className="cloud-in flex items-baseline gap-2 leading-[1.45]"
+                  /* `items-start`, and the role never wraps. Reported:
+                     "catalog & governance is sticking to the other new line".
+                     With both halves wrapping freely the role broke mid-phrase
+                     and the service name climbed into the gap, so neither read
+                     as one thing. The role is now unbreakable and the service
+                     wraps under itself. */
+                  className="cloud-in flex items-start gap-x-2 leading-[1.45]"
                   style={{ "--i": i }}
                 >
-                  <span className="shrink-0 font-mono text-micro uppercase tracking-[0.08em] text-faint opacity-70">
-                    {r.role}
-                  </span>
+                  {/* The ROLE is the dotted term, not the service: it is the
+                      part that stays true when a vendor renames a product,
+                      and one definition then covers all four columns. It
+                      brings its own mark, so every row has a symbol in every
+                      platform — which is as close to logos as this can
+                      honestly get. */}
+                  <TagTerm
+                    name={r.role}
+                    flow
+                    dense
+                    onDefine={onDefine}
+                    onPin={onPin}
+                    active={shown?.name === r.role}
+                  />
                   <span
-                    className="min-w-0 font-mono text-micro"
+                    className="min-w-0 flex-1 text-right font-mono text-micro leading-[1.5]"
                     style={{ color: `rgb(var(${platTint(platform)}))` }}
                   >
                     {r[platform]}
@@ -209,7 +246,7 @@ const Node = ({ node, index, flow, platform, onDefine, onPin, shown }) => {
  * a connector between "object detection" and "retrieval" would claim a
  * dependency that does not exist.
  */
-const Plane = ({ plane, offset, platform, onDefine, onPin, shown }) => (
+const Plane = ({ plane, offset, platform, compact, onDefine, onPin, shown }) => (
   <section aria-label={plane.title}>
     {/* THE PLANE LABEL SITS ABOVE ITS ROW, not in a column beside it. As a
         9.5rem left column it took 152px off every row for two short lines of
@@ -224,9 +261,11 @@ const Plane = ({ plane, offset, platform, onDefine, onPin, shown }) => (
       >
         {plane.title}
       </span>
-      <span className="font-serif italic text-label text-faint">
-        {plane.role}
-      </span>
+      {!compact && (
+        <span className="font-serif italic text-label text-faint">
+          {plane.role}
+        </span>
+      )}
       {plane.parallel && (
         <span className="font-mono text-micro uppercase tracking-[0.1em] text-faint opacity-60">
           · alternatives, not steps
@@ -241,6 +280,7 @@ const Plane = ({ plane, offset, platform, onDefine, onPin, shown }) => (
           index={offset + i}
           flow={plane.flow}
           platform={platform}
+          compact={compact}
           onDefine={onDefine}
           onPin={onPin}
           shown={shown}
@@ -269,7 +309,7 @@ const Plane = ({ plane, offset, platform, onDefine, onPin, shown }) => (
  * still, and only the slots change. That is the claim stated as a demo rather
  * than as a mapping: the system is the same, the managed pieces are swappable.
  */
-export const DiagramControls = ({ why, onWhy, platform, onPlatform }) => {
+export const DiagramControls = ({ why, onWhy, platform, onPlatform, compact, onCompact }) => {
   const docs = PLATFORM_DOCS[platform];
   return (
     <div>
@@ -307,6 +347,24 @@ export const DiagramControls = ({ why, onWhy, platform, onPlatform }) => {
             stable root per platform rather than 99 deep service links: cloud
             vendors reorganise docs constantly and a dead link on a portfolio
             is worse than no link. */}
+        {/* MINIMISE, and it is the reader's call rather than mine. The
+            diagram does not fit a screen at sixteen nodes, and the two things
+            that would make it fit — the plane descriptions and the per-node
+            responsibility lines — are the sentences that make each box a slot
+            rather than a label. Cutting them permanently would be trading the
+            point of the view for its height. Offering the trade is not. */}
+        <button
+          type="button"
+          onClick={onCompact}
+          aria-pressed={compact}
+          className={`shrink-0 rounded-full border px-2.5 py-1 font-mono text-micro uppercase tracking-[0.1em] transition-colors ${
+            compact
+              ? "border-line bg-tertiary text-white-100"
+              : "border-line text-faint hover:text-white-100"
+          }`}
+        >
+          {compact ? "↕ full detail" : "↕ fit to screen"}
+        </button>
         {docs && (
           <a
             href={docs.href}
@@ -319,8 +377,17 @@ export const DiagramControls = ({ why, onWhy, platform, onPlatform }) => {
           </a>
         )}
       </div>
+      {/* The date is the honest half of naming cloud products: they get
+          renamed constantly, and a reader meeting a stale name cannot tell
+          whether the page is old or they are. Dating the claim beats
+          pretending it is permanent. */}
       <p className="mt-2 font-serif italic text-label leading-[1.5] text-faint">
         {PLATFORM_NOTE}
+        {platform !== "oss" && (
+          <span className="not-italic font-mono text-micro opacity-70">
+            {" "}· names checked {PLATFORM_CHECKED}
+          </span>
+        )}
       </p>
     </div>
   );
@@ -366,8 +433,8 @@ const WhyPanel = ({ open, onToggle }) => (
   </>
 );
 
-const StackDiagram = ({ platform = "oss", onDefine, onPin, shown }) => {
-  const pass = { platform, onDefine, onPin, shown };
+const StackDiagram = ({ platform = "oss", compact = false, onDefine, onPin, shown }) => {
+  const pass = { platform, compact, onDefine, onPin, shown };
   // Running count, so the node numbers read 01..16 straight down the drawing
   // rather than restarting inside every plane.
   let n = 0;
@@ -377,14 +444,14 @@ const StackDiagram = ({ platform = "oss", onDefine, onPin, shown }) => {
        which is the tool list again with more borders. The phone keeps the
        list. */
     <Reveal delay={0.1} className="hidden lg:block">
-      <div className="flex flex-col gap-2">
+      <div className={`flex flex-col ${compact ? "gap-1.5" : "gap-2"}`}>
         {systemPlanes.map((plane) => {
           const offset = n;
           n += plane.nodes.length;
           return (
             <div key={plane.id} className="flex flex-col gap-2">
               <Plane plane={plane} offset={offset} {...pass} />
-              {plane.out && <Step label={plane.out} />}
+              {plane.out && <Step label={plane.out} compact={compact} />}
             </div>
           );
         })}
@@ -393,27 +460,24 @@ const StackDiagram = ({ platform = "oss", onDefine, onPin, shown }) => {
             flows into Python or Docker; everything above simply runs on them.
             Dashed and off the colour ramp, because it is not a position on
             the path -- it is the floor under all of it. */}
-        <section
-          className="mt-1 flex items-stretch gap-3 rounded-lg border border-dashed border-line px-3 py-2"
-          aria-label={systemSubstrate.title}
-        >
-          <div className="w-[9.5rem] shrink-0 self-center">
-            <h3 className="font-display text-[13px] font-semibold uppercase tracking-[0.08em] text-secondary">
+        <section className="mt-1" aria-label={systemSubstrate.title}>
+          {/* The substrate labels itself the same way the planes do — above
+              its row, not in a column beside it. It kept the old left-column
+              layout when the planes moved, so its heading sat 152px in from
+              an edge every other label started at. */}
+          <h3 className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+            <span className="font-display text-[12px] font-semibold uppercase tracking-[0.12em] text-secondary">
               {systemSubstrate.title}
-            </h3>
-            <p className="mt-0.5 font-serif text-label leading-[1.35] text-faint">
-              {systemSubstrate.role}
-            </p>
-          </div>
-          <div className="flex min-w-0 flex-1 items-stretch gap-2">
+            </span>
+            {!compact && (
+              <span className="font-serif italic text-label text-faint">
+                {systemSubstrate.role}
+              </span>
+            )}
+          </h3>
+          <div className="mt-1.5 flex items-stretch gap-2 rounded-lg border border-dashed border-line p-2">
             {systemSubstrate.nodes.map((node, i) => (
-              <Node
-                key={node.id}
-                node={node}
-                index={n + i}
-                flow="--c-flow-off"
-                {...pass}
-              />
+              <Node key={node.id} node={node} index={n + i} flow="--c-flow-off" {...pass} />
             ))}
           </div>
         </section>

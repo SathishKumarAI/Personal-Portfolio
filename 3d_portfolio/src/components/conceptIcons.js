@@ -99,3 +99,85 @@ export const CONCEPT_ICONS = {
   // above is the vector itself; this is the search over many of them.
   Pinecone: { d: "M12 12h.01 M12 12l4.5-3.5 M12 12l-5 2.5 M12 12l3 5 M12 12m-7.5 0a7.5 7.5 0 1 0 15 0 7.5 7.5 0 1 0-15 0", s: 1 },
 };
+
+/* ---------------------------------------------------------------------------
+   MARKS FOR THE ROLES IN THE CLOUD VIEW.
+
+   The owner asked for logos on the cloud services. They cannot be had and
+   should not be faked: simple-icons carries no Amazon, AWS, Microsoft, Azure
+   or Google Cloud mark -- the project removed them over trademark policy --
+   and drawing ninety-nine vendor logos from memory is the exact failure
+   `gen-tool-icons.mjs` exists to prevent.
+
+   So the mark belongs to the ROLE, not the vendor. A bucket means object
+   store whether the cell says S3, Cloud Storage or Blob Storage, which is
+   both honest and more useful: the glyph tells you what the slot DOES, and
+   one mark serves all four columns instead of four marks saying the same
+   thing in three liveries.
+
+   Most roles reuse a mark already drawn above rather than inventing a second
+   bucket; the aliases are listed first so the duplication is visible.
+--------------------------------------------------------------------------- */
+const ROLE_ALIAS = {
+  "Object store": "S3",
+  "Relational store": "SQL",
+  "Warehouse": "SQL",
+  "Key-value store": "DynamoDB",
+  "Vector index": "Pinecone",
+  "Managed ETL": "ETL pipelines",
+  "ML pipelines": "ETL pipelines",
+  "Query engine": "Exploratory analysis",
+  "BI & dashboards": "Evaluation",
+  "Experiment tracking": "Evaluation",
+  "Cost & budgets": "Evaluation",
+  "Managed LLM": "LLM",
+  "Document & vision AI": "Vision",
+  "CI/CD": "MLOps",
+  "Training jobs": "Applied ML",
+};
+
+const ROLE_DRAWN = {
+  // A clock over a stack of steps: work that runs in order, on a schedule.
+  Orchestration: { d: "M4 7h7 M4 11h7 M4 15h7 M16.5 5.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z M16.5 8v2.2l1.6 1", s: 1 },
+  // Many units chewing one pile at once.
+  "Batch compute": { d: "M4 5.5h5v5H4z M10.5 5.5h5v5h-5z M4 12h5v5H4z M10.5 12h5v5h-5z M18.5 8h2 M18.5 12h2 M18.5 16h2", s: 1 },
+  // A continuous line of events going past, rather than a batch.
+  "Streaming & events": { d: "M3 12h3.5 M9 12h3.5 M15 12h3.5 M21 12h.01 M6.5 8.5l2.5 3.5-2.5 3.5 M15 8.5l2.5 3.5-2.5 3.5", s: 1 },
+  // A ledger of what exists, with a tick: catalogued and governed.
+  "Catalog & governance": { d: "M5 4.5h11l3 3v12H5z M8 9h8 M8 12.5h8 M8 16h4 M15.5 16l1.5 1.5 2.5-3", s: 1 },
+  // A notebook: a cell of code, then its output.
+  Notebooks: { d: "M5 4.5h14v15H5z M5 9h14 M8 4.5v15 M11 12h5 M11 15.5h3", s: 1 },
+  // A labelled shelf of versions.
+  "Model registry": { d: "M4 5.5h16v4H4z M4 11h16v4H4z M4 16.5h16v3H4z M7 7.5h.01 M7 13h.01 M7 18h.01", s: 1 },
+  // Columns kept once and read by two consumers: train and serve.
+  "Feature store": { d: "M4 6.5h7v11H4z M4 10h7 M4 14h7 M14 8.5h6 M14 12h6 M14 15.5h6 M11 12h3", s: 1 },
+  // A model behind an endpoint, answering.
+  "Model serving": { d: "M3.5 8.5h7v7h-7z M14 12h6.5 M14 12l-2.5-2.5 M14 12l-2.5 2.5 M17 7.5h.01 M17 16.5h.01", s: 1 },
+  // A bolt: it exists only while it runs.
+  "Serverless functions": { d: "M13.5 3.5 6 13.5h5l-.5 7 7.5-10h-5z", s: 1 },
+  // A container lifted in and out on demand.
+  "Containers on demand": { d: "M4.5 11.5h15v8h-15z M8 11.5v8 M12 11.5v8 M16 11.5v8 M12 8.5V3.5 M12 3.5 9.5 6 M12 3.5 14.5 6", s: 1 },
+  // One door in front of several services.
+  "API gateway": { d: "M9 4.5v15 M9 12h4 M17 6.5h3v4h-3z M17 13.5h3v4h-3z M13 12V8.5h4 M13 12v3.5h4", s: 1 },
+  // Work waiting its turn.
+  Queue: { d: "M3.5 8.5h4v7h-4z M9 8.5h4v7H9z M14.5 8.5h4v7h-4z M20.5 12h.01", s: 1 },
+  // Something kept close so it is not fetched twice.
+  Cache: { d: "M4 7c0-1.4 3.6-2.5 8-2.5s8 1.1 8 2.5-3.6 2.5-8 2.5S4 8.4 4 7z M4 7v10c0 1.4 3.6 2.5 8 2.5 M20 7v5 M15.5 16.5l2 2 4-4.5", s: 1 },
+  // A helm: many containers, steered.
+  "Container runtime": { d: "M12 5.5 18.5 9v6L12 18.5 5.5 15V9z M12 5.5v13 M5.5 9l6.5 3.5 6.5-3.5", s: 1 },
+  // Images on a shelf, tagged.
+  "Container registry": { d: "M4.5 6.5h15v11h-15z M4.5 10h15 M8 6.5v3.5 M12 13h4 M8 13h.01 M8 16h.01", s: 1 },
+  // A key, kept in a box.
+  Secrets: { d: "M5 9.5h14v10H5z M8.5 9.5V7a3.5 3.5 0 0 1 7 0v2.5 M12 13v3.5", s: 1 },
+  // A person, and the gate that decides.
+  "Identity & access": { d: "M8.5 8.5a3 3 0 1 0 0-.01 M4.5 19c0-3 1.8-4.5 4-4.5s4 1.5 4 4.5 M16 11.5h4v5h-4z M18 11.5V9.5a2 2 0 0 1 2-2", s: 1 },
+  // A pulse on a screen.
+  "Monitoring & logs": { d: "M3.5 12h3l2-4.5 3 9 2.5-6 1.5 3h5", s: 1 },
+};
+
+for (const [role, src] of Object.entries(ROLE_ALIAS)) {
+  // Aliases, not copies: one path, several names. If the source mark is ever
+  // redrawn the role follows it, which is the point of aliasing.
+  CONCEPT_ICONS[role] = CONCEPT_ICONS[src];
+}
+Object.assign(CONCEPT_ICONS, ROLE_DRAWN);

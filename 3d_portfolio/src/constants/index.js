@@ -260,6 +260,47 @@ export const glossary = {
   Neo4j: { def: "A graph database: stores data as nodes and the relationships between them, which makes connected questions cheap to ask.", link: "https://neo4j.com/", full: "Neo4j graph database" },
   Azure: { def: "Microsoft's cloud platform, the servers, storage and managed services an app runs on.", link: "https://azure.microsoft.com/", full: "Microsoft Azure" },
   Databricks: { def: "A platform for large-scale data and ML work, built around Apache Spark.", link: "https://www.databricks.com/", full: "Databricks Lakehouse Platform" },
+  /* THE ROLES, and these are the entries that make the cloud view readable.
+     Reported: "you are saying Cloud Storage, but it doesn't mean anything
+     here." Right — and the fix belongs on the ROLE rather than the service,
+     because the role is the part that stays constant across all four columns.
+     Thirty-three definitions cover ninety-nine services, and they stay true
+     when a vendor renames a product.
+     Linked to Wikipedia rather than vendor docs on purpose: the concept
+     outlives the product, and the vendors reorganise their docs constantly. */
+  "Orchestration": { def: "Runs the steps of a pipeline in order, on a schedule, and tells you which one failed.", link: "https://en.wikipedia.org/wiki/Orchestration_(computing)" },
+  "Batch compute": { def: "Chews through a large pile of data all at once, across many machines, rather than row by row.", link: "https://en.wikipedia.org/wiki/Batch_processing" },
+  "Managed ETL": { def: "Extract, transform, load — the plumbing that moves and reshapes data between systems, run for you.", link: "https://en.wikipedia.org/wiki/Extract,_transform,_load" },
+  "Streaming & events": { def: "Carries events the moment they happen instead of waiting for a nightly batch.", link: "https://en.wikipedia.org/wiki/Event_stream_processing" },
+  "Object store": { def: "Where the raw files live: cheap, enormous, and addressed by name rather than by folder.", link: "https://en.wikipedia.org/wiki/Object_storage" },
+  "Relational store": { def: "Tables with enforced shape and relationships — the database most applications sit on.", link: "https://en.wikipedia.org/wiki/Relational_database" },
+  "Key-value store": { def: "Fetches one record by its key, very fast, at any scale. No joins, no query planner.", link: "https://en.wikipedia.org/wiki/Key%E2%80%93value_database" },
+  "Warehouse": { def: "The queryable copy of everything, organised for analysis rather than for the app that produced it.", link: "https://en.wikipedia.org/wiki/Data_warehouse" },
+  "Query engine": { def: "Runs SQL over files that are not in a database, without loading them into one first.", link: "https://en.wikipedia.org/wiki/Database_engine" },
+  "Catalog & governance": { def: "The index of what data exists, who owns it and who may read it.", link: "https://en.wikipedia.org/wiki/Data_governance" },
+  "Notebooks": { def: "Where analysis is actually done: code, charts and notes in one document you can re-run.", link: "https://en.wikipedia.org/wiki/Notebook_interface" },
+  "BI & dashboards": { def: "The charts non-engineers read. Usually the only part of a data platform most of a company sees.", link: "https://en.wikipedia.org/wiki/Business_intelligence" },
+  "Training jobs": { def: "Running the training itself on machines bigger than a laptop, and stopping when it is done.", link: "https://en.wikipedia.org/wiki/Machine_learning" },
+  "Experiment tracking": { def: "Records what each run used and what it scored, so two experiments can be compared rather than remembered.", link: "https://en.wikipedia.org/wiki/MLOps" },
+  "Model registry": { def: "The shelf of trained models with versions, so you can say exactly which one is in production.", link: "https://en.wikipedia.org/wiki/MLOps" },
+  "ML pipelines": { def: "The training path as repeatable steps, so a model can be rebuilt without anyone remembering how.", link: "https://en.wikipedia.org/wiki/Pipeline_(computing)" },
+  "Feature store": { def: "One agreed definition of each input, shared by training and serving, so the two cannot drift apart.", link: "https://en.wikipedia.org/wiki/Feature_engineering" },
+  "Vector index": { def: "Stores embeddings and finds the nearest ones fast. This is what makes retrieval work.", link: "https://en.wikipedia.org/wiki/Vector_database" },
+  "Managed LLM": { def: "A large language model someone else hosts, called over an API instead of run on your own hardware.", link: "https://en.wikipedia.org/wiki/Large_language_model" },
+  "Document & vision AI": { def: "Ready-made models that read documents and images — OCR, detection, classification — without training your own.", link: "https://en.wikipedia.org/wiki/Optical_character_recognition" },
+  "Model serving": { def: "Puts a trained model behind an endpoint and keeps it answering under real traffic.", link: "https://en.wikipedia.org/wiki/Inference_engine" },
+  "Serverless functions": { def: "A piece of code that runs on demand with no server to keep alive, billed per call.", link: "https://en.wikipedia.org/wiki/Function_as_a_service" },
+  "Containers on demand": { def: "Runs a container when there is work and stops when there is not, without managing a cluster.", link: "https://en.wikipedia.org/wiki/Containerization_(computing)" },
+  "API gateway": { def: "The front door: routing, auth, rate limits and versioning in front of whatever is behind it.", link: "https://en.wikipedia.org/wiki/API_management" },
+  "Queue": { def: "Holds work until something is ready to do it, so a spike does not become an outage.", link: "https://en.wikipedia.org/wiki/Message_queue" },
+  "Cache": { def: "Keeps the answer to an expensive question nearby so it is not computed twice.", link: "https://en.wikipedia.org/wiki/Cache_(computing)" },
+  "Container runtime": { def: "Runs and scales containers across many machines, replacing ones that die.", link: "https://en.wikipedia.org/wiki/Kubernetes" },
+  "Container registry": { def: "Where built images are stored and pulled from, versioned like any other artifact.", link: "https://en.wikipedia.org/wiki/OS-level_virtualization" },
+  "CI/CD": { def: "Builds, tests and ships every change the same way, so releasing is boring.", link: "https://en.wikipedia.org/wiki/CI/CD" },
+  "Secrets": { def: "Keeps keys and passwords out of the code and out of the repository.", link: "https://en.wikipedia.org/wiki/Key_management" },
+  "Identity & access": { def: "Who is allowed to do what. The thing that decides whether a request is permitted at all.", link: "https://en.wikipedia.org/wiki/Identity_management" },
+  "Monitoring & logs": { def: "Tells you it broke, and ideally why, before a user does.", link: "https://en.wikipedia.org/wiki/Observability_(software)" },
+  "Cost & budgets": { def: "What it costs to run, per team and per service. The thing that decides whether it keeps running.", link: "https://en.wikipedia.org/wiki/FinOps" },
   // Added 2026-10-15. The six groups had drifted behind the work: the LLM area
   // named no model hub and no serving runtime, and the data areas named no
   // notebook and no chart library, which are the tools the day is actually
@@ -655,6 +696,18 @@ export const PLATFORMS = [
  * are the thing the owner actually asked for -- the provider's own material,
  * for a reader who wants to go further than a service name.
  */
+/**
+ * When the vendor names were last checked, shown in the interface.
+ *
+ * Cloud products get renamed constantly -- Cognitive Search became AI Search,
+ * Form Recognizer became AI Document Intelligence, Azure AD became Entra ID,
+ * Cloud Functions became Cloud Run functions, Matching Engine became Vertex AI
+ * Vector Search. A reader meeting a 2019 name on a 2026 page cannot tell
+ * whether the page is stale or they are out of date, and the honest fix is not
+ * to claim permanence but to date the claim.
+ */
+export const PLATFORM_CHECKED = "October 2026";
+
 export const PLATFORM_DOCS = {
   aws: { label: "AWS Architecture Center", href: "https://aws.amazon.com/architecture/" },
   gcp: { label: "Google Cloud Architecture Center", href: "https://cloud.google.com/architecture" },
@@ -687,37 +740,37 @@ export const PLATFORM_NOTE =
 export const platformMatrix = [
   // --- data plane ---------------------------------------------------------
   { plane: "Data", role: "Orchestration", node: "ingest", mine: "Airflow", aws: "MWAA", gcp: "Cloud Composer", azure: "Data Factory" },
-  { plane: "Data", role: "Batch compute", node: "ingest", mine: "PySpark", aws: "EMR", gcp: "Dataproc", azure: "Synapse Spark" },
+  { plane: "Data", role: "Batch compute", node: "ingest", mine: "PySpark", aws: "EMR", gcp: "Dataproc", azure: "Fabric Spark" },
   { plane: "Data", role: "Managed ETL", node: "ingest", mine: "ETL pipelines", aws: "Glue", gcp: "Dataflow", azure: "Data Factory flows" },
   { plane: "Data", role: "Streaming & events", node: "ingest", mine: null, aws: "Kinesis / MSK", gcp: "Pub/Sub", azure: "Event Hubs" },
   { plane: "Data", role: "Object store", node: "store", mine: "S3", aws: "S3", gcp: "Cloud Storage", azure: "Blob Storage" },
   { plane: "Data", role: "Relational store", node: "store", mine: "PostgreSQL", aws: "RDS", gcp: "Cloud SQL", azure: "Azure SQL" },
   { plane: "Data", role: "Key-value store", node: "store", mine: "DynamoDB", aws: "DynamoDB", gcp: "Firestore", azure: "Cosmos DB" },
-  { plane: "Data", role: "Warehouse", node: "store", mine: "SQL", aws: "Redshift", gcp: "BigQuery", azure: "Synapse" },
-  { plane: "Data", role: "Query engine", node: "shape", mine: "DuckDB", aws: "Athena", gcp: "BigQuery", azure: "Synapse serverless" },
-  { plane: "Data", role: "Catalog & governance", node: "store", mine: null, aws: "Glue Catalog / Lake Formation", gcp: "Dataplex", azure: "Purview" },
-  { plane: "Data", role: "Notebooks", node: "shape", mine: "Jupyter", aws: "SageMaker Studio", gcp: "Vertex AI Workbench", azure: "Azure ML Studio" },
+  { plane: "Data", role: "Warehouse", node: "store", mine: "SQL", aws: "Redshift", gcp: "BigQuery", azure: "Fabric Warehouse" },
+  { plane: "Data", role: "Query engine", node: "shape", mine: "DuckDB", aws: "Athena", gcp: "BigQuery", azure: "Fabric SQL analytics" },
+  { plane: "Data", role: "Catalog & governance", node: "store", mine: null, aws: "Glue Catalog / Lake Formation", gcp: "Dataplex Universal Catalog", azure: "Microsoft Purview" },
+  { plane: "Data", role: "Notebooks", node: "shape", mine: "Jupyter", aws: "SageMaker AI Studio", gcp: "Vertex AI Workbench", azure: "Azure ML Studio" },
   // The owner's own example, and a fair one: Power BI is what an Azure shop
   // actually puts in front of people, where this stack reaches for Plotly.
   { plane: "Data", role: "BI & dashboards", node: "express", mine: "Plotly", aws: "QuickSight", gcp: "Looker", azure: "Power BI" },
 
   // --- model plane --------------------------------------------------------
-  { plane: "Model", role: "Training jobs", node: "detect", mine: "PyTorch", aws: "SageMaker Training", gcp: "Vertex AI Training", azure: "Azure ML Jobs" },
-  { plane: "Model", role: "Experiment tracking", node: "track", mine: "MLflow", aws: "SageMaker Experiments", gcp: "Vertex AI Experiments", azure: "Azure ML" },
-  { plane: "Model", role: "Model registry", node: "track", mine: "MLflow", aws: "SageMaker Model Registry", gcp: "Vertex AI Model Registry", azure: "Azure ML Registry" },
-  { plane: "Model", role: "ML pipelines", node: "track", mine: null, aws: "SageMaker Pipelines", gcp: "Vertex AI Pipelines", azure: "Azure ML Pipelines" },
-  { plane: "Model", role: "Feature store", node: "shape", mine: null, aws: "SageMaker Feature Store", gcp: "Vertex AI Feature Store", azure: "Azure ML Feature Store" },
-  { plane: "Model", role: "Vector index", node: "retrieve", mine: "Pinecone", aws: "OpenSearch k-NN", gcp: "Vertex Vector Search", azure: "AI Search" },
+  { plane: "Model", role: "Training jobs", node: "detect", mine: "PyTorch", aws: "SageMaker AI Training", gcp: "Vertex AI Training", azure: "Azure ML Jobs" },
+  { plane: "Model", role: "Experiment tracking", node: "track", mine: "MLflow", aws: "SageMaker AI + MLflow", gcp: "Vertex AI Experiments", azure: "Azure ML" },
+  { plane: "Model", role: "Model registry", node: "track", mine: "MLflow", aws: "SageMaker AI Model Registry", gcp: "Vertex AI Model Registry", azure: "Azure ML Registry" },
+  { plane: "Model", role: "ML pipelines", node: "track", mine: null, aws: "SageMaker AI Pipelines", gcp: "Vertex AI Pipelines", azure: "Azure ML Pipelines" },
+  { plane: "Model", role: "Feature store", node: "shape", mine: null, aws: "SageMaker AI Feature Store", gcp: "Vertex AI Feature Store", azure: "Azure ML Feature Store" },
+  { plane: "Model", role: "Vector index", node: "retrieve", mine: "Pinecone", aws: "OpenSearch Serverless (vector)", gcp: "Vertex Vector Search", azure: "AI Search" },
   { plane: "Model", role: "Managed LLM", node: "adapt", mine: "Claude", aws: "Bedrock", gcp: "Vertex AI", azure: "Azure OpenAI" },
   { plane: "Model", role: "Document & vision AI", node: "detect", mine: "OpenCV", aws: "Textract / Rekognition", gcp: "Document AI / Vision AI", azure: "AI Document Intelligence" },
 
   // --- serving plane ------------------------------------------------------
-  { plane: "Serving", role: "Model serving", node: "inference", mine: "vLLM", aws: "SageMaker Endpoints", gcp: "Vertex AI Endpoints", azure: "Azure ML Endpoints" },
+  { plane: "Serving", role: "Model serving", node: "inference", mine: "vLLM", aws: "SageMaker AI Endpoints", gcp: "Vertex AI Endpoints", azure: "Azure ML Endpoints" },
   { plane: "Serving", role: "Serverless functions", node: "api", mine: null, aws: "Lambda", gcp: "Cloud Run functions", azure: "Azure Functions" },
   { plane: "Serving", role: "Containers on demand", node: "package", mine: "Docker", aws: "ECS / Fargate", gcp: "Cloud Run", azure: "Container Apps" },
   { plane: "Serving", role: "API gateway", node: "api", mine: "FastAPI", aws: "API Gateway", gcp: "Apigee", azure: "API Management" },
   { plane: "Serving", role: "Queue", node: "api", mine: null, aws: "SQS", gcp: "Pub/Sub", azure: "Service Bus" },
-  { plane: "Serving", role: "Cache", node: "api", mine: null, aws: "ElastiCache", gcp: "Memorystore", azure: "Cache for Redis" },
+  { plane: "Serving", role: "Cache", node: "api", mine: null, aws: "ElastiCache", gcp: "Memorystore", azure: "Managed Redis" },
 
   // --- substrate ----------------------------------------------------------
   { plane: "Substrate", role: "Container runtime", node: "package", mine: "Kubernetes", aws: "EKS", gcp: "GKE", azure: "AKS" },
@@ -726,7 +779,7 @@ export const platformMatrix = [
   { plane: "Substrate", role: "Secrets", node: "package", mine: null, aws: "Secrets Manager", gcp: "Secret Manager", azure: "Key Vault" },
   { plane: "Substrate", role: "Identity & access", node: "package", mine: null, aws: "IAM", gcp: "IAM", azure: "Entra ID" },
   { plane: "Substrate", role: "Monitoring & logs", node: "track", mine: null, aws: "CloudWatch", gcp: "Cloud Monitoring", azure: "Azure Monitor" },
-  { plane: "Substrate", role: "Cost & budgets", node: "track", mine: null, aws: "Cost Explorer", gcp: "Billing / FinOps", azure: "Cost Management" },
+  { plane: "Substrate", role: "Cost & budgets", node: "track", mine: null, aws: "Cost Explorer", gcp: "Cloud Billing", azure: "Cost Management" },
 ];
 
 /**
