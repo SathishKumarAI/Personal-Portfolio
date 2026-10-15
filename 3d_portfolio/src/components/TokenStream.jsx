@@ -197,13 +197,31 @@ const TokenStream = () => {
          whole remaining width, which is the longest clear horizontal run in
          the section. It sits above the intro and above the definition panel,
          so it still crosses nothing. */
-      /* EXPLICIT WIDTH, not `left` + `right`. A <canvas> is a REPLACED
+      /* HEIGHT IS SET BY WHAT IS BELOW IT, not by what looks good alone.
+         The view toggle moved into the header's right column, which put a
+         control a reader is meant to read and click inside this band: measured
+         187x47px of canvas over the button group and 185x38 over its question.
+         The clearance is NOT constant across widths, which is why this height
+         is responsive. Below 1536px the toggle's question wraps to two lines,
+         which makes the header's right column taller and lifts the toggle:
+         measured top y=178 at 1601px wide but y=161 at 1281px, where a flat
+         4rem band overlapped it by 7px. 2.75rem clears the tight case by 13px
+         and 4rem clears the roomy one by 10px.
+
+         A long thin ribbon rather than a short wide block, and that is the
+         right trade for this effect: the ask was for the stream to "take more
+         time", and travel time is a function of the RUN, which is the 952px
+         width -- not of the height. Re-measure whenever anything is added to
+         the top-right of the section, because this clearance is set by where
+         the header's right column starts.
+
+         EXPLICIT WIDTH, not `left` + `right`. A <canvas> is a REPLACED
          element: given both insets and `width: auto` it does not stretch, it
          falls back to its intrinsic width and ignores `right`. Measured when
          this was `left-[33%] right-0`: 416px wide instead of the ~1060px the
          insets implied, which put it straight back over the heading. The hero
          field hit the identical trap with `renderer.setSize(w, h, false)`. */
-      className="pointer-events-none absolute top-[6.5rem] left-[33%] w-[60%] -z-10 hidden rail:block h-[10rem] opacity-[0.95]"
+      className="pointer-events-none absolute top-[6.5rem] left-[33%] w-[60%] -z-10 hidden rail:block h-[2.75rem] 2xl:h-[4rem] opacity-[0.95]"
     />
   );
 };

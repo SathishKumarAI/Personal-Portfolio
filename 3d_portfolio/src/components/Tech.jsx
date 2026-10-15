@@ -7,6 +7,7 @@ import { SectionWrapper } from "../hoc";
 import SectionHead from "./SectionHead";
 import TokenStream from "./TokenStream";
 import TagTerm from "./TagTerm";
+import StackDiagram from "./StackDiagram";
 
 // A set, not a sum: several tools appear in more than one group, and counting
 // the arrays would claim more than he lists.
@@ -93,6 +94,58 @@ const DefinitionPanel = ({ entry, pinned }) => (
   </div>
 );
 
+/**
+ * The offer, and it is phrased as an offer on purpose.
+ *
+ * The owner's instruction was to let the reader choose rather than deciding
+ * for them: "let's give the chance to the user instead of just ourselves
+ * deciding to either to show stacks or like system diagram". A segmented
+ * control labelled "Tools / System" would be a setting; a question is an
+ * invitation, and the second option is the one most readers will not know is
+ * there.
+ *
+ * Both options stay rendered as real buttons rather than one button whose
+ * label flips. A control that says "See the system diagram" and then says
+ * "Back to the list" is two different controls in one position, and a reader
+ * who looks away loses track of which state they are in. Two buttons with the
+ * current one marked never has that problem, and `aria-pressed` says the same
+ * thing to a screen reader that the fill says to an eye.
+ *
+ * `lg`, matching StackDiagram itself. Offering a view that the viewport will
+ * refuse to render is worse than not offering it.
+ */
+const ViewToggle = ({ view, onChange }) => (
+  <div className="hidden lg:flex items-center gap-3">
+    <span className="font-serif italic text-faint text-label">
+      Would you like to see this as a system diagram?
+    </span>
+    <div
+      role="group"
+      aria-label="Stack view"
+      className="flex items-center gap-1 rounded-full border border-line p-0.5"
+    >
+      {[
+        ["list", "Tool list"],
+        ["diagram", "System diagram"],
+      ].map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onChange(id)}
+          aria-pressed={view === id}
+          className={`rounded-full px-3 py-1 font-mono text-micro uppercase tracking-[0.12em] transition-colors ${
+            view === id
+              ? "bg-accent text-white-100"
+              : "text-faint hover:text-white-100"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
 const Tech = () => {
   // Which group the pointer is on, or null. Drives only the rail above the
   // grid: the cards light themselves in CSS, which needs no state at all.
@@ -112,6 +165,26 @@ const Tech = () => {
   const [hovered, setHovered] = useState(null);
   const [pinned, setPinned] = useState(null);
   const shown = pinned ?? hovered;
+
+  /**
+   * Which reading of the stack is on screen. Defaults to the list, and that
+   * default is deliberate: the list is what a recruiter scanning for a
+   * keyword needs, and it is the one that works at every width. The diagram
+   * is the better answer to "do these fit together", which is a question the
+   * reader has to be interested enough to ask.
+   *
+   * Not persisted. A remembered view means a reader returning to the page
+   * lands on a diagram they chose once, weeks ago, with no memory of choosing
+   * it -- which reads as the site being broken rather than as a preference
+   * being honoured.
+   */
+  const [view, setView] = useState("list");
+
+  // Shared by both views, so a term pinned in the list is still pinned when
+  // the reader switches to the diagram. Written once rather than inline in
+  // each view: two copies of a toggle-the-pin rule is two chances for them to
+  // disagree about what a second tap does.
+  const pinTerm = (e) => setPinned((p) => (p?.name === e.name ? null : e));
 
   return (
     <>
@@ -162,7 +235,20 @@ const Tech = () => {
 
         </div>
 
-        <DefinitionPanel entry={shown} pinned={Boolean(pinned)} />
+        {/* THE OFFER GOES IN THE RIGHT COLUMN, and it is free there.
+            Under the intro it read well and cost 44px: the left column was
+            already the taller of the two, so anything added to it is added to
+            the section. The right column holds a 144px panel against a 229px
+            left column, so there was 85px of slack sitting there -- the
+            toggle fits inside it and the section height does not move.
+            It is also where it was asked for: "let's show another option on
+            side". */}
+        <div className="flex flex-col gap-3">
+          <motion.div variants={fadeIn("", "", 0.22, 1)}>
+            <ViewToggle view={view} onChange={setView} />
+          </motion.div>
+          <DefinitionPanel entry={shown} pinned={Boolean(pinned)} />
+        </div>
       </div>
 
       {/* Two shapes, because a phone and a desktop want different things here.
@@ -251,7 +337,18 @@ const Tech = () => {
             Six only from `xl`. Below that the columns would be narrower than
             the longest chip ("Exploratory analysis"), so it steps down to
             three and then two rather than letting a tool name wrap mid-word. */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-x-4 gap-y-7 items-start">
+        {/* The diagram, when it is asked for. Below `lg` the toggle is not
+            offered and `view` can only be "list", so the grid remains the one
+            thing a tablet or a phone can reach. */}
+        {view === "diagram" && (
+          <StackDiagram onDefine={setHovered} onPin={pinTerm} shown={shown} />
+        )}
+
+        <div
+          className={`${
+            view === "diagram" ? "hidden" : "hidden md:grid"
+          } md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-x-4 gap-y-7 items-start`}
+        >
           {stackGroups.map((g, i) => (
             <Reveal
               key={g.title}
@@ -318,7 +415,7 @@ const Tech = () => {
                       dense
                       primary={g.primary?.includes(it)}
                       onDefine={setHovered}
-                      onPin={(e) => setPinned((p) => (p?.name === e.name ? null : e))}
+                      onPin={pinTerm}
                       active={shown?.name === it}
                     />
                   ))}
