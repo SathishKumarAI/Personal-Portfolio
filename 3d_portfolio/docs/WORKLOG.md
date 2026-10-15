@@ -1,5 +1,90 @@
 # Worklog
 
+## 2026-10-15: a hidden unit wired to nothing, and a light theme nobody could read
+
+Four things, all reported from the screen rather than found in the code.
+
+### One hidden unit had no incoming connection
+
+Reported as "the connection from the input is missing for a few of the dots",
+and it was exactly that. The edge rule gave each source the two units opposite
+it in the next layer. That works when a layer narrows and breaks when it
+widens: four inputs into eight hidden units claim two each, which covers
+**seven of the eight** — and the last source spends its second edge on a
+duplicate, because `centre + 1` clamps to the index it already took.
+
+So HIDDEN 1's top unit was drawn with no wire into it at all, and the gap
+carried one fewer activation than it had edges for.
+
+`edgesFor()` now runs a second pass: any target nothing reached gets an edge to
+the source opposite IT, and a `seen` set drops the duplicates the first pass
+produced. Both fields call it, so the wiring cannot drift between the WebGL
+version and the fallback — they each had their own copy of the rule.
+
+| Gap | Before | After |
+| --- | --- | --- |
+| INPUT → HIDDEN 1 | incoming `0,1,1,1,1,1,1,2`, 1 duplicate | **`1,1,1,1,1,1,1,1`**, 0 duplicates |
+| HIDDEN 1 → HIDDEN 2 | 1 duplicate | **15 edges**, 0 duplicates |
+| HIDDEN 2 → OUTPUT | 1 duplicate | **11 edges**, 0 duplicates |
+
+`src/utils/netshape.test.mjs` is the guard, and it was **armed before it was
+trusted**: restoring the old rule turns it red with
+`4 -> 8: units [0] have no incoming edge`. A missing edge among thirty-four
+looks like a design choice until something counts them.
+
+### The light themes were drawn in the palest ink they own
+
+`--c-line-strong` is the right token on a dark ground: 95 134 148 against
+15 34 40 separates well. On a light ground it is 143 135 118 against white —
+a mid-tan, and no amount of alpha makes a pale line on a white page read.
+
+`--c-faint` is what the themes already use for their own 10-13px labels:
+104 114 119, 4.93:1, deliberately quiet but legible. That is the register an
+ambient diagram wants, and it is ~16% further from the page before a point of
+alpha is spent.
+
+Median resting edge contrast:
+
+| | at the start of today | last pass | now |
+| --- | ---: | ---: | ---: |
+| dark | ~6 | 34.6 | 34.6 |
+| ink | ~6 | 35.9 | 35.9 |
+| light | ~8 | 31 | **41** |
+| sepia | ~8 | 19.2 | **32.5** |
+| clean | ~8 | 27 | **43** |
+| paper | ~8 | 28 | **42** |
+
+Sepia was the floor at 11.5 this morning. It is a deliberately soft palette and
+is now within a third of the dark themes rather than a quarter.
+
+### The front was a ruler, not a wave
+
+Every dot left on the same frame and arrived on the same frame, so a pass drew
+a rigid vertical line sweeping the page — a scanline, which is what read as
+mechanical.
+
+Two changes, neither of which weakens the layer-wise claim:
+
+- A per-edge phase offset of up to a tenth of the hop, derived from the edge
+  index so it is identical on every frame and every pass. A jitter that
+  resampled would shimmer. A tenth is far too small to suggest the layers take
+  turns, which they do not.
+- Activations now fade in and out — `sin(pi * t)` on a vertex colour, so a dot
+  grows out of the layer it left and dissolves into the one it reaches instead
+  of appearing and vanishing on a frame.
+
+### The hidden layers stand taller
+
+`HIDDEN_SPREAD` 1 → 1.9 → **2.9**. The docks span 156px while the network spans
+~1450px across, so at 1 the lattice was a 10:1 strip and the edges read as
+near-horizontal scan lines.
+
+The span is still READ FROM THE REAL CONTROLS and merely scaled, centred on
+their midpoint — a hidden layer still cannot move unless a dock moves, and
+nothing is derived from viewport height. Measured: dock band 156px, hidden
+columns **460px**, centred at 435.3 against the dock's 436.
+
+
 ## 2026-10-15: the field was painting on top of the page, and nobody could see it anyway
 
 Two faults, and the second hid the first for as long as the 3D field has existed.

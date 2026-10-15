@@ -112,7 +112,7 @@ import {
 // for why they stopped being declared twice.
 import {
   HIDDEN, LAYERS, FIRE_MS, HOP_SECONDS, REST_SECONDS,
-  FIELD_ALPHA, alphaFor, EDGE_REST, EDGE_LIT,
+  FIELD_ALPHA, alphaFor, EDGE_REST, EDGE_LIT, HIDDEN_SPREAD, inkToken, edgesFor,
 } from "./netShape";
 
 const HIDDEN_DEPTH = [170, -190]; // toward the reader, then away
@@ -129,21 +129,15 @@ const MAX_SIGNALS = 32;
 const FOV = 50;
 
 /**
- * Resting and lit intensity of an edge, where 0 is the page colour exactly and
- * 1 is the full ink token.
+ * EDGE_REST / EDGE_LIT live in netShape.js, because the 2D field animates the
+ * same forward pass and the two must not drift.
  *
- * The edges are vertex-coloured rather than uniformly tinted, which is what
- * lets the forward pass LIGHT THE WIRES it is crossing instead of only sending
- * dots along them. A gap brightens as its front travels and settles back after
- * — so the structure is legible at rest, and the pass is the one authored
- * moment on the page rather than a scattering of effects.
- *
+ * Edges are vertex-coloured rather than uniformly tinted, which is what lets a
+ * pass LIGHT THE WIRES it is crossing instead of only sending dots along them.
  * Mixing toward the page colour, rather than varying alpha per vertex, is what
- * makes this work on light and dark grounds with one code path: a vertex
+ * makes that work on light and dark grounds with one code path: a vertex
  * colour can be interpolated, a material's alpha cannot.
  */
-// EDGE_REST / EDGE_LIT live in netShape.js: the 2D field animates the same
-// pass and has to match.
 
 /**
  * A soft round sprite for the nodes and the activations.
@@ -335,7 +329,7 @@ export const start = (anchor) => {
    * the sizes at which the core reads as a node and the halo as light.
    */
   const nodeMat = new PointsMaterial({
-    map: dot, size: 15, sizeAttenuation: true, transparent: true,
+    map: dot, size: 19, sizeAttenuation: true, transparent: true,
     opacity: FIELD_ALPHA.node, depthWrite: false,
   });
   /**
@@ -349,13 +343,19 @@ export const start = (anchor) => {
     transparent: true, vertexColors: true,
     opacity: FIELD_ALPHA.edge, depthWrite: false,
   });
+  /**
+   * `vertexColors` so each activation can fade IN as it leaves a layer and OUT
+   * as it lands, instead of appearing and vanishing on a frame. A dot that
+   * pops is the single thing that made the pass read as mechanical.
+   */
   const signalMat = new PointsMaterial({
     map: dot, size: 26, sizeAttenuation: true, transparent: true,
-    opacity: FIELD_ALPHA.signal, depthWrite: false,
+    vertexColors: true, opacity: FIELD_ALPHA.signal, depthWrite: false,
   });
 
   const paintTheme = () => {
-    const [r, g, b] = rgb(root, "--c-line-strong");
+    const scheme = root.getAttribute("data-scheme") === "light" ? "light" : "dark";
+    const [r, g, b] = rgb(root, inkToken(scheme));
     const [ar, ag, ab] = rgb(root, "--c-accent");
     nodeMat.color.setRGB(r / 255, g / 255, b / 255);
     signalMat.color.setRGB(ar / 255, ag / 255, ab / 255);
@@ -369,7 +369,7 @@ export const start = (anchor) => {
      * mark entirely, so every node would vanish on `light`, `paper`, `clean`
      * and `sepia`. Those four take normal blending and read as ink instead.
      */
-    const light = root.getAttribute("data-scheme") === "light";
+    const light = scheme === "light";
     const blending = light ? NormalBlending : AdditiveBlending;
     nodeMat.blending = blending;
     signalMat.blending = blending;
@@ -427,7 +427,7 @@ export const start = (anchor) => {
     const attr = edges.geometry.getAttribute("color");
     if (!attr) return;
     const bg = rgb(root, "--c-primary");
-    const ink = rgb(root, "--c-line-strong");
+    const ink = rgb(root, inkToken(root.getAttribute("data-scheme") === "light" ? "light" : "dark"));
     hopVerts.forEach((range, i) => {
       let t = EDGE_REST;
       if (wave && wave.hop === i) {
@@ -524,19 +524,22 @@ export const start = (anchor) => {
      * only thing that can move a hidden node now is a dock moving.
      */
     const ys = [...inputs, ...outputs].map((p) => p.y);
-    const bandTop = Math.min(...ys);
-    const bandBottom = Math.max(...ys);
-    const span = bandBottom - bandTop;
+    const bandMid = (Math.min(...ys) + Math.max(...ys)) / 2;
+    // The controls' own band, then scaled by HIDDEN_SPREAD and re-centred on
+    // its midpoint. Still a function of the interface — only a dock moving can
+    // move a hidden node — but no longer confined to a 10:1 strip. See
+    // netShape.js for why the flat version read as scan lines.
+    const span = (Math.max(...ys) - Math.min(...ys)) * HIDDEN_SPREAD;
+    const bandTop = bandMid - span / 2;
 
     const hidden = HIDDEN.map((count, li) => {
       const x = x0 + ((x1 - x0) * (li + 1)) / (HIDDEN.length + 1);
       return Array.from({ length: count }, (_, ni) =>
         toWorld(
-          // Spread across the band inclusively — first node ON `bandTop`, last
-          // ON `bandBottom` — so the outermost hidden units line up with the
-          // outermost icon and the outermost section dot rather than floating
-          // inside them. `count - 1` guards a one-unit layer against /0.
-          { x, y: count === 1 ? bandTop + span / 2 : bandTop + (span * ni) / (count - 1) },
+          // Spread inclusively, first node on the top edge and last on the
+          // bottom, so a layer fills its span rather than floating inside it.
+          // `count - 1` guards a one-unit layer against /0.
+          { x, y: count === 1 ? bandMid : bandTop + (span * ni) / (count - 1) },
           // A little per-node jitter in z, or each hidden layer reads as a flat
           // card standing in space and the volume collapses back to 2D.
           HIDDEN_DEPTH[li] + Math.sin(ni * 2.3 + li) * 34
@@ -579,16 +582,9 @@ export const start = (anchor) => {
     hopVerts = [];
     const pairs = [];
     for (let i = 0; i < layers.length - 1; i++) {
-      const from = layers[i], to = layers[i + 1];
-      hops[i] = [];
       const startVertex = pairs.length;
-      from.forEach((a, ai) => {
-        const centreOf = Math.round(((ai + 0.5) / from.length) * to.length - 0.5);
-        for (const d of [0, 1]) {
-          const b = to[Math.min(to.length - 1, Math.max(0, centreOf + d))];
-          if (b) { pairs.push(a, b); hops[i].push([a, b]); }
-        }
-      });
+      hops[i] = edgesFor(layers[i], layers[i + 1]);
+      hops[i].forEach(([a, b]) => pairs.push(a, b));
       hopVerts[i] = { start: startVertex, count: pairs.length - startVertex };
     }
     const edgeGeo = new BufferGeometry().setFromPoints(pairs);
@@ -672,7 +668,9 @@ export const start = (anchor) => {
   // --- activations ----------------------------------------------------------
   const signalGeo = new BufferGeometry();
   const signalPos = new Float32Array(MAX_SIGNALS * 3);
+  const signalCol = new Float32Array(MAX_SIGNALS * 3);
   signalGeo.setAttribute("position", new BufferAttribute(signalPos, 3));
+  signalGeo.setAttribute("color", new BufferAttribute(signalCol, 3));
   const signals = new Points(signalGeo, signalMat);
   signals.frustumCulled = false;
   scene.add(signals);
@@ -768,20 +766,45 @@ export const start = (anchor) => {
     paintEdges();
 
     const gap = hops[wave.hop];
-    // `ease` so a front leaves its layer and arrives at the next one with a
-    // settle rather than at a constant crawl. Linear read as a scanline.
-    const f = wave.t < 0.5
-      ? 2 * wave.t * wave.t
-      : 1 - ((-2 * wave.t + 2) ** 2) / 2;
     const n = Math.min(gap.length, MAX_SIGNALS);
+    const [ar, ag, ab] = rgb(root, "--c-accent");
+
     for (let i = 0; i < n; i++) {
       const [a, b] = gap[i];
+
+      /**
+       * A small per-edge phase offset, so the front is a WAVE rather than a
+       * ruler. Every dot leaving on the same frame and arriving on the same
+       * frame drew a rigid vertical line sweeping the page, which is what read
+       * as mechanical -- a scanline, not a network firing.
+       *
+       * Derived from the edge index rather than random, so it is identical on
+       * every frame and every pass; a jitter that resampled would shimmer.
+       * The spread is a tenth of the hop, far too small to suggest the layers
+       * take turns, which they do not.
+       */
+      const phase = ((i % 5) / 5) * 0.1;
+      const tt = Math.max(0, Math.min(1, (wave.t - phase) / (1 - 0.1)));
+
+      // Ease, so a front leaves its layer and settles into the next rather
+      // than crossing at a constant crawl.
+      const f = tt < 0.5 ? 2 * tt * tt : 1 - ((-2 * tt + 2) ** 2) / 2;
+
       signalPos[i * 3] = a.x + (b.x - a.x) * f;
       signalPos[i * 3 + 1] = a.y + (b.y - a.y) * f;
       signalPos[i * 3 + 2] = a.z + (b.z - a.z) * f;
+
+      // Bright through the middle of the crossing, nothing at either end, so
+      // an activation grows out of the layer it left and dissolves into the
+      // one it reaches.
+      const glow = Math.sin(Math.PI * tt) ** 0.6;
+      signalCol[i * 3] = (ar / 255) * glow;
+      signalCol[i * 3 + 1] = (ag / 255) * glow;
+      signalCol[i * 3 + 2] = (ab / 255) * glow;
     }
     signalGeo.setDrawRange(0, n);
     signalGeo.attributes.position.needsUpdate = true;
+    signalGeo.attributes.color.needsUpdate = true;
   };
 
   /* --- camera parallax ------------------------------------------------------
