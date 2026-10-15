@@ -10,7 +10,9 @@ Thirty files. Read the table, not the directory.
 | How a section announces itself, and its fact line | `SectionHead.jsx` |
 | Portrait, lede, the three proven claims, availability card | `About.jsx` |
 | Roles and degrees, the card deck, date alignment | `Experience.jsx` |
-| The six tool groups, and the category dots | `Tech.jsx` |
+| Stack: the header, the view toggle, and the six-column tool list | `Tech.jsx` |
+| Stack read as a system: the pipeline, the parallel fork, the platform band | `StackDiagram.jsx` |
+| Which tools exist, and their plain-English definitions | `stackGroups` and `glossary` in `../constants/index.js` |
 | Which tools get the filled chip, and each dot's colour | `stackGroups` in `../constants/index.js` |
 | Project cards, and the drawings on them | `Works.jsx` |
 | The contact card, and the URLs printed in it | `Contact.jsx` |
@@ -22,23 +24,19 @@ Thirty files. Read the table, not the directory.
 | Left edge: contact icons | `ContactRail.jsx` |
 | What a tech chip does on hover or click, and its two tiers | `TagTerm.jsx` |
 | Whether a tool shows its logo, and how big | `ToolGlyph` in `TagTerm.jsx` |
-| Which logos exist at all | `scripts/gen-tool-icons.mjs` -> `toolIcons.js` (generated) |
-| The mark for RAG, MLOps, Vision and the other ideas | `conceptIcons.js` (hand-drawn) |
+| Which brand logos exist at all | `scripts/gen-tool-icons.mjs` -> `toolIcons.js` (generated, 37 marks) |
+| The mark for RAG, Transformers, S3 and anything with no upstream logo | `conceptIcons.js` (hand-drawn) |
 | The reader's own text-size control (A- / A+) | `FontSizeToggle.jsx` |
 | What collapses behind a disclosure on a phone | `MobileCollapse.jsx` |
 | The diagram in the margin beside each role | `CareerTrack.jsx` |
 | The "open to collaborators" closing band | `Collaborate.jsx` |
 | The one scroll-reveal used by every card | `Reveal.jsx` |
 | Shared canvas geometry and the seeded RNG | `../utils/draw.js` |
-<<<<<<< HEAD
 | The ask box: answers, commands, keyboard | `CommandPalette.jsx` |
 | Which passage a question retrieves, and its ranking | `../utils/answer.js` |
-| The hero network drawing | `NeuralField.jsx` |
-=======
-| Command palette actions | `CommandPalette.jsx` |
 | The hero field in 3D: layers, depth, parallax | `NeuralField3D.js` |
 | Which field runs, and the 2D fallback drawing | `NeuralField.jsx` |
->>>>>>> b41aa04 (feat(hero): render the field in real 3D, in a chunk nobody else fetches)
+| The shape both fields draw: layer sizes, wiring, timing | `netShape.js` |
 | The token wave in Stack, desktop only | `TokenStream.jsx` |
 | The Python search band on a phone | `CodeCompletion.jsx` |
 | Brand glyph paths, and the list of off-site links | `icons.js` |
@@ -74,9 +72,20 @@ A few boundaries worth knowing before editing:
   `s: 1`. A stroke path rendered as a fill turns into a blob, and a silhouette
   rendered as a stroke turns into an outline of itself.
 - **The tool logos are a generated file, not a dependency.** `simple-icons` is a
-  devDependency; `npm run icons` writes the 25 marks this site names into
+  devDependency; `npm run icons` writes the 37 marks this site names into
   `toolIcons.js`, and that module is what ships — in its own lazy chunk, because
-  25 brand paths are 17kB gzipped against an entry bundle of 33kB.
+  brand paths are heavy against a 33kB entry bundle.
+- **Some products have no mark upstream, and never will.** simple-icons 16.31.0
+  carries no `amazon`, `aws`, `azure` or `pinecone` entry — the project removed
+  several large corporate logos over trademark policy. Those terms are drawn in
+  `conceptIcons.js` as what the product IS (a bucket, a key-value table, a
+  nearest-neighbour cluster), never as a recalled brand mark: a brand mark from
+  memory is a claim about someone else's identity and is simply right or wrong.
+- **Stack has two views over one dataset.** `Tech.jsx` owns the list and the
+  toggle; `StackDiagram.jsx` owns the system reading. Both map `stackGroups`
+  and both call the same `setHovered`/`pinTerm`, so a term is defined in one
+  place and pinning survives a view switch. A diagram holding its own copy of
+  the stack would be stale within a month.
 - **Never "optimise" an SVG path with a regex.** Rounding coordinates with
   `/\d*\.\d+/g` corrupted every mark using compact arc syntax: in
   `a5.5 5.5 0 01.5.5` the two arc FLAGS and the next number are written `01.5`,
@@ -109,7 +118,6 @@ A few boundaries worth knowing before editing:
   `intersectionRatio` is capped at `viewportHeight / elementHeight`. A section
   taller than about four viewports can never satisfy `0.25`. Use `"some"`.
   This once made the whole Projects section invisible on every phone.
-<<<<<<< HEAD
 - **The Experience roles are a sticky deck, and `position: sticky` dies inside
   any scroll container.** Adding `overflow-x: hidden` or `overflow: auto` to a
   wrapper — the section, the grid, the `<ol>` — silently turns the deck back
@@ -143,7 +151,6 @@ A few boundaries worth knowing before editing:
   the one nearest the middle of the screen. In a stack every pinned card sits
   within 40px of the same top, and "nearest the middle" flickered between two
   roles on one scroll notch.
-=======
 - **A canvas keeps its first context for life.** `NeuralField` must not call
   `getContext("2d")` until it knows it is the one drawing, and `NeuralField3D`
   creates its own element rather than borrowing that one — `forceContextLoss()`
@@ -158,7 +165,28 @@ A few boundaries worth knowing before editing:
   a function defeats tree-shaking, because a namespace object must carry every
   export: measured, that was 191.81kB gzipped against 130.73kB for the ten
   named classes this scene uses.
->>>>>>> b41aa04 (feat(hero): render the field in real 3D, in a chunk nobody else fetches)
 - **Canvases must re-read their size.** A canvas sized once inside an effect
   stays at its old backing-store dimensions after a resize, and static ones never
   repaint at all.
+- **A `<canvas>` is a REPLACED element, so `left` + `right` does not stretch
+  it.** Given both insets and `width: auto` it keeps its intrinsic width and
+  ignores `right`. `TokenStream` at `left-[33%] right-0` measured 416px wide
+  instead of the ~1060px the insets implied, and landed back across the
+  heading. Always give it an explicit width. Same class of bug as
+  `renderer.setSize(w, h, false)` in the hero field, which left that canvas at
+  its intrinsic 2401x1324 on a 1601x883 viewport.
+- **Never convert a canvas backing store to CSS pixels with
+  `canvas.width / innerWidth`.** That ratio *is* the device pixel ratio, so the
+  arithmetic agrees with the bug and a mis-sized canvas measures as correct.
+  Convert through `getBoundingClientRect()`.
+- **A bare `/* */` in JSX children is TEXT, not a comment, and it renders.**
+  The build passes and eslint passes; the only symptom is space that will not
+  go away. One dropped `{}` put 120px between the Stack header and its grid,
+  found only by measuring the section and seeing it GROW when the edit should
+  have shrunk it. Comments in JSX children are always `{/* ... */}`.
+- **Ambient canvas work must not cross text, and the clearance is not
+  constant.** `TokenStream`'s band sits above the Stack header's right column,
+  whose height moves with the breakpoint: the toggle's question wraps to two
+  lines below 1536px, lifting the toggle from y=178 to y=161. The band height
+  is responsive for that reason alone. Re-measure after adding anything to the
+  top right of that section.

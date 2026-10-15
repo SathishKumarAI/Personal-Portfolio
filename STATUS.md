@@ -4,8 +4,12 @@ Written when work stopped. Read this first on return, then `3d_portfolio/README.
 for the change-to-file table.
 
 **Last touched:** 2026-10-15
-**Branch:** `main`. **62 PRs squash-merged** in total, fourteen of them on
-2026-10-15, every branch deleted, no PR open.
+**Branch:** `feat/stack-one-screen` — **five commits, deliberately unmerged.**
+The owner asked for commits rather than a merge per fix ("try not to merge
+every time you fix everything, just commit"). One PR goes up for the whole
+Stack increment when he is satisfied with it.
+**62 PRs squash-merged** in total, fourteen of them on 2026-10-15, every
+merged branch deleted.
 **Live:** <https://sathishkumarai.github.io/> — GitHub Pages, built from `main`
 by Actions in the OTHER repo, **`workflow_dispatch` only**. A merge here does
 NOT deploy. Trigger it with:
@@ -14,7 +18,9 @@ NOT deploy. Trigger it with:
 what `main` builds. The CDN serves the previous bundle for ~15-60s after a
 successful deploy; poll until the hash matches rather than trusting the green
 tick.
-**Working tree:** clean. `download.png` sits untracked at the root, left alone.
+**Working tree:** `download.png` sits untracked at the root, left alone.
+**NOT deployed since the Stack work.** Everything below the 2026-10-15 merge
+list is live; the five Stack commits are not.
 **The site is `3d_portfolio/`.** Everything else here is supporting material.
 
 ## The 2026-10-15 session, newest first
@@ -70,9 +76,75 @@ measurement is the one with a bug in it until proven otherwise.**
 - **`sepia` is the weakest theme** for field contrast at 32.5 resting against
   34.6 on dark. Deliberately soft palette; it is the floor, not a bug.
 
+## Stack, on `feat/stack-one-screen` (unmerged)
+
+Five commits. The section holds **one screen in both of its views**, which is
+the constraint every decision below was traded against.
+
+| Commit | What changed | The number that mattered |
+| --- | --- | --- |
+| `c5c5cdd` | Stack condensed to a single screen | 1166px → 852px |
+| `5d89e03` | The six reported faults reassessed and measured | token band overlap **416x106 → 0**; ink stopped decaying to 0.00 |
+| `dbc8cfd` | DynamoDB, S3 and Pinecone given marks | terms with a glyph **30/33 → 33/33** |
+| `1fa491d` | Twelve current tools added across five areas | **33 → 47 tools**, section held at **1.00 screens** |
+| `180076f` | The same stack offered as a system diagram | list **881px**, diagram **841px**, both ≤ 1 screen |
+
+### What the Stack section is now
+
+- **Two views over one dataset.** `Tech.jsx` owns the tool list and the toggle;
+  `StackDiagram.jsx` owns the system reading. Both map `stackGroups` and both
+  call the same `setHovered`/`pinTerm`, so a term is defined once and a pin
+  survives a view switch. The toggle is `lg` and up; a phone gets the list.
+- **The diagram asserts one thing the list cannot:** LLM / RAG and Computer
+  vision are PARALLEL, not stages three and four of six. MLOps is the floor
+  under all of them, not a fifth stage — nothing flows into it or out of it.
+- **Its connectors are layout, not a measured overlay.** Flex siblings cannot
+  drift from the boxes they sit between, which is the failure mode the hero
+  field has.
+- **47 tools, every one with a glyph and a plain-English definition.** 37 brand
+  marks are generated from simple-icons; the rest are drawn in
+  `conceptIcons.js`, including S3, DynamoDB and Pinecone, which have no
+  upstream mark and are therefore drawn as what they ARE rather than as a
+  recalled logo.
+
+### What was cut to make room, and why
+
+Each of these was a REPETITION, not a sacrifice — the budget just forced
+someone to notice:
+
+- The hint line "Dotted terms have a plain-English definition, tap one" was the
+  same instruction the definition panel was already giving, 400px away, both
+  desktop-only. `TERM_HINT` moved into the panel. **−29px.**
+- The path rule "FROM RAW DATA — TO A RUNNING PRODUCT" was the fourth statement
+  of one fact: the columns run left to right, are numbered 01-06, each carry a
+  tint bar, and the intro paragraph three lines above says those exact words.
+  **−41px.**
+- The diagram's two termini said it a fifth time, and cost ~200px of the row's
+  WIDTH — which is what the nodes needed in order to wrap in fewer lines.
+  Row **314px → 231px.**
+
+### Three traps this branch added to the directory README
+
+- **A `<canvas>` is a replaced element: `left` + `right` does not stretch it.**
+  `TokenStream` measured 416px against the ~1060px its insets implied.
+- **A bare `/* */` in JSX children renders as text.** One dropped `{}` added
+  120px of invisible space; build and eslint both passed.
+- **The token band's clearance is not constant across breakpoints.** The
+  toggle's question wraps below 1536px and lifts it from y=178 to y=161, so the
+  band height is responsive.
+
+### Fixed in passing, and it was on `main`
+
+`3d_portfolio/src/components/README.md` had **two committed merge-conflict
+blocks** (`<<<<<<< HEAD` / `>>>>>>> b41aa04`) sitting in the change-to-file
+table and the traps list. Both sides were complementary rather than competing —
+the palette and 2D field rows against the 3D field rows, the role-deck traps
+against the three.js traps — so both were kept. Repo-wide scan: that was the
+only file affected.
+
 ### Where the next session starts
 
-The owner's next target is the **Stack** section.
+Open the PR for the Stack increment once the owner has looked at both views.
 
 ## The 2026-09-15 session, newest first
 
@@ -117,7 +189,7 @@ copy cut to campaign length. Two acts of that are built; three are not.
 | **Scenes** | every other section paints a full-bleed ground with hairline edges; heads at 76px | `SectionWrapper.jsx`, `main > section:nth-of-type(even)` in `index.css` — `even` since the spec band was deleted |
 | **About** | three claims, each naming the project that proves it and linking to that card. It no longer reprints the project's own sentence | `About.jsx` |
 | **Roles** | a sticky deck; only the card being read is lit, the covered ones dim | `Experience.jsx` |
-| **Stack** | 25 brand logos and 16 drawn category marks; the six category colours are one cool-to-warm ramp along the pipeline | `TagTerm.jsx`, `toolIcons.js`, `conceptIcons.js` |
+| **Stack** | 47 tools in six areas, readable as a list or as a system diagram at the reader's choice; 37 brand logos and the rest drawn | `Tech.jsx`, `StackDiagram.jsx`, `toolIcons.js`, `conceptIcons.js` |
 
 ### Names, because two sections had two each
 

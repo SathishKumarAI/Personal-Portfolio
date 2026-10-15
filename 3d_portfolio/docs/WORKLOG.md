@@ -1,5 +1,109 @@
 # Worklog
 
+## 2026-10-15: Stack, reassessed and then given a second reading
+
+Five commits on `feat/stack-one-screen`, unmerged on the owner's instruction
+("try not to merge every time you fix everything, just commit").
+
+### The correction that set the tone
+
+> "there's a lot of bugs that you introduce now ... Don't try to believe in
+> yourself. Try to reassess everything."
+
+All five reported faults were real, and each was confirmed by measurement
+before being touched rather than after:
+
+| Reported | Measured |
+| --- | --- |
+| The token animation overlaps the intro | 416x106px over the whole paragraph, plus 416x19 over the hint |
+| "raw data" / "running product" mean nothing | two bare labels, no sentence anywhere near them |
+| Two skills take too much space | "Detection & tracking" and "Exploratory analysis" stood **45px** against 25px for every other chip |
+| PyTorch and others are black plates | 12 of 33 chips carried a solid near-black fill, the heaviest marks in the section |
+| Dead space to the right | 244px of empty column under the heading |
+
+Deleting the token stream was the wrong correction to the first of those, and
+the owner said so: "you removed the animation that I really liked it". Its
+SIZE was the fault, not its presence.
+
+### The canvas bug, which was the hero field's bug again
+
+Relocating the stream to start at the heading, `left-[33%] right-0`, measured
+**416px wide** rather than the ~1060px the insets imply. A `<canvas>` is a
+REPLACED element: with `width: auto` and both insets set it keeps its intrinsic
+width and ignores `right`. This is the same class of fault as
+`renderer.setSize(w, h, false)` in the hero, which left that canvas at its
+intrinsic 2401x1324 on a 1601x883 viewport. Explicit width fixes it; the run
+went 416px to 952px.
+
+The wave was also dying. Its baseline translated downward and wrapped over
+`h + 0.55h` at 11px/s -- a ~50s period of which only a few seconds sat inside
+the canvas -- so painted ink decayed **3.37% to 0.00%** over five seconds and
+then stayed empty. It now oscillates about the middle: 7.06, 6.91, 7.16, 7.08,
+7.39, 7.37% across six seconds.
+
+### Twelve tools, and the budget that forced three deletions
+
+Asked for the current LLM / data-science / Python tooling the six areas had
+drifted behind. Added Hugging Face, Transformers, Fine-tuning, vLLM, Jupyter,
+Polars, Plotly, Airflow, DuckDB, Weights & Biases, DVC, Pydantic, pytest and
+Streamlit -- every one with a plain-English `glossary` entry, because a term
+nobody can define is a badge and this section's own copy argues against badges.
+
+That took the section from 852px to **963px, 1.09 screens** against an 883px
+viewport. What came out to pay for it was repetition, in all three cases:
+
+- the hint line, which the definition panel was already saying 400px away
+  (**-29px**)
+- the path rule, which was the fourth statement of an ordering the columns,
+  the numerals, the tint bars and the intro paragraph all already carried
+  (**-41px**)
+- term spacing and the header-to-grid gap (**-34px**)
+
+Final: **881px, 1.00 screens**, with 47 tools instead of 33.
+
+### The invisible 120px
+
+The comment explaining the path-rule removal was written as a bare `/* */`
+inside JSX, where it is TEXT and not a comment. It rendered. `npm run build`
+passed, eslint passed, and the only symptom was 120px of blank space between
+the header and the grid -- caught because the section measured **977px** after
+an edit that should have shrunk it to 856.
+
+### The diagram
+
+Asked whether the stack could read as a system design rather than a list, and
+asked for an opinion before an implementation. The opinion: right instinct, one
+condition. A list answers "what does he know" and cannot answer "does he know
+how they fit together" -- but a generic "client to API to service to database"
+would say less than the list does. So the diagram is his six areas in the order
+they run, which is the order the section's own sentence already claims.
+
+One dataset, two readings: both views map `stackGroups` and feed the same
+definition panel. The diagram's single real assertion is that LLM / RAG and
+Computer vision are PARALLEL rather than stages three and four; MLOps is drawn
+as the floor because nothing flows into it or out of it.
+
+Connectors are LAYOUT -- flex siblings between the nodes -- not an SVG overlay
+anchored to measured boxes. That is deliberate: the measured-overlay approach
+is what the hero field does and what cost this session its longest bug.
+
+| Width | List | Diagram | Band clearance |
+| --- | --- | --- | --- |
+| 1602x883 | 881px (1.00 screens) | 841px (0.95) | 10px |
+| 1281x801 | 850px | 862px | 13px |
+| 2201x883 | 881px | 841px | 10px |
+| 501px | six mobile rows, toggle 0x0, no diagram | — | canvas hidden |
+
+Zero overlap of the canvas with the heading, intro, toggle, question or panel
+at every width, in both views.
+
+### Found on `main` while documenting
+
+`src/components/README.md` carried **two committed merge-conflict blocks**
+(`<<<<<<< HEAD` / `>>>>>>> b41aa04`) in the change-to-file table and the traps
+list. Both sides were complementary, not competing, so both were kept. A
+repo-wide scan found no other file affected.
+
 ## 2026-10-15: the field's caption followed the reader off the page
 
 Reported: the `?` that explains the hero network was showing on Stack and
