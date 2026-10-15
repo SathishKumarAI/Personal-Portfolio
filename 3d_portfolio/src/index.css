@@ -33,6 +33,9 @@
   --c-flow-2: var(--c-cat-llm);
   --c-flow-3: var(--c-cat-backend);
   --c-flow-off: var(--c-line-strong);
+  --c-plat-aws: 163 98 16;
+  --c-plat-gcp: 36 90 170;
+  --c-plat-azure: 16 108 116;
 }
 
 :root[data-scheme="dark"] {
@@ -76,6 +79,18 @@
   --c-flow-2: var(--c-cat-llm);
   --c-flow-3: var(--c-cat-backend);
   --c-flow-off: var(--c-line-strong);
+  /* PLATFORM IDENTITY — and here a categorical palette is the CORRECT one.
+     The planes above are ordinal, which is why they are one hue at six
+     intensities. AWS, GCP and Azure are not ordered: they are unordered
+     alternatives you switch between, never ranked against each other, so
+     distinct hues are exactly right. The same reasoning that made six hues
+     wrong for the planes makes three hues right here.
+     Readable rather than literal brand colours: GCP and Azure are both blue in
+     real life, so they separate by HUE (blue against teal) instead of by
+     luminance, which they cannot do. */
+  --c-plat-aws: 242 174 96;
+  --c-plat-gcp: 132 180 244;
+  --c-plat-azure: 112 204 202;
 }
 
 :root {
@@ -117,6 +132,9 @@
   --c-flow-2: var(--c-cat-llm);
   --c-flow-3: var(--c-cat-backend);
   --c-flow-off: var(--c-line-strong);
+  --c-plat-aws: 163 98 16;
+  --c-plat-gcp: 36 90 170;
+  --c-plat-azure: 16 108 116;
 
   /* Primary tool chip: filled, inverted against the outline chips. Inverted
      rather than literally dark-on-light in both themes, because a dark fill on
@@ -156,6 +174,18 @@
   --c-flow-2: var(--c-cat-llm);
   --c-flow-3: var(--c-cat-backend);
   --c-flow-off: var(--c-line-strong);
+  /* PLATFORM IDENTITY — and here a categorical palette is the CORRECT one.
+     The planes above are ordinal, which is why they are one hue at six
+     intensities. AWS, GCP and Azure are not ordered: they are unordered
+     alternatives you switch between, never ranked against each other, so
+     distinct hues are exactly right. The same reasoning that made six hues
+     wrong for the planes makes three hues right here.
+     Readable rather than literal brand colours: GCP and Azure are both blue in
+     real life, so they separate by HUE (blue against teal) instead of by
+     luminance, which they cannot do. */
+  --c-plat-aws: 242 174 96;
+  --c-plat-gcp: 132 180 244;
+  --c-plat-azure: 112 204 202;
 
   --c-chip-solid: 228 225 218;
   --c-chip-solid-ink: 15 34 40; /* 13.9:1 on the fill */
@@ -1429,4 +1459,29 @@ li[data-covered="true"] > .role-card[data-current="true"]::before {
 }
 @media (prefers-reduced-motion: reduce) {
   .cloud-in { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   The attention walk through the Stack diagram.
+
+   Sixteen boxes appearing at once is a wall; the reader has no idea where to
+   start. A short pulse travelling node by node in flow order draws the eye
+   along the path the drawing is about, then stops — it runs ONCE on mount,
+   which is a deliberate click, never on a loop. The repo's standing rule:
+   get attention, then hand off.
+
+   `--w` is the node's index in the whole drawing, so the pulse genuinely
+   travels rather than firing per plane.
+--------------------------------------------------------------------------- */
+.node-walk {
+  animation: node-walk 760ms ease-out backwards;
+  animation-delay: calc(var(--w, 0) * 70ms);
+}
+@keyframes node-walk {
+  0%   { opacity: 0; transform: translateY(6px); }
+  45%  { opacity: 1; transform: none; box-shadow: 0 0 0 2px rgb(var(--walk) / 0.35); }
+  100% { opacity: 1; transform: none; box-shadow: 0 0 0 0 rgb(var(--walk) / 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .node-walk { animation: none; }
 }

@@ -20,7 +20,19 @@ import { motion } from "framer-motion";
 import { styles } from "../styles";
 import { staggerContainer } from "../utils/motion";
 
-const SectionWrapper = (Component, idName) =>
+/* `wide` is opt-in and Stack is the only caller. Every other section is a
+   DOCUMENT, and 1280px is already past a comfortable line length for prose.
+   Stack in its diagram view is a DRAWING: sixteen boxes that each have to hold
+   a title, a responsibility and a list, and 1280px on a 1990px viewport left
+   355px of empty margin on either side while the boxes inside wrapped. A
+   drawing wants the room; a paragraph does not, which is why the intro keeps
+   its own `max-w-[46rem]` either way. */
+/* `tight` trims the scene's vertical padding, and only Stack asks for it. The
+   standard clamp spends 256px of a 872px viewport on air above and below —
+   correct for a section of prose, expensive for one holding a sixteen-node
+   drawing that the reader is trying to take in at once. The grounds still
+   alternate, so the scenes stay visibly separated on less of it. */
+const SectionWrapper = (Component, idName, { wide = false, tight = false } = {}) =>
   function HOC() {
     return (
       <motion.section
@@ -57,12 +69,12 @@ const SectionWrapper = (Component, idName) =>
         // alternate, so the gap is doing real work — and gives 160px back
         // across the five of them. Desktop is untouched: 9vw passes 4rem at
         // 712px wide, well below any screen that reads the clamp differently.
-        className={`scene ${styles.paddingX} py-[clamp(3rem,9vw,8rem)] relative z-0 isolate`}
+        className={`scene ${styles.paddingX} ${tight ? "py-[clamp(2rem,5vw,4.25rem)]" : "py-[clamp(3rem,9vw,8rem)]"} relative z-0 isolate`}
       >
         <span className="hash-span" id={idName}>
           &nbsp;
         </span>
-        <div className="max-w-7xl mx-auto">
+        <div className={`${wide ? "max-w-[104rem]" : "max-w-7xl"} mx-auto`}>
           <Component />
         </div>
       </motion.section>

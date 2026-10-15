@@ -51,6 +51,11 @@ import TagTerm from "./TagTerm";
  */
 
 const nodeNo = (i) => String(i + 1).padStart(2, "0");
+/* The chosen platform's own colour. `oss` is the site accent, because the
+   stack he actually runs is the point of the page; the three clouds get the
+   categorical hues defined in index.css. */
+const platTint = (platform) =>
+  platform === "oss" ? "--c-accent" : `--c-plat-${platform}`;
 
 /**
  * WHAT MOVES between two stages -- and it has to look nothing like a tool.
@@ -104,14 +109,23 @@ const Step = ({ label }) => (
  */
 const Node = ({ node, index, flow, platform, onDefine, onPin, shown }) => {
   const cloud = platform !== "oss";
-  const roles = cloud
-    ? platformMatrix.filter((r) => r.node === node.id)
-    : [];
+  const roles = cloud ? platformMatrix.filter((r) => r.node === node.id) : [];
   return (
     <div
-      className="flex min-w-0 flex-1 flex-col rounded-lg border border-line border-t-[3px] bg-tertiary/50 px-3 py-2"
-      style={{ borderTopColor: `rgb(var(${flow}))` }}
+      className="node-walk flex min-w-0 flex-1 flex-col rounded-lg border border-line border-t-[3px] bg-tertiary/50 px-3 py-2"
+      style={{
+        borderTopColor: `rgb(var(${flow}))`,
+        "--w": index,
+        "--walk": `var(${flow})`,
+      }}
     >
+      {/* THE HEADER OF THE BOX: what it is, then what it is FOR. Three kinds
+          of text live in this card and they used to differ only by weight, so
+          a reader got "some kind of light change" rather than a structure.
+          Each now has its own voice: the title is display, the responsibility
+          is serif ITALIC — the page's register for commentary rather than
+          data — and the contents below the rule are mono, which is what this
+          site uses for things that are names. */}
       <h4 className="flex items-baseline gap-2 font-display text-[13px] font-semibold leading-tight tracking-[-0.01em] text-white-100">
         <span
           aria-hidden="true"
@@ -122,56 +136,65 @@ const Node = ({ node, index, flow, platform, onDefine, onPin, shown }) => {
         </span>
         {node.title}
       </h4>
-      <p className="mt-1 font-serif text-label leading-[1.35] text-faint">
+      <p className="mt-0.5 font-serif italic text-label leading-[1.3] text-faint">
         {node.role}
       </p>
 
-      {/* THE SAME BOX, FILLED FOR THE CHOSEN PLATFORM.
-          This used to be a separate table of `Airflow -> MWAA` rows, and the
-          owner's objection to it was exact: with only AWS on screen the arrow
-          is pointless, and the drawing already exists -- so render the drawing
-          on AWS instead of describing it beside one. The architecture holds
-          still and only the slots change, which is the actual claim: the
-          system is the same, the managed pieces are swappable. */}
-      {cloud ? (
-        roles.length ? (
-          <ul className="mt-2 list-none space-y-1">
-            {roles.map((r, i) => (
-              <li
-                key={r.role}
-                className="cloud-in font-mono text-micro leading-[1.5]"
-                style={{ "--i": i }}
-              >
-                <span className="block text-faint opacity-70">{r.role}</span>
-                <span className="block text-secondary">{r[platform]}</span>
-              </li>
-            ))}
-          </ul>
+      {/* A LITERAL RULE between the card's argument and its contents. The
+          reported fault was that the explanation and the tool names ran
+          together; a hairline is the cheapest unambiguous separation there
+          is, and it costs one pixel. */}
+      <div className="mt-2 border-t border-line/60 pt-2">
+        {cloud ? (
+          roles.length ? (
+            <ul className="list-none space-y-[3px]">
+              {roles.map((r, i) => (
+                /* ONE LINE PER ROLE, not two. Stacked, `Object store` over
+                   `Blob Storage` made the store node twelve lines deep and
+                   the cloud view 1,626px tall. The cards are wider now, so
+                   the pair fits on one line, which halves it. */
+                <li
+                  key={r.role}
+                  className="cloud-in flex items-baseline gap-2 leading-[1.45]"
+                  style={{ "--i": i }}
+                >
+                  <span className="shrink-0 font-mono text-micro uppercase tracking-[0.08em] text-faint opacity-70">
+                    {r.role}
+                  </span>
+                  <span
+                    className="min-w-0 font-mono text-micro"
+                    style={{ color: `rgb(var(${platTint(platform)}))` }}
+                  >
+                    {r[platform]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            /* NOT A GAP — a finding. Federated training, the classical model,
+               the interface and the language it is written in have no managed
+               equivalent anywhere, because they are not platform choices.
+               Saying so is more useful than a box that looks unfinished. */
+            <p className="cloud-in font-serif italic text-label leading-[1.4] text-faint opacity-80">
+              Unchanged — not a platform choice.
+            </p>
+          )
         ) : (
-          /* NOT A GAP — a finding. Federated training, the classical model,
-             the interface and the language it is all written in have no
-             managed equivalent, because they are not platform choices. Moving
-             cloud does not touch them, and saying so is more useful than
-             leaving the box looking unfinished. */
-          <p className="cloud-in mt-2 font-serif text-label leading-[1.4] text-faint opacity-80">
-            Unchanged — not a platform choice.
-          </p>
-        )
-      ) : (
-        <div className="mt-2 flex flex-wrap content-start gap-x-3 gap-y-0.5">
-          {node.items.map((it) => (
-            <TagTerm
-              key={it}
-              name={it}
-              flow
-              dense
-              onDefine={onDefine}
-              onPin={onPin}
-              active={shown?.name === it}
-            />
-          ))}
-        </div>
-      )}
+          <div className="flex flex-wrap content-start gap-x-3 gap-y-0.5">
+            {node.items.map((it) => (
+              <TagTerm
+                key={it}
+                name={it}
+                flow
+                dense
+                onDefine={onDefine}
+                onPin={onPin}
+                active={shown?.name === it}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -187,24 +210,30 @@ const Node = ({ node, index, flow, platform, onDefine, onPin, shown }) => {
  * dependency that does not exist.
  */
 const Plane = ({ plane, offset, platform, onDefine, onPin, shown }) => (
-  <section className="flex items-stretch gap-3" aria-label={plane.title}>
-    <div className="w-[9.5rem] shrink-0 self-center">
-      <h3
-        className="font-display text-[13px] font-semibold uppercase tracking-[0.08em]"
+  <section aria-label={plane.title}>
+    {/* THE PLANE LABEL SITS ABOVE ITS ROW, not in a column beside it. As a
+        9.5rem left column it took 152px off every row for two short lines of
+        text that are read once. Above the row it costs ~18px of height and
+        gives all of that width back to the cards, which is what the cards
+        needed: wider boxes wrap their contents in fewer lines, so the change
+        pays for its own height twice over. */}
+    <h3 className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+      <span
+        className="font-display text-[12px] font-semibold uppercase tracking-[0.12em]"
         style={{ color: `rgb(var(${plane.flow}))` }}
       >
         {plane.title}
-      </h3>
-      <p className="mt-0.5 font-serif text-label leading-[1.35] text-faint">
+      </span>
+      <span className="font-serif italic text-label text-faint">
         {plane.role}
-      </p>
+      </span>
       {plane.parallel && (
-        <p className="mt-1 font-mono text-micro uppercase tracking-[0.1em] text-faint opacity-70">
-          alternatives
-        </p>
+        <span className="font-mono text-micro uppercase tracking-[0.1em] text-faint opacity-60">
+          · alternatives, not steps
+        </span>
       )}
-    </div>
-    <div className="flex min-w-0 flex-1 items-stretch gap-2">
+    </h3>
+    <div className="mt-1.5 flex items-stretch gap-2">
       {plane.nodes.map((node, i) => (
         <Node
           key={node.id}
@@ -257,10 +286,17 @@ export const DiagramControls = ({ why, onWhy, platform, onPlatform }) => {
               type="button"
               onClick={() => onPlatform(p.id)}
               aria-pressed={platform === p.id}
-              className={`rounded-full px-2.5 py-1 font-mono text-micro uppercase tracking-[0.1em] transition-colors ${
+              /* Each platform wears its own colour when chosen, so the
+                 diagram's state is readable without reading the label — and
+                 the same hue then appears on every service name below, which
+                 is what ties the control to what it changed. */
+              style={
                 platform === p.id
-                  ? "bg-accent text-white-100"
-                  : "text-faint hover:text-white-100"
+                  ? { background: `rgb(var(${platTint(p.id)}))`, color: "rgb(var(--c-bg-deep, 12 14 18))" }
+                  : undefined
+              }
+              className={`rounded-full px-2.5 py-1 font-mono text-micro uppercase tracking-[0.1em] transition-colors ${
+                platform === p.id ? "font-semibold" : "text-faint hover:text-white-100"
               }`}
             >
               {p.short}
@@ -276,7 +312,8 @@ export const DiagramControls = ({ why, onWhy, platform, onPlatform }) => {
             href={docs.href}
             target="_blank"
             rel="noreferrer"
-            className="shrink-0 font-mono text-micro text-accent-ink hover:underline"
+            className="shrink-0 font-mono text-micro hover:underline"
+            style={{ color: `rgb(var(${platTint(platform)}))` }}
           >
             {docs.label} ↗
           </a>

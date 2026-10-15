@@ -141,9 +141,16 @@ const ViewToggle = ({ view, onChange }) => (
           type="button"
           onClick={() => onChange(id)}
           aria-pressed={view === id}
+          /* A DIFFERENT KIND OF CONTROL, so it should not look like the
+             platform picker beside it. Both were filled with the brand accent
+             and read as one group of five buttons. This one switches the VIEW;
+             the other one switches the DATA inside a view. The view toggle is
+             now structural — a solid ink fill, the page's "selected" rather
+             than its "look here" — and the accent is spent only on the
+             platform chips, where the colour also carries which platform. */
           className={`rounded-full px-3 py-1 font-mono text-micro uppercase tracking-[0.12em] transition-colors ${
             view === id
-              ? "bg-accent text-white-100"
+              ? "bg-white-100 text-primary font-semibold"
               : "text-faint hover:text-white-100"
           }`}
         >
@@ -493,4 +500,4 @@ const Tech = () => {
   );
 };
 
-export default SectionWrapper(Tech, "stack");
+export default SectionWrapper(Tech, "stack", { wide: true, tight: true });
