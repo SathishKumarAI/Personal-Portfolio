@@ -1,5 +1,65 @@
 # Worklog
 
+## 2026-10-15: the About reveal waits for the section to finish arriving
+
+Asked for twice, and both asks were the same underlying fault: *"wait till all
+the content of the about section lands, then show this"*, and *"give the user
+time to read this animation, don't go fast"*.
+
+### It was competing with the section's own entrance
+
+The claims streamed while the headshot, the intro paragraph and the status card
+were still fading in. Two animations for one pair of eyes, which is why the
+stream stayed hard to follow even after it learned to wait for the scroll to
+stop.
+
+It now waits for all four of the section's own elements to finish. **Counted,
+not timed**: no single element is reliably last, because the status card is
+`fadeIn(delay 0.2, duration 0.7)` and the claims list is `fadeIn(0.15, 1.0)`,
+so which finishes later depends on where the stagger drops each one. A fixed
+delay would be a guess that goes stale the moment a variant is retuned. Framer
+already knows when each one is done, so each reports in and the stream starts
+when the last has.
+
+### The rules land with the list, the words stream into them
+
+Making the little accent rules part of the token stream left the whole block
+empty for over a second after everything around it had landed, which reads as
+broken rather than as pending. They now arrive with the list, so three slots
+are visibly waiting while the words fill them.
+
+### Slower, twice
+
+| | first pass | second | now |
+| --- | ---: | ---: | ---: |
+| Per word | 45ms | 85ms | **120ms** |
+| Between claims | 180ms | 320ms | **430ms** |
+| Word resolve | 0.42s | 0.42s | **0.5s** |
+
+Measured end to end: gate opens 250ms after the scroll stops, first word at
+417ms, all 23 by 2351ms -- a **1.93s** stream. Long for an entrance, correct
+for a deliberate one: by the time it plays, everything else has landed and it
+is the only thing moving.
+
+### A false alarm, and a real bug found behind it
+
+Testing `/#about` showed the gate never opening and the words sitting at
+opacity 0, which looked like hidden content. It was not: `scrollY` was **0**.
+The deep link had not scrolled at all, so the claims were 1254px off screen and
+the gate was right to stay shut.
+
+The real finding is the thing underneath. **Cold-loading any section link does
+not scroll.** Measured on `/#roles`: `scrollY` 0 with the anchor 1742px down.
+The browser resolves the hash before React has rendered anything to scroll to,
+and nothing re-triggers it afterwards. In-page clicks work, because by then the
+DOM exists; a shared link does not. Filed, not fixed here.
+
+A safety net went in anyway, because the cost of being wrong about this is
+hidden text rather than a missed animation: once any sliver of the list has
+been on screen for 2.5s, the stream runs regardless of every other condition.
+A reveal may be skipped; text may never be withheld.
+
+
 ## 2026-10-15: the About reveal waits for the reader to actually arrive
 
 Reported after watching it: *"I can't humanly measure it. When I'm scrolling

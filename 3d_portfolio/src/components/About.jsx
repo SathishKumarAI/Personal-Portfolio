@@ -83,6 +83,30 @@ const PRINCIPLES = [
  */
 const SETTLE_MS = 220;
 
+/**
+ * How many of this section's elements animate themselves in: the headshot, the
+ * intro paragraph, the claims list, and the status card. The stream waits for
+ * all four. If a fifth is ever added it has to report in too, or the stream
+ * starts one element early -- which is exactly the kind of silent drift a
+ * magic delay would hide.
+ */
+const LANDING_PARTS = 4;
+
+/**
+ * The safety net, and it is not optional.
+ *
+ * A deep link to `#about` scrolls to the section's hash anchor, which sits
+ * above this list -- so the claims can be on screen without clearing the
+ * threshold the gate watches. Measured on `/#about`: the section's own content
+ * landed at 604ms and 1171ms, and the gate never opened at all. The words were
+ * therefore left at `opacity: 0` PERMANENTLY.
+ *
+ * That is not a missed animation, it is hidden content. Once any part of the
+ * list has been on screen this long, the stream runs regardless of every other
+ * condition. A reveal may be skipped; text may never be withheld.
+ */
+const FORCE_MS = 2500;
+
 const About = () => {
   /**
    * Two conditions, not one: the claims must be properly on screen AND the
@@ -96,15 +120,38 @@ const About = () => {
    * reveal and becomes a loop.
    */
   const claimsRef = useRef(null);
-  const visible = useInView(claimsRef, { amount: 0.5 });
-  const [claimsSeen, setClaimsSeen] = useState(false);
+  const visible = useInView(claimsRef, { amount: 0.2 });
+  // Any sliver of the list, for the safety net below.
+  const onScreen = useInView(claimsRef, { amount: 0.01 });
+  const [settled, setSettled] = useState(false);
+
+  /**
+   * ALL of the section's own entrance must finish first.
+   *
+   * The claims were streaming while the headshot, the intro and the status
+   * card were still fading in -- two animations competing for the same eye,
+   * which is what made the stream impossible to follow even once it waited for
+   * the scroll to stop.
+   *
+   * Counted rather than timed. No single element is reliably last: the status
+   * card is `fadeIn(delay 0.2, duration 0.7)` and the claims list is
+   * `fadeIn(0.15, 1.0)`, so which one finishes later depends on where the
+   * stagger puts each of them. A fixed delay would be a guess that goes stale
+   * the moment a variant is retuned; framer already knows when each one is
+   * done, so each reports in and the stream starts when the last has.
+   */
+  const [forced, setForced] = useState(false);
+  const [landed, setLanded] = useState(0);
+  const noteLanded = () => setLanded((n) => n + 1);
+  const contentLanded = landed >= LANDING_PARTS;
+  const claimsSeen = forced || (settled && contentLanded);
 
   useEffect(() => {
-    if (claimsSeen || !visible) return undefined;
+    if (settled || !visible) return undefined;
     let id = 0;
     const arm = () => {
       clearTimeout(id);
-      id = window.setTimeout(() => setClaimsSeen(true), SETTLE_MS);
+      id = window.setTimeout(() => setSettled(true), SETTLE_MS);
     };
     arm();
     window.addEventListener("scroll", arm, { passive: true });
@@ -112,7 +159,15 @@ const About = () => {
       clearTimeout(id);
       window.removeEventListener("scroll", arm);
     };
-  }, [visible, claimsSeen]);
+  }, [visible, settled]);
+
+  // See FORCE_MS. Tied to the list being on screen rather than to mount, so a
+  // reader still up in the hero does not have the reveal spent without them.
+  useEffect(() => {
+    if (claimsSeen || !onScreen) return undefined;
+    const id = window.setTimeout(() => setForced(true), FORCE_MS);
+    return () => clearTimeout(id);
+  }, [onScreen, claimsSeen]);
 
   return (
   <>
@@ -136,7 +191,7 @@ const About = () => {
         room for it, and the measure of the prose is unchanged: it is the
         COLUMN that got narrower, not the line length. */}
     <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-8 sm:gap-10 md:grid-cols-[minmax(0,240px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,23rem)] md:items-start">
-      <motion.div variants={fadeIn("right", "spring", 0.1, 0.7)} className="max-w-[260px]">
+      <motion.div variants={fadeIn("right", "spring", 0.1, 0.7)} onAnimationComplete={noteLanded} className="max-w-[260px]">
         <Portrait />
       </motion.div>
 
@@ -146,6 +201,7 @@ const About = () => {
       <motion.div className="flex flex-col gap-7">
         <motion.p
           variants={fadeIn("", "", 0.1, 1)}
+          onAnimationComplete={noteLanded}
           // Widened as a LEDE, not as a longer line. Filling the 892px column at 17px
           // would run ~126 characters a line, roughly 70% past the readable band.
           // Larger type on a wider measure fills the space and keeps ~71 characters.
@@ -168,6 +224,7 @@ const About = () => {
             control." It is the one line on the page that nothing can check, and
             it is on about half the portfolios on the internet. */}
         <motion.ul variants={fadeIn("", "", 0.15, 1)} className="list-none space-y-6 max-w-[40rem]"
+          onAnimationComplete={noteLanded}
           ref={claimsRef}
           data-tok={claimsSeen ? "run" : "wait"}
         >
@@ -177,11 +234,12 @@ const About = () => {
                   do. These are the other trio on the page and they were the
                   only one still arriving as a plain fade. */}
               <p className="flex items-baseline gap-3 font-sans font-medium text-white-100 text-[calc(clamp(1.02rem,1.3vw,1.18rem)*var(--type-scale,1))] leading-snug">
-                <span
-                  aria-hidden="true"
-                  className="tok relative top-[-0.3em] h-px w-5 shrink-0 bg-accent/70"
-                  style={{ "--tok": 0, "--tok-start": `${i * CLAIM_GAP}ms` }}
-                />
+                {/* NOT tokenised. The rules land with the list so the three
+                    slots are visibly there, waiting, while the words stream
+                    into them. Fading them in with the words left the whole
+                    block empty for over a second after the rest of the section
+                    had landed, which reads as broken rather than as pending. */}
+                <span aria-hidden="true" className="relative top-[-0.3em] h-px w-5 shrink-0 bg-accent/70" />
                 <TokenText text={claim} start={i * CLAIM_GAP + 60} />
               </p>
               {/* The project's `outcome` used to be printed here, and it is
@@ -213,7 +271,7 @@ const About = () => {
           At 1280 the same layout gives the prose 428px. A three-column grid
           needs the width for three columns; the breakpoint has to be where that
           width exists, not where the columns first fit at all. */}
-      <motion.div variants={fadeIn("up", "spring", 0.2, 0.7)} className="md:col-span-2 xl:col-span-1">
+      <motion.div variants={fadeIn("up", "spring", 0.2, 0.7)} onAnimationComplete={noteLanded} className="md:col-span-2 xl:col-span-1">
         <Availability />
       </motion.div>
     </div>
