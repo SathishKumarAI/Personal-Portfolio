@@ -4,7 +4,7 @@
 // lists of the same strings, drifting apart silently.
 //
 // Stack renders the same 47 tools twice -- `stackGroups` files them by skill
-// area for the tool list, `systemStages` files them by responsibility for the
+// area for the tool list, `systemPlanes` files them by responsibility for the
 // system diagram. Nothing in React notices when a tool is added to one and not
 // the other: the list simply gains a term, the diagram simply does not, and
 // both views render perfectly. The only symptom is a tool that exists in one
@@ -17,18 +17,19 @@
 import assert from "node:assert/strict";
 import {
   stackGroups,
-  systemStages,
-  systemFloor,
+  systemPlanes,
+  systemSubstrate,
   platformSwaps,
   PLATFORMS,
   glossary,
 } from "../constants/index.js";
 
 const listTools = () => new Set(stackGroups.flatMap((g) => g.items));
-const stageTools = () => [
-  ...systemStages.flatMap((s) => s.items),
-  ...systemFloor.items,
+const allNodes = () => [
+  ...systemPlanes.flatMap((p) => p.nodes),
+  ...systemSubstrate.nodes,
 ];
+const stageTools = () => allNodes().flatMap((n) => n.items);
 
 // The one that will regress. Add a tool to `stackGroups` and forget the
 // diagram, and it is missing from half the section with nothing to say so.
@@ -74,6 +75,24 @@ const test_every_staged_tool_has_a_definition = () => {
   );
 };
 
+// A node with no tools is an empty box making a claim about a responsibility
+// nothing fills -- which is worse than not drawing it, because the reader
+// assumes the gap is deliberate.
+const test_no_node_is_empty = () => {
+  const empty = allNodes().filter((n) => !n.items.length).map((n) => n.id);
+  assert.deepEqual(empty, [], `nodes with no tools: ${empty.join(", ")}`);
+};
+
+// Every node needs the two lines the drawing is built on: what it is called
+// and what it is RESPONSIBLE for. The second is the whole difference between
+// this view and the tool list.
+const test_every_node_states_a_responsibility = () => {
+  const bare = allNodes()
+    .filter((n) => !n.title || !n.role)
+    .map((n) => n.id);
+  assert.deepEqual(bare, [], `nodes missing a title or role: ${bare.join(", ")}`);
+};
+
 // The swap table is the diagram's whole claim about portability. A row missing
 // a vendor renders as a gap in one platform and not the others, which reads as
 // "there is no equivalent" rather than "someone forgot a cell".
@@ -103,6 +122,8 @@ const test_every_swap_names_a_staged_tool = () => {
 };
 
 const tests = [
+  test_no_node_is_empty,
+  test_every_node_states_a_responsibility,
   test_every_listed_tool_appears_in_a_stage,
   test_every_staged_tool_is_a_listed_tool,
   test_no_tool_is_staged_twice,

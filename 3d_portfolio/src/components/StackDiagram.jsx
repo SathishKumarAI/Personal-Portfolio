@@ -1,6 +1,6 @@
 import {
-  systemStages,
-  systemFloor,
+  systemPlanes,
+  systemSubstrate,
   platformSwaps,
   PLATFORMS,
   PLATFORM_NOTE,
@@ -49,9 +49,7 @@ import TagTerm from "./TagTerm";
  * about where a box is.
  */
 
-const stageById = Object.fromEntries(systemStages.map((s) => [s.id, s]));
-const FORK = ["vision", "language"];
-const stageNo = (i) => String(i + 1).padStart(2, "0");
+const nodeNo = (i) => String(i + 1).padStart(2, "0");
 
 /**
  * WHAT MOVES between two stages -- and it has to look nothing like a tool.
@@ -95,47 +93,34 @@ const Step = ({ label }) => (
 );
 
 /**
- * One stage, as a band: who it is on the left, what it uses on the right.
+ * One node: a job the system has to do, and what fills it.
  *
- * The split is what fixes the scattering. With the identity in a fixed-width
- * column the tool rows all start at the same x, so the eye reads a list down
- * the right-hand side instead of hunting ragged wraps inside five boxes.
- * `narrow` is for the forked pair, which share one row and so get half the
- * width each.
+ * `flow` is the PLANE's colour, not the node's — every node in a plane shares
+ * it, because the colour encodes depth in the flow and these are all at the
+ * same depth. That is the whole reason the palette stopped being six hues:
+ * identical intensity is a claim ("same stage"), and a categorical palette
+ * cannot make it.
  */
-const Band = ({ stage, index, narrow, onDefine, onPin, shown }) => (
+const Node = ({ node, index, flow, onDefine, onPin, shown }) => (
   <div
-    className="flex min-w-0 flex-1 gap-4 rounded-lg border border-line border-l-[3px] bg-tertiary/50 px-3 py-2"
-    style={{ borderLeftColor: `rgb(var(${stage.tint}))` }}
+    className="flex min-w-0 flex-1 flex-col rounded-lg border border-line border-t-[3px] bg-tertiary/50 px-3 py-2"
+    style={{ borderTopColor: `rgb(var(${flow}))` }}
   >
-    <div className={`shrink-0 ${narrow ? "w-[8.5rem]" : "w-[13rem]"}`}>
-      <h3 className="flex items-baseline gap-2 font-display text-[14px] font-semibold leading-tight tracking-[-0.01em] text-white-100">
-        {/* A ringed node, not a numeral in the heading. The list view already
-            prints `01`-`06` as plain figures beside its column titles, so a
-            plain figure here said "same thing again"; a ring says "node in a
-            graph", which is the only claim this view is making that the list
-            is not. */}
-        <span
-          aria-hidden="true"
-          className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border font-mono text-[10px] font-semibold leading-none"
-          style={{
-            borderColor: `rgb(var(${stage.tint}))`,
-            color: `rgb(var(${stage.tint}))`,
-          }}
-        >
-          {stageNo(index)}
-        </span>
-        {stage.title}
-      </h3>
-      {/* The RESPONSIBILITY, not a description of the tools. This line is what
-          turns the band from a label into a slot something has to fill, and it
-          is the whole difference between this view and the list. */}
-      <p className="mt-0.5 font-serif text-label leading-[1.35] text-faint">
-        {stage.role}
-      </p>
-    </div>
-    <div className="flex min-w-0 flex-1 flex-wrap content-start gap-x-4 gap-y-0.5">
-      {stage.items.map((it) => (
+    <h4 className="flex items-baseline gap-2 font-display text-[13px] font-semibold leading-tight tracking-[-0.01em] text-white-100">
+      <span
+        aria-hidden="true"
+        className="font-mono text-[10px] font-medium leading-none"
+        style={{ color: `rgb(var(${flow}))` }}
+      >
+        {nodeNo(index)}
+      </span>
+      {node.title}
+    </h4>
+    <p className="mt-1 font-serif text-label leading-[1.35] text-faint">
+      {node.role}
+    </p>
+    <div className="mt-2 flex flex-wrap content-start gap-x-3 gap-y-0.5">
+      {node.items.map((it) => (
         <TagTerm
           key={it}
           name={it}
@@ -148,6 +133,50 @@ const Band = ({ stage, index, narrow, onDefine, onPin, shown }) => (
       ))}
     </div>
   </div>
+);
+
+/**
+ * A plane: a row of nodes that sit at the same depth, with the plane's own
+ * identity down the left.
+ *
+ * `parallel` changes what the row ASSERTS. In the data plane the nodes are a
+ * sequence — ingest, then store, then shape — so thin rules sit between them.
+ * In the model plane they are alternatives; most projects use one or two, and
+ * a connector between "object detection" and "retrieval" would claim a
+ * dependency that does not exist.
+ */
+const Plane = ({ plane, offset, onDefine, onPin, shown }) => (
+  <section className="flex items-stretch gap-3" aria-label={plane.title}>
+    <div className="w-[9.5rem] shrink-0 self-center">
+      <h3
+        className="font-display text-[13px] font-semibold uppercase tracking-[0.08em]"
+        style={{ color: `rgb(var(${plane.flow}))` }}
+      >
+        {plane.title}
+      </h3>
+      <p className="mt-0.5 font-serif text-label leading-[1.35] text-faint">
+        {plane.role}
+      </p>
+      {plane.parallel && (
+        <p className="mt-1 font-mono text-micro uppercase tracking-[0.1em] text-faint opacity-70">
+          alternatives
+        </p>
+      )}
+    </div>
+    <div className="flex min-w-0 flex-1 items-stretch gap-2">
+      {plane.nodes.map((node, i) => (
+        <Node
+          key={node.id}
+          node={node}
+          index={offset + i}
+          flow={plane.flow}
+          onDefine={onDefine}
+          onPin={onPin}
+          shown={shown}
+        />
+      ))}
+    </div>
+  </section>
 );
 
 /* Buttons only. This used to carry `PLATFORM_NOTE` beside them, which put the
@@ -292,73 +321,56 @@ const WhyPanel = ({ open, onToggle }) => (
 
 const StackDiagram = ({ onDefine, onPin, shown }) => {
   const pass = { onDefine, onPin, shown };
+  // Running count, so the node numbers read 01..16 straight down the drawing
+  // rather than restarting inside every plane.
+  let n = 0;
 
   return (
-    /* `lg` and up, matching the toggle that offers it. A diagram whose content
-       is a sequence of full-width bands would at 390px be a vertical list of
-       boxes -- the tool list again, taller and with arrows. The phone keeps
-       the list. */
-    <Reveal delay={0.1} className="hidden lg:block mt-3">
-      {/* ONE control row, not two. The `?` had a row of its own above the
-          bands and the platform picker had another below them: 72px of a
-          section under a one-screen budget spent on two strips each holding
-          one small control. Both are controls over the same drawing, so they
-          share a line, and each expands its panel underneath only when a
-          reader asks for it. */}
+    /* `lg` and up. A layered architecture at 390px is sixteen stacked boxes,
+       which is the tool list again with more borders. The phone keeps the
+       list. */
+    <Reveal delay={0.1} className="hidden lg:block">
+      <div className="flex flex-col gap-2">
+        {systemPlanes.map((plane, i) => {
+          const offset = n;
+          n += plane.nodes.length;
+          return (
+            <div key={plane.id} className="flex flex-col gap-2">
+              <Plane plane={plane} offset={offset} {...pass} />
+              {plane.out && <Step label={plane.out} />}
+            </div>
+          );
+        })}
 
-      <div className="mt-3">
-        <Band stage={stageById.ingest} index={0} {...pass} />
-        <Step label={stageById.ingest.out} />
-        <Band stage={stageById.prepare} index={1} {...pass} />
-        <Step label={stageById.prepare.out} />
-
-        {/* THE FORK, and it is the one claim the list cannot make. In a
-            six-column list these read as areas three and four of six, in
-            sequence. They are not: both consume the same prepared data and
-            both feed the same product. Two bands sharing one row off one step
-            is how a layered diagram says that; everywhere else in this drawing
-            one row means one stage, so the shared row IS the statement. */}
-        <div className="flex items-stretch gap-2">
-          {FORK.map((id, i) => (
-            <Band key={id} stage={stageById[id]} index={2 + i} narrow {...pass} />
-          ))}
-        </div>
-
-        <Step label={stageById.language.out} />
-        <Band stage={stageById.serve} index={4} {...pass} />
-
-        {/* THE FLOOR, not a sixth stage. Nothing flows into `Ship & observe`
-            and nothing flows out of it, so it gets no step above it -- it sits
-            directly under the pipeline as the thing the pipeline stands on,
-            dashed to read as a condition rather than another step. */}
-        <div
-          className="mt-2 flex gap-4 rounded-lg border border-dashed border-line px-3 py-2"
-          style={{ "--cat": `var(${systemFloor.tint})` }}
+        {/* THE SUBSTRATE, and it gets no arrow into it on purpose. Nothing
+            flows into Python or Docker; everything above simply runs on them.
+            Dashed and off the colour ramp, because it is not a position on
+            the path -- it is the floor under all of it. */}
+        <section
+          className="mt-1 flex items-stretch gap-3 rounded-lg border border-dashed border-line px-3 py-2"
+          aria-label={systemSubstrate.title}
         >
-          <div className="w-[13rem] shrink-0">
-            <h3 className="font-display text-[14px] font-semibold leading-tight tracking-[-0.01em] text-white-100">
-              {systemFloor.title}
+          <div className="w-[9.5rem] shrink-0 self-center">
+            <h3 className="font-display text-[13px] font-semibold uppercase tracking-[0.08em] text-secondary">
+              {systemSubstrate.title}
             </h3>
             <p className="mt-0.5 font-serif text-label leading-[1.35] text-faint">
-              {systemFloor.role}
+              {systemSubstrate.role}
             </p>
           </div>
-          <div className="flex min-w-0 flex-1 flex-wrap content-start gap-x-4 gap-y-0.5">
-            {systemFloor.items.map((it) => (
-              <TagTerm
-                key={it}
-                name={it}
-                flow
-                dense
-                onDefine={onDefine}
-                onPin={onPin}
-                active={shown?.name === it}
+          <div className="flex min-w-0 flex-1 items-stretch gap-2">
+            {systemSubstrate.nodes.map((node, i) => (
+              <Node
+                key={node.id}
+                node={node}
+                index={n + i}
+                flow="--c-flow-off"
+                {...pass}
               />
             ))}
           </div>
-        </div>
+        </section>
       </div>
-
     </Reveal>
   );
 };

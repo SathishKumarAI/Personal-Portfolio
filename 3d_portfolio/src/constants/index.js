@@ -455,26 +455,178 @@ export const projects = [
 ];
 
 /* ---------------------------------------------------------------------------
-   THE SAME 47 TOOLS, FILED BY RESPONSIBILITY INSTEAD OF BY SKILL AREA.
+   THE SAME 47 TOOLS, AS A LAYERED ARCHITECTURE.
 
-   `stackGroups` above answers "what does he know", and its boxes are areas of
-   HIS experience: Data engineering, Computer vision, and so on. That is the
-   right shape for a tool list and the wrong shape for a system diagram.
+   `stackGroups` above answers "what does he know" and its boxes are areas of
+   HIS experience. This answers "how does it fit together", and its boxes are
+   the jobs a system has to do.
 
-   In a design interview nobody draws a box called "Data engineering". The
-   boxes are the jobs the system has to do -- get the data in, prepare it,
-   train something, serve it -- and the tools are what you drop into each slot.
-   The interesting sentence is then available: "Airflow here; on GCP that is
-   Composer, on AWS that is MWAA. Same role."
+   WHY PLANES AND NOT ONE CHAIN. The first version of this was five stages in a
+   row, and a single chain cannot say the thing that actually matters about an
+   ML system: some of it is a FLOW and some of it is a SUBSTRATE. Airflow runs
+   before pandas runs before FastAPI — that is a flow. Python, Docker and
+   MLflow do not sit anywhere in that order; everything above stands on them.
+   Drawing all of it as one left-to-right sequence made the second kind look
+   like the first.
 
-   So these stages are roles, and `platformSwaps` below is what makes the
-   interchangeability explicit rather than something a reader has to know.
+   It also collapsed work that is genuinely separate. "Computer vision" as one
+   box hides that detection and federated training are different problems with
+   different constraints — one is a model on a frame, the other is a training
+   topology where the data is not allowed to move. Same for language: adapting
+   a model and indexing a corpus for retrieval are not one activity.
+
+   So: three planes that pass work downward, and a substrate underneath them
+   that everything runs on. Within a plane, `parallel` says whether the nodes
+   are a sequence or alternatives running side by side.
 
    EVERY TOOL IN `stackGroups` APPEARS HERE EXACTLY ONCE, and
-   `utils/stages.test.mjs` fails the build's test run if that stops being true.
-   Two hand-maintained lists of the same 47 strings is precisely the drift this
-   repo keeps getting bitten by, so it is checked rather than hoped for.
+   `utils/stages.test.mjs` fails the test run if that stops being true.
 --------------------------------------------------------------------------- */
+
+export const systemPlanes = [
+  {
+    id: "data",
+    title: "Data plane",
+    role: "Get it, keep it, understand it",
+    flow: "--c-flow-1",
+    out: "features & findings",
+    nodes: [
+      {
+        id: "ingest",
+        title: "Ingest & orchestrate",
+        role: "Move it, on a schedule",
+        items: ["Airflow", "ETL pipelines", "PySpark"],
+      },
+      {
+        id: "store",
+        title: "Store",
+        role: "Keep it addressable",
+        items: ["S3", "PostgreSQL", "DynamoDB", "DuckDB", "SQL"],
+      },
+      {
+        id: "shape",
+        title: "Shape & analyse",
+        role: "Make it a table you can trust",
+        items: ["pandas", "Polars", "NumPy", "Exploratory analysis"],
+      },
+      {
+        id: "express",
+        title: "Visualise",
+        role: "Show what it supports",
+        items: ["Jupyter", "Plotly", "Streamlit"],
+      },
+    ],
+  },
+  {
+    id: "model",
+    title: "Model plane",
+    role: "Learn something from it",
+    flow: "--c-flow-2",
+    out: "weights & an index",
+    // ALTERNATIVES, not steps. These five do not run in order and most
+    // projects use one or two of them; drawing them as a chain would claim a
+    // dependency between object detection and retrieval that does not exist.
+    parallel: true,
+    nodes: [
+      {
+        id: "detect",
+        title: "Vision — detect & track",
+        role: "Find it in a frame, follow it",
+        items: ["PyTorch", "YOLOv8", "OpenCV", "Detection & tracking"],
+      },
+      {
+        id: "federated",
+        title: "Vision — federated",
+        role: "Train where the data already is",
+        items: ["Federated learning"],
+      },
+      {
+        id: "classical",
+        title: "Classical ML",
+        role: "When a smaller model is the honest answer",
+        items: ["scikit-learn"],
+      },
+      {
+        id: "adapt",
+        title: "Language — adapt",
+        role: "Take a general model, fit it to the task",
+        items: ["Hugging Face", "Transformers", "Fine-tuning"],
+      },
+      {
+        id: "retrieve",
+        title: "Language — retrieve",
+        role: "Ground the answer in real sources",
+        items: ["Embeddings", "Pinecone", "LangChain", "LangGraph"],
+      },
+    ],
+  },
+  {
+    id: "serve",
+    title: "Serving plane",
+    role: "Put it in front of someone",
+    flow: "--c-flow-3",
+    nodes: [
+      {
+        id: "inference",
+        title: "Inference",
+        role: "Run the model on real traffic",
+        items: ["vLLM", "Ollama", "Claude"],
+      },
+      {
+        id: "api",
+        title: "API",
+        role: "A contract, and bad input stopped at the edge",
+        items: ["FastAPI", "Pydantic"],
+      },
+      {
+        id: "interface",
+        title: "Interface",
+        role: "The screen a person actually uses",
+        items: ["Next.js", "React", "TypeScript", "Tauri"],
+      },
+    ],
+  },
+];
+
+/**
+ * NOT A PLANE. Nothing flows into it and nothing flows out of it: it is what
+ * the three planes above are standing on, which is why it is drawn underneath
+ * them, in neutral, with no arrow into it.
+ *
+ * The owner's own framing: "Python is a language where I can use for the
+ * coding, Docker, Kubernetes for the MLOps" — those are not steps, they are
+ * the ground.
+ */
+export const systemSubstrate = {
+  title: "Substrate",
+  role: "Everything above runs on this",
+  nodes: [
+    {
+      id: "language",
+      title: "Language & tests",
+      role: "What all of it is written and checked in",
+      items: ["Python", "pytest"],
+    },
+    {
+      id: "package",
+      title: "Package & run",
+      role: "Same behaviour on a laptop and a cluster",
+      items: ["Docker", "Kubernetes", "Helm"],
+    },
+    {
+      id: "deliver",
+      title: "Deliver",
+      role: "Every change built and shipped the same way",
+      items: ["GitHub Actions"],
+    },
+    {
+      id: "track",
+      title: "Track & evaluate",
+      role: "Know which run produced which number",
+      items: ["MLflow", "Weights & Biases", "DVC", "Evaluation"],
+    },
+  ],
+};
 
 export const PLATFORMS = [
   // The default is what he actually runs. Everything else is an equivalence,
@@ -591,7 +743,8 @@ export const systemFloor = {
  */
 export const DIAGRAM_WHY = [
   "A tool list answers what I know. It cannot answer whether the pieces fit together, which is the question an interview actually asks.",
-  "So the boxes here are not my skill areas — they are the jobs a system has to do. The tools are what drops into each slot. Same 47 tools; only the filing changes.",
+  "So the boxes here are not my skill areas — they are the jobs a system has to do. Three planes pass work downward; inside a plane, nodes are either a sequence or alternatives. Same 47 tools; only the filing changes.",
   "The arrows carry what moves between stages, two stages run in parallel rather than in sequence, and the band underneath is what everything else stands on.",
+  "Colour is depth, not category: one hue getting warmer as the work moves from raw data to a shipped product. The substrate sits off that scale, in neutral, because it is not a position on the path.",
   "Every managed piece is a role, not a lock-in: pick a platform to see what fills each one on AWS, Google Cloud or Azure.",
 ];
