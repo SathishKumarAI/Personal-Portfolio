@@ -5,10 +5,15 @@
    graphics card. Points are the neurons, lines are the connections, and the
    little bright dots travelling along them are activations.
 
-   It is a DIAGRAM, not wallpaper: the first layer of points sits exactly on the
-   contact icons down the left edge, and the last layer on the section dots down
-   the right. Those coordinates are read from the real buttons, so the drawing
-   stays wired to the interface.
+   It is a DIAGRAM, not wallpaper. The contact icons down the left edge ARE the
+   input layer and the section dots down the right ARE the output layer — not
+   "points drawn on top of them", which is what this used to say and used to do.
+   No node is drawn at either end now: the edges run to the controls' own edges
+   and stop, because a dot painted underneath an opaque tile is a dot nobody can
+   see, and drawing one there quietly said the icon was not the node after all.
+
+   The coordinates are read from the real buttons every time anything moves, so
+   the drawing cannot drift from the interface it describes.
 
    This file is ~131 kB gzipped once three.js is counted — about four times the
    whole app — which is why NeuralField.jsx only `import()`s it for a desktop
@@ -39,6 +44,21 @@
  * between two fixed columns of the interface rather than a flat lattice
  * behind it. Moving the pointer moves the camera, and the parallax is the
  * point: depth you cannot see is depth you did not need.
+ *
+ * That depth cost the diagram its accuracy for as long as it existed, because
+ * `toWorld` mapped a pixel to a world point correctly ONLY at z = 0. Every
+ * hidden node was computed in pixels and then silently rescaled by perspective
+ * on the way to the screen: the near layer by 1.21x, the far one by 0.84x. The
+ * labels were placed from the pixel values, so each one named a column that
+ * was not there — HIDDEN 1's label sat at x=512 while its nodes drew at
+ * x=460-465, and the "column" fanned 4.8px top to bottom. `toWorld` now
+ * divides by the same factor the projection will multiply by, which cancels
+ * it: measured through the real camera, every column projects to its label's
+ * pixel with a fan of 0.00px.
+ *
+ * And the reader is TOLD none of this. An activation lights the real control
+ * it leaves and the real control it arrives at, so the claim is demonstrated
+ * on something they recognise rather than asserted in a caption.
  *
  * Activations still travel input → hidden → hidden → output. In 3D they travel
  * through the page rather than across it.
@@ -80,11 +100,10 @@ import {
   WebGLRenderer,
 } from "three";
 
-const HIDDEN = [8, 6]; // same shape as the 2D field: 4 -> 8 -> 6 -> 5
-// Kept from the 2D field, and for the same stated reason: an unlabelled lattice
-// is just lines moving. Naming the layers is what makes it a diagram a reader
-// can follow rather than an ornament they scroll past.
-const LAYER_LABELS = ["INPUT", "HIDDEN 1", "HIDDEN 2", "OUTPUT"];
+// The shape and the layer names are shared with the 2D field: see netShape.js
+// for why they stopped being declared twice.
+import { HIDDEN, LAYERS, FIRE_MS } from "./netShape";
+
 const HIDDEN_DEPTH = [170, -190]; // toward the reader, then away
 /**
  * EIGHT, NOT FOURTEEN, AND SLOW.
@@ -113,10 +132,27 @@ const shown = (el) => {
   return b.width > 0 && b.height > 0;
 };
 
-/** Screen centre of a fixed element, in the canvas's own pixel space. */
-const centre = (el) => {
+/**
+ * The point on a control's edge that FACES the network, plus 6px of air.
+ *
+ * It used to be the control's centre, which put every input and output node
+ * directly underneath an opaque glass tile at `z-40` while the canvas sits at
+ * `z-0`. Nine nodes were drawn per frame where nothing could see them, and the
+ * edges leaving them vanished under the tile a third of the way out, so the
+ * lattice read as floating near the dock rather than as wired to it.
+ *
+ * Anchoring to the edge instead means the line starts where the tile stops:
+ * the control itself is the node, which is the claim the drawing has always
+ * been making. `dir` is +1 for the left dock (the network is to its right) and
+ * -1 for the right rail.
+ */
+const port = (el, dir) => {
   const b = el.getBoundingClientRect();
-  return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+  return {
+    x: dir > 0 ? b.right + 6 : b.left - 6,
+    y: b.top + b.height / 2,
+    el,
+  };
 };
 
 export const start = () => {
@@ -165,7 +201,35 @@ export const start = () => {
     renderer.setSize(w, h, false);
   };
 
-  const toWorld = (p, z = 0) => new Vector3(p.x - w / 2, h / 2 - p.y, z);
+  /** Camera distance to the z = 0 plane. `fit()` keeps `camera.position.z` here. */
+  const camDist = () => h / 2 / Math.tan((FOV / 2) * (Math.PI / 180));
+
+  /**
+   * A screen pixel to a world point, AT ANY DEPTH.
+   *
+   * The old version was `new Vector3(p.x - w / 2, h / 2 - p.y, z)` — correct
+   * at z = 0 and wrong everywhere else, which is the bug that stopped this
+   * being a diagram.
+   *
+   * A perspective camera at distance `d` projects a point at depth `z` to
+   * `offset * d / (d - z)`. At z = 0 that is the identity, which is why the
+   * two anchored layers always landed exactly on their docks and nobody
+   * noticed the rest. The hidden layers sit at z = +170 and z = -190, so the
+   * near one was magnified 1.21x and the far one shrunk to 0.84x: the careful
+   * pixel coordinates were computed, then scaled away before they reached the
+   * screen. Measured at 1512x900 — the HIDDEN 1 label sat at x=512 while its
+   * nodes projected to x=460-465, and the column FANNED, top to bottom, by
+   * 4.8px.
+   *
+   * Dividing by that factor on the way in cancels it on the way out, so a
+   * node lands on the pixel it was computed from whatever depth it is at. The
+   * depth is still real: points still attenuate with distance, edges still
+   * foreshorten, the parallax still moves the volume. Only the lie is gone.
+   */
+  const toWorld = (p, z = 0) => {
+    const s = (camDist() - z) / camDist();
+    return new Vector3((p.x - w / 2) * s, (h / 2 - p.y) * s, z);
+  };
 
   // --- materials, coloured from the live theme tokens -----------------------
   const nodeMat = new PointsMaterial({ size: 5, sizeAttenuation: true, transparent: true, opacity: 0.95, depthWrite: false });
@@ -197,6 +261,11 @@ export const start = () => {
   let nodes = null;   // Points
   let edges = null;   // LineSegments
   let layers = [];    // Vector3[][]
+  // The real controls behind the first and last layer, index-aligned with
+  // `layers[0]` and `layers.at(-1)`. Kept beside the geometry rather than on
+  // it because a Vector3 is a Vector3 and hanging a DOM node off one is the
+  // kind of thing that survives until someone clones the array.
+  let ends = { in: [], out: [] };
 
   const disposeGraph = () => {
     for (const obj of [nodes, edges]) {
@@ -216,9 +285,9 @@ export const start = () => {
   const build = () => {
     const inputs = [...document.querySelectorAll(
       'nav[aria-label="Contact shortcuts"] a, nav[aria-label="Contact shortcuts"] button'
-    )].filter(shown).map(centre);
+    )].filter(shown).map((el) => port(el, 1));
     const outputs = [...document.querySelectorAll('nav[aria-label="Sections"] a')]
-      .filter(shown).map(centre);
+      .filter(shown).map((el) => port(el, -1));
     // `labelLayers()` BEFORE the return, not after it. This guard used to exit
     // straight out, which disposed the graph and left the four labels standing:
     // at 882px both docks are `display:none`, so there is no network at all and
@@ -228,9 +297,11 @@ export const start = () => {
     if (!inputs.length || !outputs.length) {
       disposeGraph();
       layers = [];
+      ends = { in: [], out: [] };
       labelLayers();
       return;
     }
+    ends = { in: inputs.map((p) => p.el), out: outputs.map((p) => p.el) };
 
     const x0 = inputs[0].x, x1 = outputs[0].x;
     const spread = h * 0.44;
@@ -250,8 +321,19 @@ export const start = () => {
 
     disposeGraph();
 
-    const flat = layers.flat();
-    const nodeGeo = new BufferGeometry().setFromPoints(flat);
+    /**
+     * Only the HIDDEN layers get a drawn node. The first and last layers are
+     * the contact dock and the section rail — the reader is already looking at
+     * those nodes, and they are rendered by the interface, in the interface's
+     * own colours, at `z-40` where nothing can paint over them.
+     *
+     * Drawing a point there too meant nine of the scene's 23 nodes sat under
+     * an opaque tile every frame. Worse, it made the diagram's one real claim
+     * unreadable: if the node is a dot behind the icon, the icon is not the
+     * node, and the whole thing is a lattice that happens to end near a dock.
+     * Leaving them out is what makes the edge arrive AT the control.
+     */
+    const nodeGeo = new BufferGeometry().setFromPoints(layers.slice(1, -1).flat());
     nodes = new Points(nodeGeo, nodeMat);
     scene.add(nodes);
 
@@ -294,14 +376,46 @@ export const start = () => {
   const labelLayers = () => {
     if (!layers.length) { labelBox.replaceChildren(); return; }
     const spans = layers.map((layer, i) => {
+      const { name, gloss } = LAYERS[i] ?? { name: "", gloss: "" };
       const el = document.createElement("span");
-      el.className = "absolute -translate-x-1/2 font-mono text-label text-faint whitespace-nowrap";
-      // Clamped 56px inside the viewport: the input layer sits on a dock that
-      // is itself 20px from the edge, and a centred label under it hung half
-      // off the left of the page.
-      el.style.left = `${Math.min(w - 56, Math.max(56, layer[0].x + w / 2))}px`;
-      el.style.bottom = "26px";
-      el.textContent = `${LAYER_LABELS[i] ?? ""} ${layer.length}`;
+      el.className =
+        "absolute -translate-x-1/2 flex flex-col items-center gap-0.5 text-center whitespace-nowrap";
+
+      /**
+       * The label goes under the column's PROJECTED x, not its world x.
+       *
+       * `layer[0].x + w / 2` was right only while `toWorld` was the identity.
+       * Now that a hidden node is pre-divided by its own perspective factor,
+       * reading its world x back gives the pre-compensation number and the
+       * label lands where the nodes used to be wrong. Re-applying the same
+       * projection recovers the pixel the column actually draws on, which is
+       * the column the label is naming.
+       */
+      const d = camDist();
+      const screenX = (layer[0].x * d) / (d - layer[0].z) + w / 2;
+      // Still clamped inside the viewport, for the same reason as before: a
+      // centred label under the input column would otherwise hang off the left.
+      el.style.left = `${Math.min(w - 64, Math.max(64, screenX))}px`;
+      el.style.bottom = "22px";
+
+      const title = document.createElement("span");
+      title.className = "font-mono text-label text-faint";
+      title.textContent = name;
+      el.append(title);
+
+      // Only the two layers a reader can point at carry a gloss. See netShape.js.
+      if (gloss) {
+        const sub = document.createElement("span");
+        sub.className = "font-sans text-[10px] leading-none tracking-[0.04em] text-accent-ink/80";
+        sub.textContent = gloss;
+        el.append(sub);
+      }
+
+      const count = document.createElement("span");
+      count.className = "font-mono text-[10px] leading-none text-faint/60 tabular-nums";
+      count.textContent = String(layer.length);
+      el.append(count);
+
       return el;
     });
     labelBox.replaceChildren(...spans);
@@ -315,21 +429,69 @@ export const start = () => {
   signals.frustumCulled = false;
   scene.add(signals);
 
-  let live = []; // { path: Vector3[], t, speed }
+  let live = []; // { path: Vector3[], t, speed, to, arrived }
+
+  /**
+   * Light the REAL control an activation just left or just reached.
+   *
+   * This is the part that explains the diagram without a word of copy. A
+   * reader watching their own GitHub icon pulse, and then a section dot pulse
+   * when the dot crossing the screen arrives, learns what the field is for in
+   * one pass — the icons are the input vector, the sections are the output.
+   * Told in a caption, that sentence is a claim; shown this way it is a
+   * demonstration, and the reader did the inferring.
+   *
+   * A Map rather than a bare timeout so a control fired twice in quick
+   * succession restarts its pulse instead of having the first timer cut the
+   * second one short.
+   */
+  const lit = new Map();
+  const fire = (el) => {
+    if (!el) return;
+    // Removing and re-adding in the same frame does not restart a CSS
+    // animation; forcing a reflow between the two does.
+    el.classList.remove("net-fire");
+    void el.offsetWidth;
+    el.classList.add("net-fire");
+    clearTimeout(lit.get(el));
+    lit.set(el, window.setTimeout(() => {
+      el.classList.remove("net-fire");
+      lit.delete(el);
+    }, FIRE_MS));
+  };
+
+  /** Every control back to rest, whatever it was mid-pulse. Teardown only. */
+  const unfireAll = () => {
+    lit.forEach((id, el) => { clearTimeout(id); el.classList.remove("net-fire"); });
+    lit.clear();
+  };
 
   const spawn = () => {
     if (layers.length < 2 || live.length >= MAX_SIGNALS) return;
+    // The INDEX is picked, not the node, because the index is what finds the
+    // control: `ends.in` and `ends.out` are aligned with the first and last
+    // layer, and a Vector3 cannot say which icon it came from.
+    const pick = layers.map((l) => Math.floor(Math.random() * l.length));
     live.push({
-      path: layers.map((l) => l[Math.floor(Math.random() * l.length)]),
+      path: layers.map((l, i) => l[pick[i]]),
       t: 0,
       // Roughly half of what it was (0.26-0.46). A crossing now takes about
       // eight seconds instead of three.
       speed: 0.12 + Math.random() * 0.09,
+      to: ends.out[pick[pick.length - 1]] ?? null,
+      arrived: false,
     });
+    fire(ends.in[pick[0]] ?? null);
   };
 
   const stepSignals = (dt) => {
-    live = live.filter((s) => (s.t += dt * s.speed) < 1);
+    live = live.filter((s) => {
+      s.t += dt * s.speed;
+      // Fired on the frame it lands, before the filter drops it. The pulse and
+      // the dot reaching the rail are then the same event to a reader.
+      if (s.t >= 1 && !s.arrived) { s.arrived = true; fire(s.to); }
+      return s.t < 1;
+    });
     signalGeo.setDrawRange(0, live.length);
     live.forEach((s, i) => {
       const segs = s.path.length - 1;
@@ -343,17 +505,39 @@ export const start = () => {
     signalGeo.attributes.position.needsUpdate = true;
   };
 
-  // --- camera parallax ------------------------------------------------------
-  // The pointer moves the camera, not the scene: moving the scene would slide
-  // the input layer off the dock it is anchored to, which is the one thing this
-  // drawing promises.
+  /* --- camera parallax ------------------------------------------------------
+     This comment used to read: "The pointer moves the camera, not the scene:
+     moving the scene would slide the input layer off the dock it is anchored
+     to, which is the one thing this drawing promises."
+
+     That is not what the code does. `camera.lookAt(0, 0, 0)` ROTATES the
+     camera as well as translating it, and a rotation leaves only the world
+     origin fixed — so everything off-centre skews, and the two anchored layers
+     are the furthest off-centre things in the scene. Measured at 1513x883 by
+     projecting the real nodes through the real camera at both extremes of the
+     pointer travel:
+
+       INPUT     57.5 -> 74.7   swing 17.1px   (the dock tile is 44px wide)
+       HIDDEN 1  523.3 -> 519.5 swing -3.8px
+       HIDDEN 2  974.0 -> 979.2 swing  5.2px
+       OUTPUT    1424.8 -> 1439 swing 14.2px
+
+     The two layers that are supposed to be nailed to the interface move four
+     times as much as the two that are free, which is exactly backwards.
+
+     KEPT ANYWAY, on the owner's call, after being shown those numbers: the
+     drift is small, it only happens while the pointer is moving, and the depth
+     it sells is the reason the scene is 3D at all. `PARALLAX` is the knob --
+     set both to 0 and the anchored layers are pixel-exact at every pointer
+     position, with the rest of the diagram unchanged. */
+  const PARALLAX = { x: 30, y: 20 };
+
   let px = 0, py = 0, cx = 0, cy = 0;
   const onPointer = (e) => {
-    // 30/20, down from 46/30. The parallax is the thing that proves the scene
-    // has depth, so it stays — but a reader moving the pointer toward a link
-    // should not shift the whole backdrop behind the text they are reading.
-    px = (e.clientX / w - 0.5) * 30;
-    py = (e.clientY / h - 0.5) * 20;
+    // 30/20, down from 46/30. A reader moving the pointer toward a link should
+    // not shift the whole backdrop behind the text they are reading.
+    px = (e.clientX / w - 0.5) * PARALLAX.x;
+    py = (e.clientY / h - 0.5) * PARALLAX.y;
   };
 
   // --- loop -----------------------------------------------------------------
@@ -414,6 +598,25 @@ export const start = () => {
     onScreen = fade > 0.02;
   };
 
+  /**
+   * devicePixelRatio is NOT constant for the life of a page.
+   *
+   * It changes on browser zoom, and on dragging the window between a retina
+   * laptop panel and an external monitor. It was read once at start() and
+   * never again, so either of those left the drawing buffer sized for the old
+   * ratio: the field came back soft on one screen and over-sampled on the
+   * other. Cheap enough to check on every resize and on the poll, and a no-op
+   * unless the number actually moved.
+   */
+  let lastDpr = 0;
+  const syncPixelRatio = () => {
+    const next = Math.min(window.devicePixelRatio || 1, 1.5);
+    if (next === lastDpr) return false;
+    lastDpr = next;
+    renderer.setPixelRatio(next);
+    return true;
+  };
+
   const onResize = () => {
     w = window.innerWidth;
     h = window.innerHeight;
@@ -422,6 +625,7 @@ export const start = () => {
     // already drew — so without this the narrow window kept a frozen lattice
     // painted over the mobile hero.
     canvas.style.display = wide.matches ? "" : "none";
+    syncPixelRatio();
     fit();
     build();
   };
@@ -436,7 +640,37 @@ export const start = () => {
   // opened already narrow takes the same path as one dragged narrow later.
   onResize();
   onScroll();
-  poll = window.setInterval(build, 500);
+
+  /**
+   * STAYING WIRED, IN REAL TIME.
+   *
+   * The 500ms poll stays: it is the catch-all for the things no event reports
+   * — the dock hiding itself as Contact scrolls in, a font swapping, the
+   * reader's own text-size control changing a cell's height. What it is bad at
+   * is the thing a person actually does, which is drag a window edge: half a
+   * second of the network lagging behind its own dock, every frame of the drag.
+   *
+   * So the observers below handle the fast path and the poll handles the rest.
+   *
+   *  - ResizeObserver on each dock: fires the moment a cell changes size or
+   *    the dock reflows, which a window resize does before `resize` settles.
+   *  - visualViewport: pinch-zoom and the on-screen keyboard change the
+   *    viewport WITHOUT firing window.resize. Guarded because Safari shipped
+   *    it late enough to matter.
+   */
+  const anchorWatch = new ResizeObserver(build);
+  for (const sel of ['nav[aria-label="Contact shortcuts"]', 'nav[aria-label="Sections"]']) {
+    const nav = document.querySelector(sel);
+    if (nav) anchorWatch.observe(nav);
+  }
+  window.visualViewport?.addEventListener("resize", onResize);
+
+  poll = window.setInterval(() => {
+    // A DPR change with no resize event — an external monitor at a different
+    // scale factor — needs the buffer resized, not just the graph rebuilt.
+    if (syncPixelRatio()) fit();
+    build();
+  }, 500);
   window.addEventListener("resize", onResize);
   wide.addEventListener("change", onResize);
   window.addEventListener("scroll", onScroll, { passive: true });
@@ -448,11 +682,16 @@ export const start = () => {
     cancelAnimationFrame(raf);
     clearInterval(poll);
     themeWatch.disconnect();
+    anchorWatch.disconnect();
+    window.visualViewport?.removeEventListener("resize", onResize);
     window.removeEventListener("resize", onResize);
     wide.removeEventListener("change", onResize);
     window.removeEventListener("scroll", onScroll);
     window.removeEventListener("pointermove", onPointer);
     document.removeEventListener("visibilitychange", onVisibility);
+    // The pulse classes live on the rails, which this module does not own and
+    // React keeps mounted. Leaving one behind outlives the field itself.
+    unfireAll();
     disposeGraph();
     labelBox.remove();
     canvas.remove();

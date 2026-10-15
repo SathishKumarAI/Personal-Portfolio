@@ -31,31 +31,26 @@ import { useEffect, useRef } from "react";
  *  - pointer-events: none, and aria-hidden, it is never in anyone's way
  */
 
-// Real sub-word pieces, the way a tokenizer splits text, so the stream reads as
-// tokens being emitted rather than as boxes sliding past.
-// Hidden widths. The input (4) and output (5) counts are fixed by the interface,
-// four contact links and five sections, so only these are free, and they are
-// chosen so the shape is one an ML reader would not query.
-//
-// 4 -> 8 -> 6 -> 5 is a plain MLP funnel: expand into a wider representation,
-// then taper to the output dimension. The previous 4 -> 5 -> 4 -> 5 was not
-// wrong, but it oscillated and put a 4-unit layer immediately before a 5-unit
-// output, which is a bottleneck nobody draws by accident. A diagram on a
-// portfolio should not invite a question the owner then has to answer.
-const HIDDEN = [8, 6];
-
-// Labelled, because an unlabelled lattice is just lines moving. Naming the
-// layers is what turns it from decoration into a diagram a reader can follow.
-const LAYER_LABELS = ["INPUT", "HIDDEN 1", "HIDDEN 2", "OUTPUT"];
+// The shape and the layer names live in netShape.js. They used to be declared
+// here AND in NeuralField3D, which is two copies of one fact: see that file.
+import { HIDDEN, LAYERS, FIRE_MS } from "./netShape";
 
 const token = (el, name, alpha) => {
   const v = getComputedStyle(el).getPropertyValue(name).trim();
   return v ? `rgba(${v.split(/\s+/).join(",")},${alpha})` : `rgba(128,128,128,${alpha})`;
 };
 
-const centre = (el) => {
+/**
+ * The point on a control's edge that faces the network, plus 6px of air — the
+ * same anchor the 3D field uses, and for the same reason. The centre put the
+ * node under an opaque tile at `z-40` while this canvas sits at `z-0`, so the
+ * edge leaving it disappeared a third of the way out and the lattice read as
+ * floating near the dock rather than wired to it. `dir` is +1 for the left
+ * dock, -1 for the right rail.
+ */
+const port = (el, dir) => {
   const b = el.getBoundingClientRect();
-  return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+  return { x: dir > 0 ? b.right + 6 : b.left - 6, y: b.top + b.height / 2, el };
 };
 
 /** Is this control actually on screen? A hidden dock must not anchor an edge. */
@@ -120,10 +115,10 @@ const NeuralField = () => {
         ...document.querySelectorAll(
           'nav[aria-label="Contact shortcuts"] a, nav[aria-label="Contact shortcuts"] button'
         ),
-      ].filter(shown).map(centre);
+      ].filter(shown).map((el) => port(el, 1));
       const outputs = [
         ...document.querySelectorAll('nav[aria-label="Sections"] a'),
-      ].filter(shown).map(centre);
+      ].filter(shown).map((el) => port(el, -1));
 
       if (!inputs.length || !outputs.length) return [];
 
@@ -140,6 +135,32 @@ const NeuralField = () => {
       return [inputs, ...hidden, outputs];
     };
 
+    /**
+     * Light the real control an activation leaves or reaches. Same mechanism,
+     * same class and same duration as the 3D field — see `.net-fire` in
+     * index.css for why this is the thing that explains the diagram.
+     *
+     * The CSS rule turns itself off under `prefers-reduced-motion`, which
+     * matters more here than there: this file is exactly what a reduced-motion
+     * reader sees, so the class still lands and simply does nothing.
+     */
+    const lit = new Map();
+    const fire = (el) => {
+      if (!el) return;
+      el.classList.remove("net-fire");
+      void el.offsetWidth; // restart the animation rather than ignore the re-add
+      el.classList.add("net-fire");
+      clearTimeout(lit.get(el));
+      lit.set(el, window.setTimeout(() => {
+        el.classList.remove("net-fire");
+        lit.delete(el);
+      }, FIRE_MS));
+    };
+    const unfireAll = () => {
+      lit.forEach((id, el) => { clearTimeout(id); el.classList.remove("net-fire"); });
+      lit.clear();
+    };
+
     // One activation travelling input -> hidden -> hidden -> output.
     const spawn = () => {
       if (layers.length < 2) return;
@@ -147,7 +168,10 @@ const NeuralField = () => {
       // Matched to NeuralField3D: half the old speed. This file is what a
       // reduced-motion reader and a browser without WebGL actually see, so
       // leaving it busy would quietly give the quiet version to nobody.
-      signals.push({ path, t: 0, speed: 0.13 + Math.random() * 0.1 });
+      // `el` rides along on the endpoint nodes, so unlike the 3D field this one
+      // needs no parallel index array: these are plain objects, not Vector3s.
+      signals.push({ path, t: 0, speed: 0.13 + Math.random() * 0.1, arrived: false });
+      fire(path[0].el);
     };
 
     const draw = () => {
@@ -186,8 +210,8 @@ const NeuralField = () => {
         ctx.textAlign = "center";
         ctx.textBaseline = "alphabetic";
         layers.forEach((layer, li) => {
-          const label = LAYER_LABELS[li];
-          if (!label || !layer.length) return;
+          const { name, gloss } = LAYERS[li] ?? { name: "", gloss: "" };
+          if (!name || !layer.length) return;
           const x = layer[0].x;
           const lowest = Math.max(...layer.map((n) => n.y));
 
@@ -203,11 +227,22 @@ const NeuralField = () => {
             li === 0 || li === layers.length - 1
               ? accent.replace(",1)", ",0.85)")  // the two the reader can point at
               : ink.replace(",1)", ",0.7)");
-          ctx.fillText(label, x, labelY);
+          ctx.fillText(name, x, labelY);
 
-          // node count under the name, the one number that explains the shape
+          /* The gloss is what turns the name into a sentence: "INPUT" names a
+             layer the reader has no reason to think is real, "ways to reach me"
+             tells them it is the four icons they can see. Only the two layers
+             with a counterpart in the interface carry one — see netShape.js. */
+          let line = labelY + 11;
+          if (gloss) {
+            ctx.fillStyle = accent.replace(",1)", ",0.6)");
+            ctx.fillText(gloss, x, line);
+            line += 11;
+          }
+
+          // node count last, the one number that explains the shape
           ctx.fillStyle = ink.replace(",1)", ",0.45)");
-          ctx.fillText(`${layer.length} nodes`, x, labelY + 11);
+          ctx.fillText(String(layer.length), x, line);
         });
         ctx.textAlign = "start";
 
@@ -255,7 +290,12 @@ const NeuralField = () => {
         heroVisible = Math.max(0, Math.min(1, (b.bottom - h * 0.15) / (h * 0.5)));
       }
 
-      signals.forEach((s) => (s.t += s.speed * 0.016));
+      signals.forEach((s) => {
+        s.t += s.speed * 0.016;
+        // Fired on the frame it lands, before the filter drops it, so the pulse
+        // and the dot reaching the rail are one event to a reader.
+        if (s.t >= 1 && !s.arrived) { s.arrived = true; fire(s.path.at(-1).el); }
+      });
       signals = signals.filter((s) => s.t < 1);
       // ~0.8 a second at 60fps, matching NeuralField3D.
       if (heroVisible > 0.05 && Math.random() < 0.013) spawn();
@@ -270,6 +310,9 @@ const NeuralField = () => {
       raf = 0;
       poll = 0;
       signals = [];
+      // The pulse classes sit on the rails, which this component does not own
+      // and React keeps mounted. Leaving one behind outlives the field.
+      unfireAll();
       if (!ctx) return; // never drew: the 3D field has the canvas
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, c.width, c.height);
