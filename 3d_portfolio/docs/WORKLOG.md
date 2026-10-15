@@ -1,5 +1,73 @@
 # Worklog
 
+## 2026-10-15: two overlaps, a button that read as a warning, and the other trio
+
+Four reports, all from looking at the real page.
+
+### Two things were sitting on top of the field's own captions
+
+Both measured, both real:
+
+| | overlap |
+| --- | --- |
+| SCROLL cue vs the OUTPUT caption | **53 x 33px** |
+| `?` legend button vs the INPUT caption | **14 x 18px** |
+
+The layer labels sit at `bottom: 22px` and stand 43px tall, so anything else
+anchored to the bottom corners was always going to land on them. The cue was at
+`bottom-8` (32px) and the legend button at `bottom-4` (16px).
+
+The cue moved to `bottom-28` and the button to `bottom-20`, both clear of the
+65px label block. Verified after: **no overlap on either**.
+
+### The scroll cue reads vertically now
+
+It was the word "scroll" sitting horizontally above a vertical line, which is
+two directions in one control. It now runs top-to-bottom along the right edge,
+in the same direction as the line beneath it and the same direction as the
+gesture it is asking for.
+
+`writing-mode: vertical-rl` rather than a `rotate`: a rotation leaves the
+element's box the original shape, so everything around it has to be
+re-positioned to compensate. Writing-mode changes the box too.
+
+### The CTA read as a warning
+
+`.btn-accent` was a hot accent fill (255 54 33) with a matching accent GLOW
+around it and black label text. At button size that is the shape of a
+destructive confirm, and it was reported exactly that way -- "the color is
+looking too like dangerous".
+
+`.btn-primary` uses `--c-chip-solid`, the ink the theme already uses for its
+primary tool chips, so no new colour enters the system. Measured on the shipped
+page: `rgb(16 23 32)` on white text, **18.2:1**. The shadow is neutral rather
+than tinted, which is most of what removes the siren quality.
+
+The accent is not lost, it is FREED: it goes on being the page's one highlight
+-- "real-world impact", the claim rules, the live dot -- instead of competing
+with a button for the same job.
+
+### The other trio now streams too
+
+The hero's three claims have streamed word by word since earlier today. About's
+three -- "It runs where the data already is", "It shows the source it used",
+"You can try it in a minute, with no account" -- were the only other trio on
+the page and were still arriving as a plain fade.
+
+They could not simply reuse the hero's timing. The hero streams at page load,
+where a fixed delay is exactly right; About is a screen down, and by the time
+a reader arrives the animation would have finished unwatched.
+
+`[data-tok="wait"] .tok { animation-play-state: paused }` holds them. One
+stylesheet rule and no second code path: the delays stay as written and only
+start counting when the section says so. `useInView(..., { once: true, amount:
+0.4 })` flips the gate -- `once`, because a reveal that repeats stops being a
+reveal and becomes a loop.
+
+Verified: 26 token spans, `paused` and gate `wait` before scrolling, `running`
+and gate `run` after, and all three claims still read whole out of the DOM.
+
+
 ## 2026-10-15: the status row stops floating, and starts doing something
 
 Reported as dead space, and it measured that way. At 1707x872 the navbar ended

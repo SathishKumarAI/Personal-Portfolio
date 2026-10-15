@@ -1,6 +1,8 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import { profile, projects } from "../constants";
 import { fadeIn } from "../utils/motion";
+import TokenText from "./TokenText";
 import { SectionWrapper } from "../hoc";
 import SectionHead from "./SectionHead";
 import Availability from "./Availability";
@@ -68,7 +70,20 @@ const PRINCIPLES = [
   .map((p) => ({ ...p, project: projects.find((x) => x.name === p.name) }))
   .filter((p) => p.project);
 
-const About = () => (
+/* Matches the hero's spacing between claims. One number, one meaning: a
+   line's place in the queue. */
+const CLAIM_GAP = 180;
+
+const About = () => {
+  /* The claims are a screen down, so their stream is held until they are
+     actually on screen -- see `[data-tok="wait"]` in index.css. `once` so
+     scrolling back up does not replay it; a reveal that repeats stops being a
+     reveal and becomes a loop. `amount: 0.4` waits for the list to be properly
+     in view rather than firing on its first pixel. */
+  const claimsRef = useRef(null);
+  const claimsSeen = useInView(claimsRef, { once: true, amount: 0.4 });
+
+  return (
   <>
     {/* No meta line, deliberately: the first section sets no pattern for the
         rest to repeat, and there is no honest number to put over an
@@ -121,12 +136,22 @@ const About = () => (
             The other sentence was "Calm, disciplined, focused on what I can
             control." It is the one line on the page that nothing can check, and
             it is on about half the portfolios on the internet. */}
-        <motion.ul variants={fadeIn("", "", 0.15, 1)} className="list-none space-y-6 max-w-[40rem]">
-          {PRINCIPLES.map(({ claim, project }) => (
+        <motion.ul variants={fadeIn("", "", 0.15, 1)} className="list-none space-y-6 max-w-[40rem]"
+          ref={claimsRef}
+          data-tok={claimsSeen ? "run" : "wait"}
+        >
+          {PRINCIPLES.map(({ claim, project }, i) => (
             <li key={claim}>
+              {/* Streams in word by word, the same way the hero's three claims
+                  do. These are the other trio on the page and they were the
+                  only one still arriving as a plain fade. */}
               <p className="flex items-baseline gap-3 font-sans font-medium text-white-100 text-[calc(clamp(1.02rem,1.3vw,1.18rem)*var(--type-scale,1))] leading-snug">
-                <span aria-hidden="true" className="relative top-[-0.3em] h-px w-5 shrink-0 bg-accent/70" />
-                {claim}
+                <span
+                  aria-hidden="true"
+                  className="tok relative top-[-0.3em] h-px w-5 shrink-0 bg-accent/70"
+                  style={{ "--tok": 0, "--tok-start": `${i * CLAIM_GAP}ms` }}
+                />
+                <TokenText text={claim} start={i * CLAIM_GAP + 60} />
               </p>
               {/* The project's `outcome` used to be printed here, and it is
                   the Projects card's own heading — so three whole sentences
@@ -162,6 +187,7 @@ const About = () => (
       </motion.div>
     </div>
   </>
-);
+  );
+};
 
 export default SectionWrapper(About, "about");

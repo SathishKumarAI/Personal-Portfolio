@@ -196,7 +196,7 @@ const Hero = () => {
               two produced. */}
           <a
             href="#roles"
-            className="btn-accent inline-flex items-center gap-2 rounded-2xl px-7 py-3.5 font-sans font-semibold text-[15px] tracking-[-0.01em] text-black-100"
+            className="btn-primary inline-flex items-center gap-2 rounded-2xl px-7 py-3.5 font-sans font-semibold text-[15px] tracking-[-0.01em]"
           >
             Start with the roles
           </a>
@@ -212,12 +212,22 @@ const Hero = () => {
           adds no height. */}
       <CodeCompletion />
 
+      {/* VERTICAL, and lifted clear of the field's labels.
+          Measured at 1707x872 it overlapped the OUTPUT caption by 53 x 33px:
+          the cue sat at bottom-8 (32px) and the layer labels sit at bottom
+          22px and stand 43px tall, so the two were competing for the same
+          corner. `bottom-28` puts it above that block entirely.
+
+          The word now reads top-to-bottom along the edge rather than sitting
+          horizontally above the line. `writing-mode` rather than a rotate:
+          it keeps the glyphs upright-by-line and leaves the element's own box
+          the right shape, so nothing has to be re-positioned to compensate. */}
       <a
         href="#about"
-        className="absolute bottom-8 right-6 sm:right-10 z-10 hidden sm:flex flex-col items-center gap-2 group"
+        className="absolute bottom-28 right-6 sm:right-10 z-10 hidden sm:flex flex-col items-center gap-3 group"
         aria-label="Scroll to about"
       >
-        <span className="font-mono text-micro tracking-label uppercase text-faint group-hover:text-accent transition-colors">
+        <span className="[writing-mode:vertical-rl] font-mono text-micro tracking-label uppercase text-faint group-hover:text-accent transition-colors">
           scroll
         </span>
         <span className="relative block w-px h-10 bg-line overflow-hidden">
