@@ -71,24 +71,29 @@ const test_no_edge_is_drawn_twice = () => {
   }
 };
 
-// The ceiling that keeps it a diagram rather than a mesh. Fully connected is
-// 4*8 + 8*6 + 6*5 = 110, which at any opacity that makes one edge visible
-// reads as a net laid over the headline. If a future shape pushes this past
-// the limit, the field needs looking at, not the test.
-const test_the_lattice_stays_sparse = () => {
-  const total = gaps().reduce((n, g) => n + g.pairs.length, 0);
-  assert.ok(total <= 48, `${total} edges is past the sparse ceiling of 48`);
-  assert.ok(total >= 20, `${total} edges is too few to read as a network`);
+// The field is FULLY CONNECTED, because that is what its labels claim. A dense
+// layer's weight matrix is (n_out x n_in) with every entry present, so the
+// edge count is exactly the product of the two layer sizes. Anything less and
+// the drawing is a locally-connected net wearing a dense net's captions.
+const test_the_lattice_is_fully_connected = () => {
+  for (const { from, to, pairs } of gaps()) {
+    assert.equal(
+      pairs.length,
+      from * to,
+      `${from} -> ${to} should have ${from * to} edges, has ${pairs.length}`
+    );
+  }
 };
 
-// Guards the signal buffer. `MAX_SIGNALS` in NeuralField3D is 32 and a gap
-// carries every one of its edges at once, so a wider gap than that would be
-// silently clipped mid-pass rather than throwing.
+// Guards the signal buffer. A pass carries every edge of one gap at once, and
+// `stepSignals` draws min(gap.length, MAX_SIGNALS) rather than throwing -- so
+// a gap wider than the buffer loses edges silently, mid-animation.
+const MAX_SIGNALS = 64; // keep in step with NeuralField3D.js
 const test_no_gap_exceeds_the_signal_buffer = () => {
   for (const { from, to, pairs } of gaps()) {
     assert.ok(
-      pairs.length <= 32,
-      `${from} -> ${to} needs ${pairs.length} concurrent signals, over MAX_SIGNALS=32`
+      pairs.length <= MAX_SIGNALS,
+      `${from} -> ${to} needs ${pairs.length} concurrent signals, over MAX_SIGNALS=${MAX_SIGNALS}`
     );
   }
 };
@@ -97,7 +102,7 @@ const tests = [
   test_every_unit_has_an_incoming_edge,
   test_every_unit_has_an_outgoing_edge,
   test_no_edge_is_drawn_twice,
-  test_the_lattice_stays_sparse,
+  test_the_lattice_is_fully_connected,
   test_no_gap_exceeds_the_signal_buffer,
 ];
 
