@@ -1,4 +1,33 @@
+WHAT THIS LICENCE COVERS
+========================
+
+The MIT licence below applies to the SOURCE CODE in this repository: the
+components, hooks, utilities, build configuration, tests, and the drawn SVG
+marks authored here. Take it, change it, ship it, sell it.
+
+It does NOT cover the personal content, which is reserved:
+
+  - the name, biography, photographs and likeness of Sathish Kumar
+  - the written copy: role descriptions, project write-ups, the CV, and the
+    text of public/llms.txt
+  - the project outcomes and any figures attributed to them
+
+Those are a person's professional record. Reuse the code to build your own
+portfolio; please do not republish someone else's work history as your own.
+
+Third-party assets keep their own licences. Brand marks generated from the
+`simple-icons` package are CC0, but the trademarks they depict belong to their
+respective owners and are used here only to identify those products. The
+typefaces (Barlow, Newsreader, JetBrains Mono) are licensed under the SIL Open
+Font License by their authors.
+
+If you build something from this, a link back is appreciated but not required.
+A starting point for doing exactly that is in
+`3d_portfolio/docs/BUILD-THIS-YOURSELF.md`.
+
+
 MIT License
+===========
 
 Copyright (c) 2024-2026 Sathish Kumar
 
