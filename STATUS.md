@@ -316,7 +316,7 @@ copy cut to campaign length. Two acts of that are built; three are not.
 | **Scenes** | every other section paints a full-bleed ground with hairline edges; heads at 76px | `SectionWrapper.jsx`, `main > section:nth-of-type(even)` in `index.css` — `even` since the spec band was deleted |
 | **About** | three claims, each naming the project that proves it and linking to that card. It no longer reprints the project's own sentence | `About.jsx` |
 | **Roles** | a sticky deck; only the card being read is lit, the covered ones dim | `Experience.jsx` |
-| **Stack** | 47 tools in six areas, readable as a list or as a system diagram at the reader's choice; 37 brand logos and the rest drawn | `Tech.jsx`, `StackDiagram.jsx`, `toolIcons.js`, `conceptIcons.js` |
+| **Stack** | 56 tools in six areas, readable as a list or as a system diagram; the diagram re-renders on AWS, GCP or Azure across 38 roles. 38 brand logos, the rest drawn | `Tech.jsx`, `StackDiagram.jsx`, `toolIcons.js`, `conceptIcons.js` |
 
 ### Names, because two sections had two each
 
@@ -363,7 +363,7 @@ recruiter on a work laptop in daylight. Dark is one click and is remembered.
 
 ### Checks that did not exist this morning
 
-`npm test` is **27 checks across four files**, and CI runs it between lint and
+`npm test` is **42 checks across six files**, and CI runs it between lint and
 build:
 
 - `utils/answer.test.mjs` — the retrieval behind the ask box, including that
@@ -564,7 +564,7 @@ Three changes, and the first is the one that mattered:
 | --- | --- |
 | **Deleted the six About capability cards** and the `services` constant | They restated Stack's six groups in adjectives instead of tools, and they were claims on a page whose hero promises evidence. About: 1,446px → 966px |
 | **Project covers build left to right as you scroll** | The diagrams are left-to-right pipelines, so they now draw in the direction they run. A `destination-out` wipe over the finished frame, NOT a build parameter through six 250-line drawers |
-| **Section eyebrows carry derived facts** | `4 roles · since 2020`, `6 areas · 33 tools`, `6 built · 1 live`, `4 routes · US Central`. All computed from the data, so none can go stale. Trailing full stops gone; `SectionHead.jsx` owns the shape |
+| **Section eyebrows carry derived facts** | `4 roles · since 2020`, `6 areas · 56 tools`, `6 built · 1 live`, `4 routes · US Central`. All computed from the data, so the rendered number cannot go stale even when prose about it does |
 
 **Still the default section names** — Overview, Experience, Stack, Projects,
 Contact. Renaming those is writing his copy, and was left alone.

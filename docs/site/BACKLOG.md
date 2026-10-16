@@ -9,7 +9,7 @@ Future work for the portfolio, as tickets. Priority: **P0** ship-blockers,
 > the default**, reader-controlled text size, full-bleed scenes, a sticky Roles
 > deck, a WebGL hero field on desktop, tool logos on every named technology, and
 > an ask box that retrieves from the page's own copy.
-> Twenty-one PRs squash-merged 2026-09-14 and 2026-09-15; `npm test` is 27 checks
+> Current as of 2026-10-16: `npm test` is 42 checks
 > in CI.
 > See [ARCHITECTURE.md](ARCHITECTURE.md) and [DECISIONS.md](DECISIONS.md).
 

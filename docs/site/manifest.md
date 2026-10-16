@@ -22,6 +22,8 @@ owned, add to that file.
 | `docs/WORKLOG.md` | **What changed, when, and what was measured.** Newest first, append-only | `docs/CHANGELOG.md`, `docs/HISTORY.md` | P0 |
 | `docs/STACK-TAXONOMY.md` | **Why each tool is in the box it is in.** The rule the Stack's boxes follow, every tool with its reason, the judgement calls worth arguing with, and the claims only the owner can confirm | `docs/TOOLS.md`, `docs/SKILLS.md`, `docs/STACK.md` | P0 |
 | `docs/BUILD-THIS-YOURSELF.md` | **How to build a portfolio this way with a coding agent.** Generalised prompts in the order that makes each phase checkable | `docs/PROMPTS.md`, `docs/RECIPE.md`, `docs/HOWTO.md` | P1 |
+| `../STYLE.md` | **How these documents are written.** The procedural/explanatory split, the STE rules that apply to one and not the other, approved terms | `docs/WRITING.md`, `docs/CONVENTIONS.md`, `STYLEGUIDE.md` | P1 |
+| `../prompts/` | **Building one of these with an agent.** The phase sequence, agent/skill orchestration, and cloning this site specifically | `docs/AGENTS.md`, `docs/AI.md`, `PROMPTS.md` | P1 |
 | `../LICENSE` | **What may be reused.** MIT for the code; the written content, CV and likeness are reserved | `COPYING`, `docs/LICENSE.md` | P0 |
 | `src/utils/README.md` | **Which helper owns what**, and the failure each test is named for | `docs/TESTING.md` | P1 |
 | `docs/TYPE-AUDIT.md` | **Type scale and contrast**, measured off the running page | `docs/A11Y.md`, `docs/TYPOGRAPHY.md` | P1 |
