@@ -3,28 +3,109 @@
 Written when work stopped. Read this first on return, then `portfolio/README.md`
 for the change-to-file table.
 
-**Last touched:** 2026-10-15
-**Branch:** `main`. **65 PRs squash-merged**; the Stack work landed as #66, #67 and #68. Nothing open.
-The owner asked for commits rather than a merge per fix ("try not to merge
-every time you fix everything, just commit"). One PR goes up for the whole
-Stack increment when he is satisfied with it.
-**62 PRs squash-merged** in total, fourteen of them on 2026-10-15, every
-merged branch deleted.
-**Live:** <https://sathishkumarai.github.io/> — GitHub Pages, built from `main`
-by Actions in the OTHER repo, **`workflow_dispatch` only**. A merge here does
-NOT deploy. Trigger it with:
-`gh workflow run "Deploy portfolio to Pages" --repo SathishKumarAI/SathishKumarAI.github.io`
-**Deployed and verified** 2026-10-15: live serves `index-Ca2LUgWZ.js`, which is
-what `main` builds. The CDN serves the previous bundle for ~15-60s after a
-successful deploy; poll until the hash matches rather than trusting the green
-tick.
-**Working tree:** clean. `download.png` sits untracked at the root, left alone.
-**Deployed and verified** 2026-10-15: live serves `index-BSvDy0U3.js`, which is
-what `main` builds. Checked on the live site, not just the green tick — 47
-terms, the view toggle, four planes and sixteen nodes in the diagram, the
-crawler notice as points, and the retrieval panel reading "best match" with no
-"100%" anywhere.
-**The site is `portfolio/`.** Everything else here is supporting material.
+**Last touched:** 2026-10-16
+**Branch:** `main`. **81 PRs squash-merged**, every branch deleted, nothing open.
+**Working tree:** clean.
+
+**Live:** <https://sathishkumarai.github.io/> — GitHub Pages, built by Actions
+in a SECOND repository, **`workflow_dispatch` only**. A merge here does NOT
+deploy. Trigger it with:
+
+```
+gh workflow run "Deploy portfolio to Pages" --repo SathishKumarAI/SathishKumarAI.github.io
+```
+
+**Deployed and verified 2026-10-16:** live serves `index-BGxW3jwc.js`, which is
+what `main` builds. Two things that have each caught someone out:
+
+- The CDN serves the previous bundle for 15-60s after a successful run. Poll
+  until the hash matches; do not trust the green tick.
+- The deploy workflow pins `SOURCE_DIR: portfolio` **in the other repo**. A
+  directory rename here breaks deploys silently until that file is changed too.
+
+**The site is `portfolio/`.** Everything else is supporting material.
+
+## The 2026-10-16 session: layout, docs, and one self-inflicted outage
+
+Six PRs (#71-#76). The repository was reorganised; the site changed only in
+its footer.
+
+| PR | What | The number |
+| --- | --- | --- |
+| #71 | Colophon grouped into four labelled categories | footer 97px -> 128px |
+| #72 | The component map, which had drifted behind the code | 6 stale facts, 4 missing pointers |
+| #73 | Root orientation: two doc sets explained, `Research_Docs` given a README | — |
+| #74 | **`3d_portfolio` -> `portfolio`**, 6.0 MB of template assets archived | 130 files renamed with history |
+| #75 | Prompts, a writing standard, a navigable README, two file splits | `constants` 885 -> 30-line barrel + 9 files |
+| #76 | **Fixing the outage #74 and #75 caused together** | main could not build |
+
+### The layout now
+
+```
+portfolio/      the site. Everything buildable.
+docs/           ONE documentation tree
+  site/         how the site works and why          (10 files)
+  repo/         the GitHub account around it         (2 files)
+  prompts/      building one of these with an agent  (3 files)
+  notes/        personal notes, unmaintained         (was Research_Docs/)
+  STYLE.md      how these documents are written
+archive/        kept, not deleted. Nothing references it
+  template-assets/  6.0 MB of forked-template imagery
+  orphans/          a root lockfile, two dead exports
+README · LICENSE · CLAUDE.md · STATUS.md   the only files at the root
+```
+
+`CLAUDE.md` and `STATUS.md` stay at the root deliberately: Claude Code reads
+the first only there, and the workspace convention expects the second at every
+repo root.
+
+### The outage, and why nothing caught it
+
+**Read this before renaming anything in this repository.**
+
+`.gitignore` carried `portfolio/`, added 2026-09-11 to ignore an abandoned
+Next.js attempt. The rename in #74 collided with it.
+
+Nothing appeared to break. **Git does not untrack files that are already
+tracked**, so the rename committed cleanly, the build passed, CI was green.
+The rule only affected files created AFTER the rename — and #75 created
+eleven of them. What reached `main` was a barrel importing nine files that
+were not there.
+
+Two failures, both avoidable:
+
+1. The split was verified with build, tests, lint and an export-parity check.
+   All four passed, **because they ran against the working tree, where the
+   files existed.** Nothing inspected what git had STAGED. `git status` would
+   have shown eleven `??` lines.
+2. CI caught it and the PR was merged anyway: the wait loop polled until the
+   run reported `completed` and never read `conclusion`, which said
+   `failure`.
+
+**After any `git mv` of a directory, run `git check-ignore -v <newpath>/<a
+new file>`.** It is one command and it is the only thing that would have
+caught this before CI.
+
+### Open, and all of it is the owner's call
+
+1. **Nine tools are live but unverified as his experience** — `Snowflake`,
+   `Databricks`, `Unity Catalog`, `Guardrails`, `LangSmith`, `Ragas`,
+   `IAM & RBAC`, `Secrets management`, `PII & anonymisation`. Remove any that
+   are not true from `stackGroups` and `npm test` names what else must move.
+   Reasoning for every placement: `docs/site/STACK-TAXONOMY.md`.
+2. **Coding assistants have no home.** A fourth category — tools that write
+   the code, not components of what it runs. Named nowhere. If they should
+   appear they need their own block, never the stack.
+3. **Four files remain over the 500-line ceiling**: `NeuralField3D.js`
+   (1037), `Tech.jsx` (546), `StackDiagram.jsx` (516), `CodeCompletion.jsx`
+   (515). Each is one concern that happens to be long. The hero field is the
+   most bug-prone file here; splitting it needs a better reason than a count.
+4. **Two repos, and they could be one.** `SathishKumarAI.github.io` holds
+   three files — a workflow, a LICENSE and a README — and exists only to own
+   the username that serves the site at a root URL. Renaming this repo into
+   that name would consolidate them and keep all 75 merged PRs; the cost is a
+   less descriptive repo name. The split already caused one incident, because
+   `SOURCE_DIR` is pinned in both.
 
 ## The 2026-10-15 session, newest first
 
@@ -79,7 +160,7 @@ measurement is the one with a bug in it until proven otherwise.**
 - **`sepia` is the weakest theme** for field contrast at 32.5 resting against
   34.6 on dark. Deliberately soft palette; it is the floor, not a bug.
 
-## Stack, on `feat/stack-one-screen` (unmerged)
+## Stack (merged; was `feat/stack-one-screen`)
 
 Five commits. The section holds **one screen in both of its views**, which is
 the constraint every decision below was traded against.
