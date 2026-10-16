@@ -9,7 +9,16 @@ Research_Docs/   notes, command cheat-sheets, brainstorms
 docs/            account-level notes that are not about the site
 STATUS.md        where work stopped, the next action, the traps. Read on return.
 CONTRIBUTING.md  how to contribute, including with an LLM
+LICENSE          MIT for the code; the written content and CV are reserved
 ```
+
+**Reusing this?** The code is MIT — take it. The biography, role history,
+project write-ups and CV are not covered; please do not republish someone
+else's work history as your own. `LICENSE` says exactly where the line is.
+
+**Want to build one like it?** `3d_portfolio/docs/BUILD-THIS-YOURSELF.md` is
+a prompt pack for doing it with a coding agent — the order that makes each
+phase checkable, rather than a template to fill in.
 
 Despite the folder name there is no 3D in it; the name survives from a version that had it.
 
