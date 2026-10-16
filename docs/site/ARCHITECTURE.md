@@ -241,31 +241,38 @@ titles by name.
 
 ## Build and deploy topology
 
-Two repositories, one source of truth. This surprises everyone once.
+One repository. It was two until 2026-10-16, and the join is worth knowing
+because every older document in this set describes the split version.
 
 ```mermaid
 sequenceDiagram
   participant Dev as You
-  participant PR as Personal-Portfolio<br/>(this repo)
-  participant IO as SathishKumarAI.github.io<br/>(deploy repo)
+  participant Repo as SathishKumarAI.github.io<br/>(this repo)
   participant GH as GitHub Pages
 
-  Dev->>PR: push branch, open PR
-  PR->>PR: CI — install, lint, test, build, crawler-file guard
-  Dev->>PR: squash-merge to main
-  Note over PR,IO: a push here triggers NOTHING in the other repo
-  Dev->>IO: gh workflow run deploy.yml
-  IO->>PR: checkout at SOURCE_REF (main)
-  IO->>IO: build portfolio/, fail if robots/llms/og/JSON-LD missing
-  IO->>GH: publish dist/
-  GH-->>Dev: served through a CDN — add ?v= when checking
+  Dev->>Repo: push branch, open PR
+  Repo->>Repo: CI — install, lint, test, build, crawler-file guard
+  Dev->>Repo: squash-merge to main
+  alt the merge touched portfolio/
+    Repo->>Repo: deploy.yml — the same steps again
+    Repo->>GH: publish dist/
+    GH-->>Dev: served through a CDN — add ?v= when checking
+  else docs or config only
+    Note over Repo,GH: nothing deploys. The live bundle is unchanged
+  end
 ```
 
 - **The site lives in `portfolio/`, not the repo root.** Vercel needs
-  `--cwd portfolio`; the deploy workflow sets `SOURCE_DIR`.
-- **A repo named `<user>.github.io` is served from the domain root**, which is the
-  only reason that second repo exists. It keeps Vite's `base` at `/` so one build
-  serves both Pages and any future Vercel deploy.
+  `--cwd portfolio`; the deploy workflow sets `SITE_DIR`.
+- **The repo name is load-bearing.** Only a repo named exactly
+  `<user>.github.io` is served from the domain root. That keeps Vite's `base`
+  at `/` so one build serves both Pages and any future Vercel deploy. Renaming
+  this repo moves the site to a subpath and breaks every absolute URL.
+- **Why it used to be two repos.** The site repo had a different name, so a
+  second repo owned the name and checked this one out to build it. That second
+  repo pinned the source path in its own workflow, which meant a directory
+  rename here succeeded, passed CI, and broke deploys silently. The rename
+  removed the reason for the split.
 - **Verify a deploy by bundle hash, not by eye.** `ls dist/assets` against what the
   live HTML references; the CDN will happily serve you yesterday's page.
 

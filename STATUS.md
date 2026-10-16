@@ -7,21 +7,21 @@ for the change-to-file table.
 **Branch:** `main`. **76 PRs squash-merged** (#1 was closed unmerged), every branch deleted, nothing open.
 **Working tree:** clean.
 
-**Live:** <https://sathishkumarai.github.io/> — GitHub Pages, built by Actions
-in a SECOND repository, **`workflow_dispatch` only**. A merge here does NOT
-deploy. Trigger it with:
+**Live:** <https://sathishkumarai.github.io/> — GitHub Pages, built by
+`.github/workflows/deploy.yml` **in this repo**. A merge that touches
+`portfolio/` deploys it. To re-run without a code change:
 
 ```
-gh workflow run "Deploy portfolio to Pages" --repo SathishKumarAI/SathishKumarAI.github.io
+gh workflow run deploy.yml
 ```
 
-**Deployed and verified 2026-10-16:** live serves `index-BGxW3jwc.js`, which is
-what `main` builds. Two things that have each caught someone out:
+Two things that have each caught someone out:
 
 - The CDN serves the previous bundle for 15-60s after a successful run. Poll
   until the hash matches; do not trust the green tick.
-- The deploy workflow pins `SOURCE_DIR: portfolio` **in the other repo**. A
-  directory rename here breaks deploys silently until that file is changed too.
+- **The repo name is load-bearing.** Only `<user>.github.io` is served from the
+  domain root. Rename this repo and Pages moves the site to a subpath, breaking
+  every absolute URL unless Vite's `base` changes with it.
 
 **The site is `portfolio/`.** Everything else is supporting material.
 
@@ -101,12 +101,7 @@ caught this before CI.
    (1037), `Tech.jsx` (546), `StackDiagram.jsx` (516), `CodeCompletion.jsx`
    (515). Each is one concern that happens to be long. The hero field is the
    most bug-prone file here; splitting it needs a better reason than a count.
-4. **Two repos, and they could be one.** `SathishKumarAI.github.io` holds
-   three files — a workflow, a LICENSE and a README — and exists only to own
-   the username that serves the site at a root URL. Renaming this repo into
-   that name would consolidate them and keep all 76 merged PRs; the cost is a
-   less descriptive repo name. The split already caused one incident, because
-   `SOURCE_DIR` is pinned in both.
+4. ~~**Two repos, and they could be one.**~~ Done 2026-10-16. See below.
 
 ## The 2026-10-15 session, newest first
 
@@ -741,23 +736,35 @@ their call. `archive/pre-consolidation-2026-09-11` is deliberate and stays.
 
 ## How the deploy works
 
-Two repos, one source of truth.
+One repo, since 2026-10-16. `.github/workflows/deploy.yml` builds `portfolio/`,
+fails if `robots.txt`, `llms.txt`, `og.png` or the JSON-LD are missing from
+`dist/`, and publishes.
 
-- **`Personal-Portfolio`** holds the site, in `portfolio/`. Edit here.
-- **`SathishKumarAI.github.io`** holds no site code. It exists only because a
-  repo named exactly `<user>.github.io` is served from the domain root, which
-  keeps Vite's `base` at `/` so one build serves both Pages and Vercel.
-
-Its workflow checks out this repo at `SOURCE_REF` (now `main`), builds
-`portfolio/`, fails if `robots.txt`, `llms.txt`, `og.png` or the JSON-LD are
-missing from `dist/`, and publishes.
-
-**A push here cannot trigger that workflow** — the source is a different
-repository. Deploy on demand:
+It runs on a merge to `main` that touches `portfolio/` or the workflow itself,
+and on demand:
 
 ```bash
-gh workflow run deploy.yml -R SathishKumarAI/SathishKumarAI.github.io
+gh workflow run deploy.yml
 ```
+
+**A docs-only merge deploys nothing**, by a `paths:` filter. That is deliberate:
+most merges here are documentation and rebuilding the site for them changes the
+bundle hash for no reason.
+
+### Why it was two repos, and what the split cost
+
+Only a repo named exactly `<user>.github.io` is served from the domain root.
+The site repo was called `Personal-Portfolio`, so a second repo owned the name
+and checked this one out to build it.
+
+That second repo pinned `SOURCE_DIR` in its own workflow. When `3d_portfolio`
+was renamed to `portfolio` here, the build kept passing, CI stayed green, and
+deploys broke — in a file in a different repository, with no error until
+someone tried to deploy.
+
+The fix was to rename this repo into the name, which removed the reason for the
+split. The old repo is kept as `pages-deploy-legacy`, archived, holding the
+three files it always held.
 
 Pages serves through a CDN, so a fresh deploy can take a minute to appear. Add a
 cache-busting query (`?v=2`) when checking, or you will verify the old bundle

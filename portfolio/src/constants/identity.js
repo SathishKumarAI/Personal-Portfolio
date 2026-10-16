@@ -12,7 +12,7 @@ import { GH } from "./links.js";
 // This site's own repository. Linked from the Collaborate band, which invites
 // people into it, so it points at the repo root rather than at a file path:
 // a deep link to CONTRIBUTING.md on a branch would 404 until that branch merges.
-export const SITE_REPO = `${GH}/Personal-Portfolio`;
+export const SITE_REPO = `${GH}/SathishKumarAI.github.io`;
 
 export const contact = {
   email: "sathishkumar786.ml@gmail.com",

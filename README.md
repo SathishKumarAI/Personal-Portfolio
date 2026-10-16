@@ -64,9 +64,14 @@ not the site were moved out, keeping their git history. Nothing was deleted.
 
 ## Live
 
-<https://sathishkumarai.github.io/> — GitHub Pages, built from `main` by Actions
-in `SathishKumarAI.github.io`, which holds no site code. See `STATUS.md` for how
-the two repos relate and why the second one has to exist.
+<https://sathishkumarai.github.io/> — GitHub Pages, built from `main` by
+`.github/workflows/deploy.yml` in this repo. A merge that touches `portfolio/`
+deploys it.
+
+The repo name is load-bearing: only a repo named exactly `<user>.github.io` is
+served from the domain root, which keeps Vite's `base` at `/` so one build
+serves both Pages and any future Vercel deploy. Until 2026-10-16 that forced the
+build into a second repository; `STATUS.md` has the history.
 
 ## License
 
