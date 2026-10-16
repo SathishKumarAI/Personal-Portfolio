@@ -208,7 +208,14 @@ node_modules/
 
 # --- nested repos, archived out of this tree 2026-09-11 ---
 # Kept as rules so a stray re-clone here does not get committed by accident.
-portfolio/
+#
+# `portfolio/` WAS on this list and had to come off it on 2026-10-16. It named
+# an abandoned Next.js attempt archived in 2026-09-11 -- and then the site
+# directory was renamed `3d_portfolio` -> `portfolio` and collided with it.
+# Nothing appeared to break: git does not untrack files already tracked, so
+# the rename committed cleanly and the build passed. Only NEW files under the
+# site were silently dropped, which is how nine freshly split constants
+# modules reached main as a barrel importing nothing. CI caught it.
 test/
 innit/
 SathishKumarAI/
