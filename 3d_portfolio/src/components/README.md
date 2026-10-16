@@ -10,10 +10,12 @@ Thirty files. Read the table, not the directory.
 | How a section announces itself, and its fact line | `SectionHead.jsx` |
 | Portrait, lede, the three proven claims, availability card | `About.jsx` |
 | Roles and degrees, the card deck, date alignment | `Experience.jsx` |
-| Stack: the header, the view toggle, and the six-column tool list | `Tech.jsx` |
-| Stack read as a system: stage bands, flow payloads, the `?` explainer | `StackDiagram.jsx` |
+| Stack: the header, the view toggle, the definition strip, the tool list | `Tech.jsx` |
+| Stack as a system: planes, nodes, flow payloads, the `?`, `fit to screen` | `StackDiagram.jsx` |
 | The planes, their nodes, and what flows between them | `systemPlanes` / `systemSubstrate` in `../constants/index.js` |
-| Which tools have a managed equivalent on AWS / GCP / Azure | `platformSwaps` in `../constants/index.js` |
+| What fills each role on AWS / GCP / Azure | `platformMatrix` in `../constants/index.js` |
+| Why a tool is in the box it is in | `../../docs/STACK-TAXONOMY.md` |
+| The emoji cursor, hero only | `.hero-cursor` in `../index.css`, class in `Hero.jsx` |
 | What the closing band retrieves, and the questions it offers | `RetrievalRank.jsx` |
 | Which tools exist, and their plain-English definitions | `stackGroups` and `glossary` in `../constants/index.js` |
 | Which tools get the filled chip, and each dot's colour | `stackGroups` in `../constants/index.js` |
@@ -27,7 +29,7 @@ Thirty files. Read the table, not the directory.
 | Left edge: contact icons | `ContactRail.jsx` |
 | What a tech chip does on hover or click, and its two tiers | `TagTerm.jsx` |
 | Whether a tool shows its logo, and how big | `ToolGlyph` in `TagTerm.jsx` |
-| Which brand logos exist at all | `scripts/gen-tool-icons.mjs` -> `toolIcons.js` (generated, 37 marks) |
+| Which brand logos exist at all | `scripts/gen-tool-icons.mjs` -> `toolIcons.js` (generated, 38 marks) |
 | The mark for RAG, Transformers, S3 and anything with no upstream logo | `conceptIcons.js` (hand-drawn) |
 | The reader's own text-size control (A- / A+) | `FontSizeToggle.jsx` |
 | What collapses behind a disclosure on a phone | `MobileCollapse.jsx` |
@@ -75,7 +77,7 @@ A few boundaries worth knowing before editing:
   `s: 1`. A stroke path rendered as a fill turns into a blob, and a silhouette
   rendered as a stroke turns into an outline of itself.
 - **The tool logos are a generated file, not a dependency.** `simple-icons` is a
-  devDependency; `npm run icons` writes the 37 marks this site names into
+  devDependency; `npm run icons` writes the 38 marks this site names into
   `toolIcons.js`, and that module is what ships — in its own lazy chunk, because
   brand paths are heavy against a 33kB entry bundle.
 - **Some products have no mark upstream, and never will.** simple-icons 16.31.0
@@ -85,10 +87,10 @@ A few boundaries worth knowing before editing:
   nearest-neighbour cluster), never as a recalled brand mark: a brand mark from
   memory is a claim about someone else's identity and is simply right or wrong.
 - **Stack has two views over one dataset.** `Tech.jsx` owns the list and the
-  toggle; `StackDiagram.jsx` owns the system reading. Both resolve the same 47
+  toggle; `StackDiagram.jsx` owns the system reading. Both resolve the same 56
   terms and both call the same `setHovered`/`pinTerm`, so a term is defined in
   one place and pinning survives a view switch. The two filings are separate
-  constants — `stackGroups` by skill area, `systemStages` by responsibility —
+  constants — `stackGroups` by skill area, `systemPlanes` by responsibility —
   and `utils/stages.test.mjs` fails if they stop covering the same set.
 - **The diagram's boxes are RESPONSIBILITIES, not skill areas.** That is the
   only reason the second view exists: a box called "Data engineering" is a
@@ -100,6 +102,18 @@ A few boundaries worth knowing before editing:
   diagram's planes and `--c-flow-off` is the substrate's neutral. If you
   retune them, check luminance monotonicity by computing it — chroma rising
   while lightness stays flat looks like a ramp and is not one.
+- **A PLACEMENT IS A CLAIM, and it has its own document.** Which box a tool
+  sits in asserts what kind of thing it is, and getting it wrong is the error a
+  reader who uses that tool spots first. `Claude` shipped in the `Inference`
+  box beside `vLLM` and `Ollama` — an inference server, a local runtime and a
+  hosted model, filed as though they were interchangeable. Before moving a tool
+  between boxes, read `docs/STACK-TAXONOMY.md`; it carries the rule, all 56
+  placements with reasons, and the calls worth arguing with. `npm test` catches
+  drift between the two filings but **cannot** catch a wrong box.
+- **The cloud matrix is a mapping, not a CV.** Only `mine` says anything about
+  the owner; ten rows carry an em dash meaning "the slot is real and he is not
+  claiming it". `test_the_mine_column_only_names_real_tools` enforces that the
+  column may only name something already in `stackGroups`.
 - **A figure has to be actionable, not merely measured.** "Every figure is
   measured or absent" was satisfied by both a raw TF-IDF score and a
   percentage that was always 100%, and both were wrong. If a reader cannot act
@@ -134,6 +148,12 @@ A few boundaries worth knowing before editing:
   not otherwise say, the feature has lost the thing that justified it.
 
 ## Traps in this directory
+
+- **Verify layout against `npx vite preview`, not the dev server.** React's
+  StrictMode double-mount makes framer's `whileInView` fire unreliably in dev,
+  so sections sit at `opacity: 0` after scripted scrolling and look like a
+  regression that does not exist in a production build. This cost a false
+  bug report; the live site and `vite preview` both behaved correctly.
 
 - **`Works.jsx` seeds each cover's RNG from the project name**
   (`hash(name || cover)`). Renaming a project silently changes its drawing. The
@@ -211,8 +231,10 @@ A few boundaries worth knowing before editing:
   go away. One dropped `{}` put 120px between the Stack header and its grid,
   found only by measuring the section and seeing it GROW when the edit should
   have shrunk it. Comments in JSX children are always `{/* ... */}`.
-- **Ambient canvas work must not cross text, and the clearance is not
-  constant.** `TokenStream`'s band sits above the Stack header's right column,
+- **Ambient canvas work must not cross text.** `TokenStream`'s band now runs
+  out of the Stack heading, through the space the definition card used to
+  occupy. Re-measure it against the heading, meta, intro, strip and toggle
+  after any header change. The note below is the history of why:
   whose height moves with the breakpoint: the toggle's question wraps to two
   lines below 1536px, lifting the toggle from y=178 to y=161. The band height
   is responsive for that reason alone. Re-measure after adding anything to the

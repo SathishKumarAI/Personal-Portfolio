@@ -373,7 +373,7 @@ In rough order of how much you learn per hour:
 3. **Add a glossary term** to `constants.glossary` and hover the chip. One data
    edit, three behaviours: tooltip, panel, "learn more" link.
 4. **Make a section eyebrow count something else** — `STACK_META` in
-   `Tech.jsx` says `6 areas · 33 tools`; make it name the largest area instead.
+   `Tech.jsx` says `6 areas · 56 tools`; make it name the largest area instead.
    Three lines, and you will have to decide what is honestly derivable.
 5. **Try act 4 of the campaign** (see [BACKLOG.md](BACKLOG.md)): make a section's
    heading arrive as you scroll into its scene. Everything needed is already here —
