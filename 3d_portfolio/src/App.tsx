@@ -1,3 +1,27 @@
+/* ---------------------------------------------------------------------------
+   PLAIN ENGLISH.
+
+   The composition root: the only file that says WHAT IS ON THE PAGE AND IN
+   WHAT ORDER. Nothing here has logic of its own — every element below is a
+   component that owns its own behaviour. If you are looking for why a section
+   renders the way it does, this file will not tell you; it will tell you
+   which file to open.
+
+   Reading the JSX top to bottom gives you the page top to bottom, with two
+   deliberate exceptions worth knowing:
+
+     - The fixed layers (`NeuralField`, the grain, the rails, `BackToTop`,
+       `CommandPalette`) sit outside `<main>` and are positioned, so their
+       place in this file is paint order, not page order.
+     - `AgentNote` and `Footer` come AFTER `</main>` because a page gets one
+       main landmark and they are not part of it.
+
+   TO REORDER THE PAGE, move a line inside `<main>`. Two things follow
+   automatically and one does not: the nav and the right rail both read
+   `navLinks` in `constants`, so they stay correct, but the scene tinting is
+   `main > section:nth-of-type(even)` in `index.css` — moving a section
+   changes which ones are tinted.
+--------------------------------------------------------------------------- */
 import { MotionConfig } from "framer-motion";
 import { About, Contact, Hero, Navbar, Tech, Works } from "./components";
 import Experience from "./components/Experience";

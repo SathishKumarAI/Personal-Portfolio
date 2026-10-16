@@ -5,8 +5,9 @@ is supporting material.
 
 ```
 3d_portfolio/    the site. Vite + React. Start here.
-Research_Docs/   notes, command cheat-sheets, brainstorms
-docs/            account-level notes that are not about the site
+Research_Docs/   personal working notes, predating the site. Has a README
+docs/            account/repo notes: branch protection, how the repo presents.
+                 NOT the site's docs — those are 3d_portfolio/docs/
 STATUS.md        where work stopped, the next action, the traps. Read on return.
 CONTRIBUTING.md  how to contribute, including with an LLM
 LICENSE          MIT for the code; the written content and CV are reserved

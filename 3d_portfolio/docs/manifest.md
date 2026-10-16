@@ -44,6 +44,15 @@ the docs, which is this file. The table caught it. What the set actually
 needed was not a new map but two missing rows and four stale ones, which is
 the usual shape of a documentation problem.
 
+## What this manifest does NOT govern
+
+`../../docs/` holds account- and repository-level notes — branch protection,
+how the repo presents on GitHub. Different subject, different owner: that set
+has its own `README.md`. This table governs the SITE's documentation only.
+
+`../../Research_Docs/` is personal working notes that predate the site. Not
+maintained to this standard and not a reference; it says so itself.
+
 ## Conventions this set follows
 
 - **No frontmatter.** The existing pages have none; matching local convention

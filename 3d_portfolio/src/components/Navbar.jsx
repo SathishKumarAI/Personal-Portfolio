@@ -8,6 +8,26 @@ import FontSizeToggle from "./FontSizeToggle";
 import { ICON_PATHS, readable, socialLinks } from "./icons";
 import useActiveSection from "../hooks/useActiveSection";
 
+/**
+ * Owns, the fixed top bar: the section links, the theme and text-size
+ * controls, the ask-box affordance, and the whole mobile menu.
+ * Does not own: which section is currently active — `useActiveSection` owns
+ * that, and `SideRail` reads the same hook so the two can never disagree. An
+ * earlier version ran its own observer and they drifted.
+ *
+ * Two behaviours here are less obvious than they look:
+ *
+ * HIDE ON THE WAY DOWN, RETURN ON THE WAY UP. The bar is 77px of a fixed
+ * viewport — about 9% of a phone screen, held open for the whole of a very
+ * long page. It retracts while a reader is moving forward and comes back the
+ * moment they reverse. The guards below exist because the naive version
+ * flickers: a jump-to-section scroll is not a reading gesture, and the bar
+ * must not hide itself while the menu is open.
+ *
+ * THE SHORTCUT LABEL IS PLATFORM-AWARE. The palette accepts Meta or Ctrl, but
+ * the button used to print "⌘K" everywhere, showing Windows and Linux readers
+ * a key they do not have.
+ */
 const prefersReduced = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
