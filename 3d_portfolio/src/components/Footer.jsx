@@ -28,6 +28,42 @@ const THIS_VERSION = "October 2026";
  */
 const BUILT_WITH = "React · Vite · Tailwind · framer-motion · three.js";
 
+/**
+ * One labelled group of the colophon.
+ *
+ * The colophon shipped as a single run-on line: five build tools, three
+ * typefaces, two links and a date range, all separated by interpuncts. It was
+ * reported as scattered, and it was the same failure the Stack diagram had —
+ * nothing marked where one kind of fact ended and the next began, so the eye
+ * had to read the punctuation to find the boundaries.
+ *
+ * A label in front of each group is the cheapest fix there is: four short
+ * answers to four questions, rather than one sentence of eleven items.
+ *
+ * NO LOGOS HERE, deliberately. The brand marks live in a lazily-loaded chunk
+ * precisely so 17kB of SVG paths stay out of the entry bundle, and the footer
+ * renders on every page load. Pulling that chunk forward to decorate a
+ * colophon would cost every reader first paint for ornament. No emoji either:
+ * nothing else on this page uses them, and a row of them under a type-led
+ * design reads as a different site's footer.
+ */
+const Group = ({ label, children }) => (
+  <div className="flex flex-col gap-0.5">
+    <span className="font-mono text-micro uppercase tracking-[0.14em] text-faint opacity-70">
+      {label}
+    </span>
+    <span className="flex flex-wrap items-baseline gap-x-2 text-secondary">
+      {children}
+    </span>
+  </div>
+);
+
+const Dot = () => (
+  <span aria-hidden="true" className="text-faint opacity-50">
+    ·
+  </span>
+);
+
 const Footer = () => (
   // Gutter on the <footer>, measure inside it — the split `SectionWrapper`
   // uses. `px-6 sm:px-16` used to sit on the capped div, which parked the
@@ -35,40 +71,42 @@ const Footer = () => (
   // viewport past 1280px. `sm:pr-24` stays on the measure: it is clearance for
   // the fixed BackToTop button, not a gutter.
   <footer className={`${styles.paddingX} relative z-10 border-t border-line bg-primary`}>
-    <div className="max-w-7xl mx-auto pt-5 pb-20 sm:py-5 sm:pr-24 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between font-mono text-label text-faint">
+    <div className="max-w-7xl mx-auto pt-5 pb-20 sm:py-5 sm:pr-24 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-10 font-mono text-label text-faint">
       <span className="flex flex-wrap items-center gap-x-2">
         © {new Date().getFullYear()} Sathish Kumar <span className="text-faint">·</span> <LiveClock />
       </span>
-      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span>Built with {BUILT_WITH}</span>
-        <span aria-hidden="true">·</span>
-        <span>Type: Barlow · Newsreader · JetBrains Mono</span>
-        <span aria-hidden="true">·</span>
-        {/* The licence is scoped: the code is MIT, the written content is not.
-            Saying "MIT" alone on a portfolio would invite someone to republish
-            a CV, so the link carries the distinction rather than the badge. */}
-        <a
-          href={`${SITE_REPO}/blob/main/LICENSE`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-accent-ink hover:underline"
-        >
-          Code MIT ↗
-        </a>
-        <span aria-hidden="true">·</span>
-        <a
-          href={`${SITE_REPO}/blob/main/3d_portfolio/docs/BUILD-THIS-YOURSELF.md`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-accent-ink hover:underline"
-        >
-          Build your own ↗
-        </a>
-        <span aria-hidden="true">·</span>
-        <span className="text-secondary">
-          Started {STARTED}, this version {THIS_VERSION}
-        </span>
-      </span>
+      {/* FOUR GROUPS, not one sentence. Each answers a different question —
+          what it runs on, what it is set in, what you may do with it, and how
+          old it is — and a reader looking for one of those can now find it
+          without parsing the other three. */}
+      <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:flex sm:flex-wrap sm:items-start sm:gap-x-10">
+        <Group label="Built with">{BUILT_WITH}</Group>
+        <Group label="Set in">Barlow <Dot /> Newsreader <Dot /> JetBrains Mono</Group>
+        <Group label="Licence">
+          {/* "Code MIT", never a bare MIT badge: the written content is not
+              covered, and a badge would erase the distinction. */}
+          <a
+            href={`${SITE_REPO}/blob/main/LICENSE`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent-ink hover:underline"
+          >
+            Code MIT ↗
+          </a>
+          <Dot />
+          <a
+            href={`${SITE_REPO}/blob/main/3d_portfolio/docs/BUILD-THIS-YOURSELF.md`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent-ink hover:underline"
+          >
+            Build your own ↗
+          </a>
+        </Group>
+        <Group label="Since">
+          {STARTED} <Dot /> this version {THIS_VERSION}
+        </Group>
+      </div>
     </div>
   </footer>
 );
