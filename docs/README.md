@@ -51,13 +51,27 @@ has now caught two.
 | `REPO-SECURITY.md` | Branch protection, required checks, and the rule set that once locked the owner out of `main` |
 | `REPO-SHOWCASE.md` | How the repository presents: description, topics, pins, social preview |
 
+## STYLE.md — how these documents are written
+
+Two registers, and the mistake is using one for both. Procedures follow
+[ASD-STE100 Simplified Technical English](STYLE.md) — short sentences, active
+voice, one meaning per word, the standard aircraft maintenance manuals use.
+Decision logs deliberately do not: controlled vocabulary strips the rejected
+options and the measurements, which is why those documents exist.
+
 ## prompts/ — building one of these
 
-`BUILD-THIS-YOURSELF.md` is a sequence of generalised prompts for a coding
-agent, in the order that makes each phase checkable. It is deliberately not a
-transcript of how this site was built: a one-shot prompt produces a template
-with someone else's taste and a lot of invented numbers, and the order is the
-part worth copying.
+Three files, in increasing specificity:
+
+| File | Use it when |
+| --- | --- |
+| `BUILD-THIS-YOURSELF.md` | Starting from nothing. Eight phases, in the order that makes each checkable |
+| `AGENTS-AND-SKILLS.md` | Going faster: what to parallelise, what never to, which repeated jobs become skills |
+| `CLONE-THIS-SITE.md` | Taking *this* site and re-pointing it at your own work |
+
+Deliberately not a transcript of how this site was built: a one-shot prompt
+produces a template with someone else's taste and a lot of invented numbers.
+The order is the part worth copying.
 
 ## notes/ — personal, unmaintained
 
