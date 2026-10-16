@@ -185,7 +185,7 @@ tagline the page no longer contained on every share of the link.
   a test now asserts that template still names the current `status.role`. If the
   role changes, the build fails and someone re-renders the card.
 - **Still manual:** the render itself. Capture the template at exactly 1200x630
-  with no device-pixel-ratio scaling and save over `public/og.png`.
+  with no device-pixel-ratio scaling and save over `portfolio/public/og.png`.
 - **The `<noscript>` block had drifted the same way** and was corrected in the
   same pass. It is now guarded.
 

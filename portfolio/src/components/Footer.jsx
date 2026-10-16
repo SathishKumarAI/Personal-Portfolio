@@ -95,7 +95,7 @@ const Footer = () => (
           </a>
           <Dot />
           <a
-            href={`${SITE_REPO}/blob/main/portfolio/docs/BUILD-THIS-YOURSELF.md`}
+            href={`${SITE_REPO}/blob/main/docs/prompts/BUILD-THIS-YOURSELF.md`}
             target="_blank"
             rel="noreferrer"
             className="text-accent-ink hover:underline"

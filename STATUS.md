@@ -28,7 +28,7 @@ crawler notice as points, and the retrieval panel reading "best match" with no
 
 ## The 2026-10-15 session, newest first
 
-Fourteen merges, #50 to #63. `portfolio/docs/WORKLOG.md` has the
+Fourteen merges, #50 to #63. `docs/site/WORKLOG.md` has the
 measurements; `DECISIONS.md` has what was chosen and what it cost.
 
 | PR | What changed | The number that mattered |
@@ -596,7 +596,7 @@ overlapped the lede by 156px.
 
 Before it, `fix/mobile-layout-and-nav` squash-merged and deleted, four commits,
 all four phone-layout faults found by measuring the running page. Full reasoning in
-`portfolio/docs/WORKLOG.md`, the 2026-09-12 entry headed "four layout faults
+`docs/site/WORKLOG.md`, the 2026-09-12 entry headed "four layout faults
 on a phone":
 
 | What | Where it lives now |
@@ -719,7 +719,7 @@ does; a comment in that file says so.
   writing UTF-16LE; git stops parsing at the first NUL byte.
 - **`portfolio/read.md` is historical. Do not run it.**
 - **A grep cannot read a PNG.** `public/og.png` kept an old job title through a
-  whole rename. Its source is `portfolio/docs/og-card.html`; regenerate it
+  whole rename. Its source is `docs/site/og-card.html`; regenerate it
   whenever the title or tagline changes.
 
 ## What is deliberately not done
@@ -733,7 +733,7 @@ does; a comment in that file says so.
   Below that there is nothing to read, and inventing coordinates would
   contradict the one claim that makes it a diagram rather than decoration.
 - **No enforced PR workflow.** Impossible on a personal account without locking
-  the owner out; see `docs/REPO-SECURITY.md`.
+  the owner out; see `docs/repo/REPO-SECURITY.md`.
 - **`llms.txt` and the JSON-LD are hand-written copies** of facts in
   `src/constants/index.js`. Both carry a comment naming what they mirror.
 
@@ -741,12 +741,12 @@ does; a comment in that file says so.
 
 | Question | File |
 | --- | --- |
-| What changed, when, and what was measured | `portfolio/docs/WORKLOG.md` |
-| What is left, as tickets | `portfolio/docs/BACKLOG.md` |
-| Why the type is the size it is | `portfolio/docs/TYPE-AUDIT.md` |
+| What changed, when, and what was measured | `docs/site/WORKLOG.md` |
+| What is left, as tickets | `docs/site/BACKLOG.md` |
+| Why the type is the size it is | `docs/site/TYPE-AUDIT.md` |
 | What a phone gets and a desktop does not | `portfolio/README.md`, "What a phone gets" |
 | Which file to open for a given change | `portfolio/README.md` |
 | Which component owns what | `portfolio/src/components/README.md` |
-| Branch protection across the account | `docs/REPO-SECURITY.md` |
+| Branch protection across the account | `docs/repo/REPO-SECURITY.md` |
 | How to contribute, and LLM-written patches | `CONTRIBUTING.md` |
 | Where the five earlier drafts went | `README.md` |

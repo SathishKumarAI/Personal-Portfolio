@@ -7,7 +7,7 @@ when someone loads the page, and why is it built this way?"*
 ## Core shape
 
 One React page, statically built, no backend, no API key, no database, no
-analytics. Everything a reader sees is either in `src/constants/index.js` or
+analytics. Everything a reader sees is either in `portfolio/src/constants/index.js` or
 derived from it at module load. That constraint is the reason several things that
 look expensive are cheap: the ask box needs no server because the corpus is the
 page's own copy, and the site survives a network with nothing behind it.
@@ -279,5 +279,5 @@ sequenceDiagram
 
 - [DECISIONS.md](DECISIONS.md) — why each of these is the way it is
 - [LEARNING-NOTES.md](LEARNING-NOTES.md) — the same techniques explained from scratch
-- [../README.md](../README.md) — the change→file table
+- [../../portfolio/README.md](../../portfolio/README.md) — the change→file table
 - [WORKLOG.md](WORKLOG.md) — the measurements behind every claim here

@@ -22,9 +22,9 @@ index and the "6 built · 1 live" line all change by themselves.
 seventh project, and shipping a page that lies about itself. That is the single
 most common bug in personal sites, and it is invisible — nothing errors.
 
-**Where it lives.** `src/constants/index.js` holds the facts. Every section's
-eyebrow is one line of arithmetic over them — `src/components/Tech.jsx` and
-`src/components/Works.jsx` open with theirs:
+**Where it lives.** `portfolio/src/constants/index.js` holds the facts. Every section's
+eyebrow is one line of arithmetic over them — `portfolio/src/components/Tech.jsx` and
+`portfolio/src/components/Works.jsx` open with theirs:
 
 ```js
 const STACK_META = `${stackGroups.length} areas · ${
@@ -49,7 +49,7 @@ whole idea behind React, and this is the smallest honest example of it.
 **In plain words.** A component is a function that returns some HTML-shaped thing.
 Props are its arguments. The page is about thirty of them stacked up.
 
-**Where it lives.** `src/components/TagTerm.jsx` is a good first read: one
+**Where it lives.** `portfolio/src/components/TagTerm.jsx` is a good first read: one
 component, a few props (`name`, `plain`, `primary`), and two very different
 outputs depending on them.
 
@@ -57,7 +57,7 @@ outputs depending on them.
 a header comment saying what the file owns *and what it does not*. When a change
 crosses two files, one of them is probably wrong.
 
-**Try next.** Open `src/components/README.md` and pick any row. Open that file and
+**Try next.** Open `portfolio/src/components/README.md` and pick any row. Open that file and
 read only its header comment. You should be able to predict what is inside before
 scrolling.
 
@@ -77,10 +77,10 @@ the whole page re-colours with no JavaScript touching any element.
 or dark*. Structural rules (shadows, grain, the hero bloom) key off the second,
 because `:not([data-theme="dark"])` stops being true when you add a third palette.
 
-**Where it lives.** The top 200 lines of `src/index.css`, and `ThemeToggle.jsx`.
+**Where it lives.** The top 200 lines of `portfolio/src/index.css`, and `ThemeToggle.jsx`.
 
 **Try next.** In DevTools, set `document.documentElement.dataset.theme = "ink"`.
-Then find one hard-coded colour anywhere in `src/components/` — there should not be
+Then find one hard-coded colour anywhere in `portfolio/src/components/` — there should not be
 one.
 
 ---
@@ -101,7 +101,7 @@ the top, so the next one slides over the last.
    pins, and the part below the fold never arrives. Measured here at 1280×620 with
    large text: **192px of a card was unreachable**.
 
-**Where it lives.** `.role-sticky` in `src/index.css`, `useDeckFits` in
+**Where it lives.** `.role-sticky` in `portfolio/src/index.css`, `useDeckFits` in
 `Experience.jsx` — which measures the tallest card and turns the whole effect off
 rather than hiding content.
 
@@ -153,7 +153,7 @@ question, show the best sentences.
   endings off *both* so they land on the same key. It does not have to be real
   linguistics — it has to be applied identically to both sides.
 
-**Where it lives.** `src/utils/answer.js`, ~120 lines, no dependencies.
+**Where it lives.** `portfolio/src/utils/answer.js`, ~120 lines, no dependencies.
 
 **Try next.** In `answer.test.mjs`, add a question you would ask this page. Run
 `npm test`. If the answer is wrong, print the scores and find out which of the
@@ -178,7 +178,7 @@ mask-composite: exclude;   /* subtract the inside from the outside = a ring */
 `@property --role-edge` is what makes the angle animatable — without it the browser
 treats the variable as an unknown string and nothing moves.
 
-**Where it lives.** `.role-card[data-current="true"]::before` in `src/index.css`.
+**Where it lives.** `.role-card[data-current="true"]::before` in `portfolio/src/index.css`.
 
 **Try next.** Change `mask-composite: exclude` to `add` and watch the ring become a
 filled card. That one keyword is the whole trick.
@@ -219,7 +219,7 @@ ignores that block completely. Stopping it needs
 `initial={reduced ? false : "hidden"}` in the component.
 
 **Where it lives.** `MotionConfig reducedMotion="user"` in `App.tsx`, the
-`@media (prefers-reduced-motion: reduce)` blocks in `src/index.css`, and the
+`@media (prefers-reduced-motion: reduce)` blocks in `portfolio/src/index.css`, and the
 `useReducedMotion()` calls in `Hero.jsx`, `Works.jsx`, `Availability.jsx`.
 
 **Try next.** Turn reduced motion on in your OS, reload, and check three things:
@@ -242,9 +242,9 @@ it is wrong. You do not need Jest for that — Node has `assert` built in.
 - **They protect claims, not code.** "Answers are quoted, never generated" is a
   promise the page makes to a reader; the test is what keeps it true.
 
-**Where it lives.** `src/utils/*.test.mjs`, run by `npm test`, run again by CI.
+**Where it lives.** `portfolio/src/utils/*.test.mjs`, run by `npm test`, run again by CI.
 
-**Try next.** Delete a line from `public/llms.txt` and run `npm test`. Read the
+**Try next.** Delete a line from `portfolio/public/llms.txt` and run `npm test`. Read the
 failure message — it names exactly what went missing.
 
 ---
@@ -300,7 +300,7 @@ the literal `bg-cat-data` sitting in a data file is found. Once you know the
 compiler is doing text search, both behaviours stop being surprising.
 
 **Try next.** Put the word `flex` on a line of its own in a comment in any file
-under `src/`, run `npm run build`, and diff the CSS against the previous build. Then
+under `portfolio/src/`, run `npm run build`, and diff the CSS against the previous build. Then
 decide whether you want a build step that reads your prose.
 
 ---
@@ -388,4 +388,4 @@ In rough order of how much you learn per hour:
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — the same systems, assuming you know the craft
 - [DECISIONS.md](DECISIONS.md) — why each of these was chosen over the alternative
-- [../README.md](../README.md) — which file to open for a given change
+- [../../portfolio/README.md](../../portfolio/README.md) — which file to open for a given change

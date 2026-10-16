@@ -5,9 +5,9 @@ is supporting material.
 
 ```
 portfolio/    the site. Vite + React. Start here.
-Research_Docs/   personal working notes, predating the site. Has a README
+docs/notes/   personal working notes, predating the site. Has a README
 docs/            account/repo notes: branch protection, how the repo presents.
-                 NOT the site's docs — those are portfolio/docs/
+                 NOT the site's docs — those are docs/site/
 STATUS.md        where work stopped, the next action, the traps. Read on return.
 CONTRIBUTING.md  how to contribute, including with an LLM
 LICENSE          MIT for the code; the written content and CV are reserved
@@ -17,7 +17,7 @@ LICENSE          MIT for the code; the written content and CV are reserved
 project write-ups and CV are not covered; please do not republish someone
 else's work history as your own. `LICENSE` says exactly where the line is.
 
-**Want to build one like it?** `portfolio/docs/BUILD-THIS-YOURSELF.md` is
+**Want to build one like it?** `docs/prompts/BUILD-THIS-YOURSELF.md` is
 a prompt pack for doing it with a coding agent — the order that makes each
 phase checkable, rather than a template to fill in.
 

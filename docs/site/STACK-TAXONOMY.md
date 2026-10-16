@@ -158,7 +158,7 @@ decision, not an oversight.
 
 The following were added on request and are **claims about his experience** that
 only he can confirm. If any of these is not true, remove the tool from
-`stackGroups` in `src/constants/index.js` and the test suite will tell you what
+`stackGroups` in `portfolio/src/constants/index.js` and the test suite will tell you what
 else needs to move:
 
 `Snowflake` · `Databricks` · `Unity Catalog` · `Guardrails` · `LangSmith` ·
