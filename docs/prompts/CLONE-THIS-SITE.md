@@ -101,13 +101,18 @@ Do not inherit "0.97 screens" as a target. Measure yours.
 
 ## Phase 7 — re-point the deploy
 
-> This repo deploys through a workflow in a **separate** GitHub Pages
-> repository that pins `SOURCE_REPO` and `SOURCE_DIR`. Find every place a
-> path or repo name is hard-coded — both workflows, the README, the footer
-> links — and list them before changing anything.
+> This repo is named `<user>.github.io` so Pages serves it from the domain
+> root, and `.github/workflows/deploy.yml` pins the site subdirectory in
+> `SITE_DIR`. Find every place a path, repo name or absolute URL is hard-coded
+> — both workflows, `index.html`, the README, the footer links — and list them
+> before changing anything.
 
-A rename in this project broke exactly this, in a second repository, with no
-error until a deploy was attempted.
+Two traps here, both already paid for. The build used to live in a **second**
+repository that pinned the source path; a directory rename in this one
+succeeded, passed CI, and broke deploys with no error until someone tried to
+deploy. And the repo name itself is load-bearing: rename it to anything but
+`<user>.github.io` and Pages serves the site from a subpath, which breaks every
+absolute URL unless Vite's `base` changes with it.
 
 ## Phase 8 — the honesty pass
 

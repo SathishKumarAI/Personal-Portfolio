@@ -1,0 +1,96 @@
+# Builds the site and publishes it to GitHub Pages.
+#
+# This repo is named `<user>.github.io`, so Pages serves it from the domain
+# root and Vite's `base` stays at "/". One build serves Pages and any future
+# Vercel deploy with no rewriting.
+#
+# Until 2026-10-16 the build lived in a SECOND repository, because the site
+# repo had a different name and only `<user>.github.io` is served from the
+# root. That split cost a real outage: `SOURCE_DIR` was pinned over there, so
+# renaming a directory here broke deploys with no error until someone tried
+# to deploy. Renaming this repo removed the reason for the split.
+name: Deploy portfolio to Pages
+
+on:
+  # A merge that changes the site now deploys it. This is new: for as long as
+  # the build lived elsewhere, a push here could not reach the deploy at all.
+  push:
+    branches: [main]
+    paths:
+      - 'portfolio/**'
+      - '.github/workflows/deploy.yml'
+  # Still on demand, for re-running a deploy without a code change:
+  #   gh workflow run deploy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; the newest wins.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  # The repo root is supporting material. The site is one level down.
+  SITE_DIR: portfolio
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ env.SITE_DIR }}/package-lock.json
+
+      - name: Install
+        run: npm ci
+        working-directory: ${{ env.SITE_DIR }}
+
+      - name: Lint
+        run: npm run lint
+        working-directory: ${{ env.SITE_DIR }}
+
+      - name: Test
+        run: npm test
+        working-directory: ${{ env.SITE_DIR }}
+
+      - name: Build
+        run: npm run build
+        working-directory: ${{ env.SITE_DIR }}
+
+      # Cheap guard against shipping the thing this site got wrong once: a
+      # crawler-facing file silently missing from the build output.
+      - name: Check the crawler files survived the build
+        run: |
+          set -e
+          for f in robots.txt llms.txt og.png index.html; do
+            test -s "$SITE_DIR/dist/$f" || { echo "missing or empty: dist/$f"; exit 1; }
+          done
+          grep -q 'application/ld+json' "$SITE_DIR/dist/index.html" \
+            || { echo "JSON-LD missing from dist/index.html"; exit 1; }
+          echo "robots.txt, llms.txt, og.png and the JSON-LD are all present."
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.SITE_DIR }}/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

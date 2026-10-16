@@ -1,11 +1,10 @@
 # Pull-request checks for the site in portfolio/.
 #
-# Why this exists: the deploy workflow lives in the OTHER repo
-# (SathishKumarAI.github.io) and only runs on demand, after a merge. So until
-# this file, nothing checked a branch before it landed on `main` — a PR could
-# merge with a broken build and the first sign of it would be a red deploy.
+# Why this exists: nothing else checks a branch before it lands on `main`. A PR
+# could merge with a broken build and the first sign of it would be a red
+# deploy — which, since 2026-10-16, is a deploy of the live site.
 #
-# It deliberately runs the same steps as that deploy, in the same order, on the
+# It deliberately runs the same steps as `deploy.yml`, in the same order, on the
 # same Node: install, lint, test, build, then the crawler-file guard. If CI and
 # deploy disagree about what "green" means, the one that runs later is the one
 # that finds out, and that is the expensive one.
