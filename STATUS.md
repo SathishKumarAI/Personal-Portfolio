@@ -4,7 +4,7 @@ Written when work stopped. Read this first on return, then `portfolio/README.md`
 for the change-to-file table.
 
 **Last touched:** 2026-10-16
-**Branch:** `main`. **81 PRs squash-merged**, every branch deleted, nothing open.
+**Branch:** `main`. **76 PRs squash-merged** (#1 was closed unmerged), every branch deleted, nothing open.
 **Working tree:** clean.
 
 **Live:** <https://sathishkumarai.github.io/> — GitHub Pages, built by Actions
@@ -27,7 +27,7 @@ what `main` builds. Two things that have each caught someone out:
 
 ## The 2026-10-16 session: layout, docs, and one self-inflicted outage
 
-Six PRs (#71-#76). The repository was reorganised; the site changed only in
+Seven PRs (#71-#77). The repository was reorganised; the site changed only in
 its footer.
 
 | PR | What | The number |
@@ -38,6 +38,7 @@ its footer.
 | #74 | **`3d_portfolio` -> `portfolio`**, 6.0 MB of template assets archived | 130 files renamed with history |
 | #75 | Prompts, a writing standard, a navigable README, two file splits | `constants` 885 -> 30-line barrel + 9 files |
 | #76 | **Fixing the outage #74 and #75 caused together** | main could not build |
+| #77 | This file, which described a branch that merged a day earlier | 2 contradictory bundle hashes in one header |
 
 ### The layout now
 
@@ -103,7 +104,7 @@ caught this before CI.
 4. **Two repos, and they could be one.** `SathishKumarAI.github.io` holds
    three files — a workflow, a LICENSE and a README — and exists only to own
    the username that serves the site at a root URL. Renaming this repo into
-   that name would consolidate them and keep all 75 merged PRs; the cost is a
+   that name would consolidate them and keep all 76 merged PRs; the cost is a
    less descriptive repo name. The split already caused one incident, because
    `SOURCE_DIR` is pinned in both.
 
