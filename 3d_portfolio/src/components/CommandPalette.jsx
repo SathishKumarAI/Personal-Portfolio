@@ -4,6 +4,24 @@ import { contact, navLinks, themes } from "../constants";
 import { ask } from "../utils/answer";
 import { readable, socialLinks } from "./icons";
 
+/**
+ * Owns, the Ctrl-K / ⌘K ask box: the overlay, the keyboard handling, and the
+ * single list that mixes retrieved answers with commands.
+ * Does not own: the answers themselves. `utils/answer.js` retrieves passages
+ * that already exist in `constants`, and this file never writes a sentence —
+ * if it ever starts producing text the page does not otherwise say, the
+ * feature has lost the thing that justifies it.
+ * Does not own: the theme. `ThemeToggle` is the only writer of `data-theme`;
+ * this dispatches a `set-theme` event instead. Writing the attribute here
+ * directly left that component's state stale, so its button needed two clicks
+ * and announced the wrong mode in between.
+ *
+ * ONE LISTBOX, TWO KINDS OF ROW. Answers rank first, then commands. Both are
+ * plain entries with a `run`, so one set of arrow keys drives the whole list;
+ * the `kind` field only changes how a row draws and which header sits above
+ * it. Two lists would have meant two cursors and a decision about which one
+ * Enter belongs to.
+ */
 // An explicit `behavior: "smooth"` beats the CSS reduced-motion reset, and these
 // are the longest scrolls on the site.
 const smooth = () =>

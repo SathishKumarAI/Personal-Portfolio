@@ -11,6 +11,34 @@ import MobileCollapse from "./MobileCollapse";
 import { ICON_PATHS } from "./icons";
 import { TAU, roundRect, hash, mulberry } from "../utils/draw";
 
+/**
+ * Owns, the Projects section: the cards, and the drawing on each cover.
+ * Does not own: what a project IS. Every string comes from `projects` in
+ * `constants`; this file decides only how it is shown.
+ *
+ * THE COVERS ARE DRAWN, NOT PHOTOGRAPHED, and that is the point of the
+ * section. Each one is a small diagram of how that project actually works —
+ * a question being embedded and its passages retrieved, a detector boxing an
+ * object, training happening in three places at once. A screenshot of a UI
+ * would say less, because the interesting part of this work is the shape of
+ * the system behind it.
+ *
+ * Each cover is a function taking a 2D context, further down this file. They
+ * are plain canvas calls on purpose: no library, no dependency, and the
+ * drawing lives beside the card that uses it.
+ *
+ * THE TRAP. Every cover seeds its randomness from the PROJECT NAME
+ * (`hash(name || cover)` with `mulberry` in `utils/draw.js`), so a drawing is
+ * stable across reloads. Renaming a project silently changes its artwork, and
+ * nothing in the build will mention it.
+ *
+ * A PHONE SHOWS THREE CARDS and offers the rest. `PHONE_CARDS` here and the
+ * `.projects-grid[data-collapsed]` rule in `index.css` are ONE mechanism —
+ * change one and you must change the other. A deep link to a hidden card has
+ * to open the deck first, which is why links elsewhere point at
+ * `#<project name>` rather than at `#projects`.
+ */
+
 /* ---- cover drawing ---- */
 const RED = "#FF3621";
 const BG = "#11262C"; // keep in step with --c-canvas in index.css

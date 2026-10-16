@@ -222,3 +222,9 @@ sathishkumarai.github.io/
 # recaptcha). Kept locally as a content source; never committed.
 Satish Kumar _ LinkedIn.html
 Satish Kumar _ LinkedIn_files/
+
+# A screenshot dropped at the root in September and never referenced by
+# anything. Ignored rather than deleted: it is not the repo's to throw away,
+# and an untracked file that shows up in every `git status` eventually gets
+# committed by accident.
+/download.png
