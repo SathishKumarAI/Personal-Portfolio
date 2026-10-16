@@ -1,6 +1,6 @@
 # STATUS: personal-portfolio
 
-Written when work stopped. Read this first on return, then `3d_portfolio/README.md`
+Written when work stopped. Read this first on return, then `portfolio/README.md`
 for the change-to-file table.
 
 **Last touched:** 2026-10-15
@@ -24,11 +24,11 @@ what `main` builds. Checked on the live site, not just the green tick — 47
 terms, the view toggle, four planes and sixteen nodes in the diagram, the
 crawler notice as points, and the retrieval panel reading "best match" with no
 "100%" anywhere.
-**The site is `3d_portfolio/`.** Everything else here is supporting material.
+**The site is `portfolio/`.** Everything else here is supporting material.
 
 ## The 2026-10-15 session, newest first
 
-Fourteen merges, #50 to #63. `3d_portfolio/docs/WORKLOG.md` has the
+Fourteen merges, #50 to #63. `portfolio/docs/WORKLOG.md` has the
 measurements; `DECISIONS.md` has what was chosen and what it cost.
 
 | PR | What changed | The number that mattered |
@@ -237,7 +237,7 @@ someone to notice:
 
 ### Fixed in passing, and it was on `main`
 
-`3d_portfolio/src/components/README.md` had **two committed merge-conflict
+`portfolio/src/components/README.md` had **two committed merge-conflict
 blocks** (`<<<<<<< HEAD` / `>>>>>>> b41aa04`) sitting in the change-to-file
 table and the traps list. Both sides were complementary rather than competing —
 the palette and 2D field rows against the 3D field rows, the role-deck traps
@@ -596,7 +596,7 @@ overlapped the lede by 156px.
 
 Before it, `fix/mobile-layout-and-nav` squash-merged and deleted, four commits,
 all four phone-layout faults found by measuring the running page. Full reasoning in
-`3d_portfolio/docs/WORKLOG.md`, the 2026-09-12 entry headed "four layout faults
+`portfolio/docs/WORKLOG.md`, the 2026-09-12 entry headed "four layout faults
 on a phone":
 
 | What | Where it lives now |
@@ -661,13 +661,13 @@ their call. `archive/pre-consolidation-2026-09-11` is deliberate and stays.
 
 Two repos, one source of truth.
 
-- **`Personal-Portfolio`** holds the site, in `3d_portfolio/`. Edit here.
+- **`Personal-Portfolio`** holds the site, in `portfolio/`. Edit here.
 - **`SathishKumarAI.github.io`** holds no site code. It exists only because a
   repo named exactly `<user>.github.io` is served from the domain root, which
   keeps Vite's `base` at `/` so one build serves both Pages and Vercel.
 
 Its workflow checks out this repo at `SOURCE_REF` (now `main`), builds
-`3d_portfolio/`, fails if `robots.txt`, `llms.txt`, `og.png` or the JSON-LD are
+`portfolio/`, fails if `robots.txt`, `llms.txt`, `og.png` or the JSON-LD are
 missing from `dist/`, and publishes.
 
 **A push here cannot trigger that workflow** — the source is a different
@@ -683,13 +683,13 @@ and believe the deploy failed.
 
 **Vercel is still not set up.** `npx vercel whoami` returns `Logged out` and the
 login is interactive. If a Vercel URL ever becomes the primary address, six
-absolute URLs in `3d_portfolio/index.html` change together and nothing else
+absolute URLs in `portfolio/index.html` change together and nothing else
 does; a comment in that file says so.
 
 ## Traps, each one already paid for
 
-- **The site is not at the repo root.** Vercel needs `--cwd 3d_portfolio`, or
-  Root Directory set to `3d_portfolio` in the dashboard.
+- **The site is not at the repo root.** Vercel needs `--cwd portfolio`, or
+  Root Directory set to `portfolio` in the dashboard.
 - **A `tailwind.config.js` change needs a dev-server restart.** Vite will not
   pick up new tokens on HMR; the classes silently resolve to nothing and you
   measure transparent backgrounds or 16px fallback type and wonder why. Cost
@@ -717,9 +717,9 @@ does; a comment in that file says so.
   against the input list, not against the loop's own success count.
 - **`.gitignore` must stay ASCII.** It was corrupted once by a PowerShell `>>`
   writing UTF-16LE; git stops parsing at the first NUL byte.
-- **`3d_portfolio/read.md` is historical. Do not run it.**
+- **`portfolio/read.md` is historical. Do not run it.**
 - **A grep cannot read a PNG.** `public/og.png` kept an old job title through a
-  whole rename. Its source is `3d_portfolio/docs/og-card.html`; regenerate it
+  whole rename. Its source is `portfolio/docs/og-card.html`; regenerate it
   whenever the title or tagline changes.
 
 ## What is deliberately not done
@@ -741,12 +741,12 @@ does; a comment in that file says so.
 
 | Question | File |
 | --- | --- |
-| What changed, when, and what was measured | `3d_portfolio/docs/WORKLOG.md` |
-| What is left, as tickets | `3d_portfolio/docs/BACKLOG.md` |
-| Why the type is the size it is | `3d_portfolio/docs/TYPE-AUDIT.md` |
-| What a phone gets and a desktop does not | `3d_portfolio/README.md`, "What a phone gets" |
-| Which file to open for a given change | `3d_portfolio/README.md` |
-| Which component owns what | `3d_portfolio/src/components/README.md` |
+| What changed, when, and what was measured | `portfolio/docs/WORKLOG.md` |
+| What is left, as tickets | `portfolio/docs/BACKLOG.md` |
+| Why the type is the size it is | `portfolio/docs/TYPE-AUDIT.md` |
+| What a phone gets and a desktop does not | `portfolio/README.md`, "What a phone gets" |
+| Which file to open for a given change | `portfolio/README.md` |
+| Which component owns what | `portfolio/src/components/README.md` |
 | Branch protection across the account | `docs/REPO-SECURITY.md` |
 | How to contribute, and LLM-written patches | `CONTRIBUTING.md` |
 | Where the five earlier drafts went | `README.md` |

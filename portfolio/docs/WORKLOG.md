@@ -3988,7 +3988,7 @@ position" dev warning, which is documented in `Works.jsx` and is
 - **Vercel is not deployed.** `npx vercel whoami` returns `Logged out` and
   `vercel login` is interactive, so the owner has to run it. Note for whoever
   does: the site is not at the repo root, so deploy with
-  `npx vercel --cwd 3d_portfolio`, or set Root Directory to `3d_portfolio` when
+  `npx vercel --cwd portfolio`, or set Root Directory to `portfolio` when
   importing the repo in the dashboard.
 - **Three TODOs in `index.html` are still blocked on that domain**: absolute
   `og:image` and `twitter:image`, `og:url`, and the canonical link. X ignores

@@ -1,13 +1,13 @@
 # Personal portfolio
 
-The personal site of Sathish Kumar. **The site is `3d_portfolio/`** — everything else here
+The personal site of Sathish Kumar. **The site is `portfolio/`** — everything else here
 is supporting material.
 
 ```
-3d_portfolio/    the site. Vite + React. Start here.
+portfolio/    the site. Vite + React. Start here.
 Research_Docs/   personal working notes, predating the site. Has a README
 docs/            account/repo notes: branch protection, how the repo presents.
-                 NOT the site's docs — those are 3d_portfolio/docs/
+                 NOT the site's docs — those are portfolio/docs/
 STATUS.md        where work stopped, the next action, the traps. Read on return.
 CONTRIBUTING.md  how to contribute, including with an LLM
 LICENSE          MIT for the code; the written content and CV are reserved
@@ -17,7 +17,7 @@ LICENSE          MIT for the code; the written content and CV are reserved
 project write-ups and CV are not covered; please do not republish someone
 else's work history as your own. `LICENSE` says exactly where the line is.
 
-**Want to build one like it?** `3d_portfolio/docs/BUILD-THIS-YOURSELF.md` is
+**Want to build one like it?** `portfolio/docs/BUILD-THIS-YOURSELF.md` is
 a prompt pack for doing it with a coding agent — the order that makes each
 phase checkable, rather than a template to fill in.
 
@@ -26,7 +26,7 @@ Despite the folder name there is no 3D in it; the name survives from a version t
 ## Run
 
 ```bash
-cd 3d_portfolio
+cd portfolio
 npm install
 npm run dev        # http://localhost:5173 (5174 if 5173 is taken)
 npm run build
@@ -76,12 +76,12 @@ setup, any of it.
 **Content: not licensed for reuse.** The MIT grant covers the software. It is
 not an invitation to republish the parts of this repository that are a person
 rather than a program: the work history and its dates, the project write-ups,
-the bio and headline copy, `3d_portfolio/public/llms.txt`, and the images in
-`3d_portfolio/public/` including the headshot and the social card.
+the bio and headline copy, `portfolio/public/llms.txt`, and the images in
+`portfolio/public/` including the headshot and the social card.
 
 The distinction matters more here than on a normal repo, because on a portfolio
 the text *is* the product. Someone can fork this site and put their own career
 in it; they should not be able to fork it and keep Sathish's.
 
 If you want to reuse the design, the honest path is: keep the code, replace
-everything in `3d_portfolio/src/constants/index.js`.
+everything in `portfolio/src/constants/index.js`.

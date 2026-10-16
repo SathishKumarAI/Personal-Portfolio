@@ -1,4 +1,4 @@
-# Pull-request checks for the site in 3d_portfolio/.
+# Pull-request checks for the site in portfolio/.
 #
 # Why this exists: the deploy workflow lives in the OTHER repo
 # (SathishKumarAI.github.io) and only runs on demand, after a merge. So until
@@ -28,7 +28,7 @@ permissions:
   contents: read
 
 env:
-  SOURCE_DIR: 3d_portfolio
+  SOURCE_DIR: portfolio
 
 jobs:
   check:

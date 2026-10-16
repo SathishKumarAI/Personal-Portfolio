@@ -52,7 +52,7 @@ worth more than a confident claim that turns out to be false.
 ## Before you open a pull request
 
 ```bash
-cd 3d_portfolio
+cd portfolio
 npm install
 npm run dev        # http://localhost:5173
 npm run lint       # must exit 0 errors
@@ -60,7 +60,7 @@ npm run build      # must succeed
 ```
 
 The repo has conventions that are load-bearing rather than decorative, and
-`3d_portfolio/README.md` is the map. Two that catch people:
+`portfolio/README.md` is the map. Two that catch people:
 
 - **Do not add a bare `text-[Npx]`.** Type sizes come from the named scale in
   `tailwind.config.js`. The reason is in `docs/TYPE-AUDIT.md`.

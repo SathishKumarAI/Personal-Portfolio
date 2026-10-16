@@ -5,7 +5,7 @@ repository and they are deliberately separate:
 
 | Set | Covers | Governed by |
 | --- | --- | --- |
-| `3d_portfolio/docs/` | The site: architecture, decisions, worklog, backlog, the stack taxonomy | `3d_portfolio/docs/manifest.md` — one canonical file per topic |
+| `portfolio/docs/` | The site: architecture, decisions, worklog, backlog, the stack taxonomy | `portfolio/docs/manifest.md` — one canonical file per topic |
 | **`docs/` (here)** | The GitHub **account and repository** around the site | this file |
 
 The split is by subject, not by importance. Branch protection is a property of
@@ -24,7 +24,7 @@ holds them.
 ## Before adding a file here
 
 Ask which subject it belongs to. If it is about **what the site does or why it
-is built that way**, it goes in `3d_portfolio/docs/` — and `manifest.md` there
+is built that way**, it goes in `portfolio/docs/` — and `manifest.md` there
 will tell you which existing file already owns the topic, because the usual
 answer is that one does.
 

@@ -112,7 +112,7 @@ browsing, so these are what that score cannot see.
   production URL that unblocks the tickets below. *Blocked 2026-09-11:
   `npx vercel whoami` returns `Logged out` and `vercel login` is interactive, so
   it has to be run by the owner. Deploy from the subdirectory
-  (`npx vercel --cwd 3d_portfolio`) or set Root Directory to `3d_portfolio` if
+  (`npx vercel --cwd portfolio`) or set Root Directory to `portfolio` if
   importing the repo in the dashboard: the site is not at the repo root.*
 - [x] **(P0, S) ~~Set the real canonical domain.~~** Done 2026-09-11:
   <https://sathishkumarai.github.io/>. The canonical, `og:url`, `og:image`,

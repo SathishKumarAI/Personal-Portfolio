@@ -3,7 +3,7 @@
 What is configured across the `SathishKumarAI` account, what it actually buys,
 and the two things it deliberately does not do.
 
-This lives here rather than in `3d_portfolio/` because it describes the account,
+This lives here rather than in `portfolio/` because it describes the account,
 not the site.
 
 ## The configuration

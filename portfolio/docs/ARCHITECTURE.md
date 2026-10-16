@@ -250,13 +250,13 @@ sequenceDiagram
   Note over PR,IO: a push here triggers NOTHING in the other repo
   Dev->>IO: gh workflow run deploy.yml
   IO->>PR: checkout at SOURCE_REF (main)
-  IO->>IO: build 3d_portfolio/, fail if robots/llms/og/JSON-LD missing
+  IO->>IO: build portfolio/, fail if robots/llms/og/JSON-LD missing
   IO->>GH: publish dist/
   GH-->>Dev: served through a CDN — add ?v= when checking
 ```
 
-- **The site lives in `3d_portfolio/`, not the repo root.** Vercel needs
-  `--cwd 3d_portfolio`; the deploy workflow sets `SOURCE_DIR`.
+- **The site lives in `portfolio/`, not the repo root.** Vercel needs
+  `--cwd portfolio`; the deploy workflow sets `SOURCE_DIR`.
 - **A repo named `<user>.github.io` is served from the domain root**, which is the
   only reason that second repo exists. It keeps Vite's `base` at `/` so one build
   serves both Pages and any future Vercel deploy.

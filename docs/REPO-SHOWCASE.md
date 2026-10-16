@@ -131,7 +131,7 @@ link look like it points somewhere else:
 
 ## 4. The portfolio site is showing the wrong six
 
-`3d_portfolio/src/constants/index.js` → `projects` currently carries:
+`portfolio/src/constants/index.js` → `projects` currently carries:
 
 | # | Project | Verdict |
 |---|---|---|

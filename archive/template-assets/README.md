@@ -3,8 +3,13 @@
 **Nothing in this directory is imported by the site.** Verified 2026-09-11:
 `grep -rn 'from "../assets"' src/` returns only `assets/index.js` referencing itself.
 
-These are leftovers from the original 3D template this repo was forked from, the one the `3d_portfolio` folder name still refers to, and whose three.js stack
-was removed (see `docs/WORKLOG.md`).
+These are leftovers from the original 3D template this repo was forked from —
+the one the old `3d_portfolio` directory name referred to — whose three.js
+stack was removed long before the current WebGL hero was written. See
+`../../portfolio/docs/WORKLOG.md`.
+
+**Moved here 2026-10-16**, from `src/assets/`. Kept rather than deleted: it is
+not mine to throw away, and the evidence that it was dead is recorded below.
 
 | What | Why it is dead |
 |---|---|
