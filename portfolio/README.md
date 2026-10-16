@@ -2,8 +2,8 @@
 
 A fast, type-led personal site for an AI engineer, staged as a campaign page:
 six palettes, one lava-red accent and full-bleed scenes. React 18
-on Vite 5, Tailwind for styling, Framer Motion for movement, two 2D canvases for
-the margin diagrams, and three.js for the hero field.
+on Vite 5, Tailwind for styling, Framer Motion for movement, 2D canvases for the
+margin diagrams and the token stream, and three.js for the hero field.
 
 **The directory was called `3d_portfolio` until 2026-10-16.** That name came
 from a forked template whose 3D stack had been removed, so for a year it
@@ -61,7 +61,7 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build
 npm run lint
-npm test           # 27 checks, four files: retrieval, timezone maths,
+npm test           # 42 checks, six files: retrieval, timezone maths,
                    # and the llms.txt / index.html crawler mirrors
 npm run icons      # regenerate src/components/toolIcons.js from simple-icons
 ```
@@ -387,7 +387,7 @@ desktop's content.
 | | Phone | md and up |
 | --- | --- | --- |
 | Navigation | Hamburger, full-screen menu | Inline links |
-| Stack | Six labelled rows of bare terms, no boxes | Six cards, each with its description |
+| Stack | Six labelled rows of bare terms, no boxes | Two views: a six-column tool list, or a system diagram with a cloud matrix |
 | Stack intro copy | Hidden | Shown |
 | Role points, project copy | Behind a disclosure (Projects, Roles) | All inline |
 | Projects | Three cards, then "Show 3 more projects" | All six |
@@ -430,11 +430,16 @@ Three rules behind that table:
    read, and inventing coordinates would contradict the one claim that makes it
    a diagram rather than decoration.
 
-## Ambient motion: two effects, each scoped
+## Ambient motion: every effect scoped to where it means something
 
-Two canvases, and the scoping is the whole design decision. A backdrop that
-follows the reader down the page is wallpaper competing with text; a backdrop
-that appears where it illustrates something is an illustration.
+Each effect is confined to the one section it illustrates, and the scoping is
+the whole design decision. A backdrop that follows the reader down the page is
+wallpaper competing with text; a backdrop that appears where it illustrates
+something is an illustration.
+
+The two below are the canvases. The rest of the motion budget — the career
+diagrams, the role-edge light, the Stack diagram's platform swap and node walk
+— is tabulated in [`../docs/site/ARCHITECTURE.md`](../docs/site/ARCHITECTURE.md).
 
 ### `NeuralField.jsx`: landing view only
 

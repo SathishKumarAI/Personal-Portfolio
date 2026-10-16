@@ -219,8 +219,12 @@ the stemmer did. Both are pinned by tests named for the failure.
 
 ## Tests: what each one actually protects
 
-`npm test` is 27 checks in four plain-node files. No framework, no fixtures — the
+`npm test` is 42 checks in six plain-node files. No framework, no fixtures — the
 repo has no runner and does not need one.
+
+They chain with `&&`, so the first failure stops the rest. **A partial count is
+the tell**: a run reporting 26 of 42 means something failed early, not that
+sixteen checks were skipped.
 
 | File | Checks | The failure it exists for |
 | --- | --- | --- |
@@ -228,6 +232,8 @@ repo has no runner and does not need one.
 | `utils/localzone.test.mjs` | 5 | An offset that is right in July and wrong in January — India to US Central is +11:30h then +10:30h |
 | `utils/llms-mirror.test.mjs` | 7 | The crawler copy drifting from `constants`. It shipped with **no employment history at all**; this is the check that would have caught it |
 | `utils/html-mirror.test.mjs` | 7 | The other two hand-written mirrors: the JSON-LD a search engine reads, and the `<noscript>` block that is the only content in the served HTML. Also that `og-card.html` still names the current role |
+| `utils/netshape.test.mjs` | 5 | The hero field drawing a unit with no incoming edge — a diagram of something that is not a network |
+| `utils/stages.test.mjs` | 10 | The Stack's two filings covering different sets of tools, a node asserting a job nothing fills, and the cloud matrix inventing experience in its `mine` column |
 
 Each was proved to fail before being trusted: the mirror guard was run against a
 copy with the Roles section deleted and reported the three employers and four role
