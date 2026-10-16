@@ -1,15 +1,47 @@
-# Sathish Kumar: portfolio
+# portfolio — the site
 
-A fast, type-led personal site for an AI engineer, staged as a campaign page:
-six palettes, one lava-red accent and full-bleed scenes. React 18
-on Vite 5, Tailwind for styling, Framer Motion for movement, 2D canvases for the
-margin diagrams and the token stream, and three.js for the hero field.
+A fast, type-led personal site for an AI engineer. React 18 on Vite 5,
+Tailwind for styling, Framer Motion for movement, 2D canvases for the margin
+diagrams and the token stream, three.js for the hero field.
 
-**The directory was called `3d_portfolio` until 2026-10-16.** That name came
-from a forked template whose 3D stack had been removed, so for a year it
-described something that was not there. It was renamed once the layout was
-tidied; the WebGL hero it would now have been accurate about lives in
+**Live:** <https://sathishkumarai.github.io> · **Docs:** [`../docs/`](../docs/)
+
+---
+
+## Find what you need
+
+This file is long because it is a reference, not an introduction. Use the
+table.
+
+| You want | Go to |
+| --- | --- |
+| **To change one thing** and not read anything else | [Where to change what](#where-to-change-what) — the table most sessions start and end with |
+| To run it locally | [Run](#run) |
+| What it is built on | [Stack](#stack) |
+| Where the words live | [Content model](#content-model) |
+| Colour, type, spacing tokens | [Design system](#design-system) |
+| What is on the page, in order | [Sections, in order](#sections-in-order) |
+| The nav, the two edge docks | [Navigation and docks](#navigation-and-docks) |
+| What a phone is shown | [What a phone gets](#what-a-phone-gets-and-what-it-does-not) |
+| Why each animation is where it is | [Ambient motion](#ambient-motion-every-effect-scoped-to-where-it-means-something) |
+| **Things that will bite you** | [Traps](#traps) — read before a first edit |
+| How to verify a visual change | [Verification](#verification) |
+
+**Not here:** how the system works (data flow, chunking, the theme cascade,
+deploy topology) is [`../docs/site/ARCHITECTURE.md`](../docs/site/ARCHITECTURE.md).
+Why a thing was built the way it is, is
+[`../docs/site/DECISIONS.md`](../docs/site/DECISIONS.md). This file is for
+*changing* the site; those are for understanding it.
+
+### A note on the directory name
+
+It was `3d_portfolio` until 2026-10-16. The name came from a forked template
+whose 3D stack had been removed, so for a year it described something that was
+not there. It was renamed when the repository layout was tidied. The WebGL
+hero the old name would now have been accurate about lives in
 `NeuralField3D.js` — desktop only, in a lazy chunk a phone never fetches.
+
+---
 
 ## Where to change what
 
