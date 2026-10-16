@@ -248,7 +248,7 @@ repo-wide scan confirms the site and docs name it nowhere.
 ### The regression I caused, and the process fault under it
 
 Making "Hugging Face" a primary tool broke `llms-mirror.test.mjs`, which
-checks `public/llms.txt` still mirrors the stack. It had been failing since the
+checks `portfolio/public/llms.txt` still mirrors the stack. It had been failing since the
 skills commit, because I was running the two `.mjs` suites directly instead of
 `npm test`, which runs five. The fix is one line of llms.txt; the lesson is
 that running a subset of the suite is indistinguishable from running none of
@@ -370,7 +370,7 @@ at every width, in both views.
 
 ### Found on `main` while documenting
 
-`src/components/README.md` carried **two committed merge-conflict blocks**
+`portfolio/src/components/README.md` carried **two committed merge-conflict blocks**
 (`<<<<<<< HEAD` / `>>>>>>> b41aa04`) in the change-to-file table and the traps
 list. Both sides were complementary, not competing, so both were kept. A
 repo-wide scan found no other file affected.
@@ -815,7 +815,7 @@ version and the fallback — they each had their own copy of the rule.
 | HIDDEN 1 → HIDDEN 2 | 1 duplicate | **15 edges**, 0 duplicates |
 | HIDDEN 2 → OUTPUT | 1 duplicate | **11 edges**, 0 duplicates |
 
-`src/utils/netshape.test.mjs` is the guard, and it was **armed before it was
+`portfolio/src/utils/netshape.test.mjs` is the guard, and it was **armed before it was
 trusted**: restoring the old rule turns it red with
 `4 -> 8: units [0] have no incoming edge`. A missing edge among thirty-four
 looks like a design choice until something counts them.
@@ -1487,7 +1487,7 @@ behind. `noreferrer` alone is enough; it implies `noopener` in every browser
 that matters.
 
 Verified by walking the anchors on the rendered page, and again by parsing every
-`<a>` in `src/**/*.jsx`. Nothing to change. The README already carried the
+`<a>` in `portfolio/src/**/*.jsx`. Nothing to change. The README already carried the
 convention and a stale count of 13.
 
 ### What the docs were still claiming
@@ -1756,7 +1756,7 @@ invalidates **in the same commit**. Five places still described it as shipping:
 | File | Said |
 | --- | --- |
 | `README.md` | sold the site as having "a spec band" — first sentence of the repo |
-| `docs/LEARNING-NOTES.md` §1 | told a learner to read `src/components/SpecBand.jsx`, **deleted** |
+| `docs/LEARNING-NOTES.md` §1 | told a learner to read `portfolio/src/components/SpecBand.jsx`, **deleted** |
 | `docs/LEARNING-NOTES.md` §13 | offered an exercise on the deleted band |
 | `docs/BACKLOG.md` | "a spec band", and "`npm test` is 20 checks" |
 | `STATUS.md` | "what the spec band counts", "20 checks across three files" |
@@ -1923,7 +1923,7 @@ wrong than it would have by being right.
 
 ### The social card had been previewing a tagline the site no longer had
 
-`public/og.png` was generated on 11 September. The headline changed on the 14th.
+`portfolio/public/og.png` was generated on 11 September. The headline changed on the 14th.
 For a day, every share of this link on LinkedIn, Slack or anywhere else showed
 **"AI Engineer · data to AI, end to end"** — a line that exists nowhere on the
 page. Nothing warned anyone, because a grep cannot read a PNG and neither can a
@@ -1940,7 +1940,7 @@ that file now says when to redo it and what went wrong the one time nobody did.
 
 ### Two more hand-written mirrors, both unguarded until today
 
-Yesterday's `llms-mirror.test.mjs` guards `public/llms.txt`. It left two copies of
+Yesterday's `llms-mirror.test.mjs` guards `portfolio/public/llms.txt`. It left two copies of
 the same facts unchecked, and the asymmetry was mine:
 
 - the **JSON-LD** block — what Google and every structured-data consumer reads
@@ -1996,7 +1996,7 @@ deploy, and a trap documented in `main.tsx` that cost 55 kB when it fired.
 
 ## 2026-09-14: the crawler copy is now checked, not trusted
 
-`public/llms.txt` is a hand-written mirror of facts in `constants/index.js`.
+`portfolio/public/llms.txt` is a hand-written mirror of facts in `constants/index.js`.
 Hand-written was and is the right call — it is prose for a reader, not a dump —
 but hand-written also means it can quietly stop being true, and until today
 nothing checked that it had not.
@@ -2492,9 +2492,9 @@ nothing, and that is the correct answer for most of them.
 
 ### Where the paths come from, and why not by hand
 
-`simple-icons` is a **devDependency**, not a runtime one. `scripts/gen-tool-icons.mjs`
+`simple-icons` is a **devDependency**, not a runtime one. `portfolio/scripts/gen-tool-icons.mjs`
 reads it once, writes the marks this site actually names into
-`src/components/toolIcons.js`, and that generated module is what ships. 3,460
+`portfolio/src/components/toolIcons.js`, and that generated module is what ships. 3,460
 marks in the dependency graph for 25 glyphs would be the wrong trade; so would
 hand-writing them, which is 25 chances to ship a logo that is subtly wrong from
 memory. The repo hand-writes four brand glyphs already, but those were checked
@@ -3783,7 +3783,7 @@ protection on private repositories is a paid feature for personal accounts. 9
 forks were skipped deliberately.
 
 The full reasoning, including why requiring pull requests would have locked the
-owner out of his own `main`, is in `../docs/REPO-SECURITY.md`. The short version
+owner out of his own `main`, is in `../docs/repo/REPO-SECURITY.md`. The short version
 worth repeating: **outside contributors were never able to push anyway.** Anyone
 without write access can only fork and open a PR. Protection guards against the
 owner's own mistakes, not against strangers who were never getting in.
@@ -3822,7 +3822,7 @@ dev warning, which is documented in `Works.jsx` and `NODE_ENV`-guarded.
   remaining height is content rather than padding. The hamburger is the fast
   route to Contact.
 - **The site is still client-rendered**, so AI crawlers see only the
-  `<noscript>` block. `public/llms.txt` is the deliberate answer. A build-time
+  `<noscript>` block. `portfolio/public/llms.txt` is the deliberate answer. A build-time
   prerender is filed in `BACKLOG.md` as P1/L.
 - **23 private repos are unprotected** pending GitHub Pro.
 - **A theme picker on first load was proposed and advised against**: the site
@@ -3918,7 +3918,7 @@ engineering roles". What he calls himself and what he will be hired for are
 different decisions, and that sentence is the only place the second one is
 stated.
 
-**A grep cannot read a PNG.** `public/og.png` had the old title painted into it
+**A grep cannot read a PNG.** `portfolio/public/og.png` had the old title painted into it
 and no source in the repo, so every string could be updated, verified and
 shipped while the image in every link preview kept saying "ML / AI Engineer". It
 was also the last em dash to survive `1242d04`, and it was set in Arial while
@@ -3988,7 +3988,7 @@ position" dev warning, which is documented in `Works.jsx` and is
 - **Vercel is not deployed.** `npx vercel whoami` returns `Logged out` and
   `vercel login` is interactive, so the owner has to run it. Note for whoever
   does: the site is not at the repo root, so deploy with
-  `npx vercel --cwd 3d_portfolio`, or set Root Directory to `3d_portfolio` when
+  `npx vercel --cwd portfolio`, or set Root Directory to `portfolio` when
   importing the repo in the dashboard.
 - **Three TODOs in `index.html` are still blocked on that domain**: absolute
   `og:image` and `twitter:image`, `og:url`, and the canonical link. X ignores
@@ -4166,7 +4166,7 @@ type-led, Databricks-style site with light/dark themes. Branch:
    gap).
 10. **Optimization + cleanup.** Vendor chunk split (app code now ~11KB gzip on
     its own); removed 2 unused deps; deleted dead 3D component files; **removed
-    19MB of dead `public/` glTF assets** that were shipping in every build.
+    19MB of dead `portfolio/public/` glTF assets** that were shipping in every build.
     ESLint clean.
 11. **Docs + hygiene.** Real README, `favicon.svg`, `robots.txt`,
     `site.webmanifest`.

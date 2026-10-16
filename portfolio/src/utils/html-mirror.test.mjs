@@ -86,7 +86,7 @@ const test_the_primary_tools_are_in_knowsAbout = () => {
 // so the one thing that CAN be tested is that its source template still exists
 // and still says what the site says.
 const test_the_og_card_source_matches_the_role = () => {
-  const card = readFileSync(new URL("../../docs/og-card.html", import.meta.url), "utf8");
+  const card = readFileSync(new URL("../../../docs/site/og-card.html", import.meta.url), "utf8");
   assert.ok(card.includes(status.role), `og-card.html no longer says "${status.role}"`);
 };
 

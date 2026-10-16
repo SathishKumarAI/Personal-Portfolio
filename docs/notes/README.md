@@ -1,10 +1,10 @@
-# Research_Docs
+# docs/notes
 
 Personal working notes. **Nothing here is about the site** — the site and all
-of its documentation live in `3d_portfolio/`.
+of its documentation live in `portfolio/`.
 
 This directory predates the current site and is kept as a record. It is not
-maintained to the same standard as `3d_portfolio/docs/`: entries are written
+maintained to the same standard as `docs/site/`: entries are written
 for one reader, some are stubs, and none of them are a reference anyone else
 should rely on.
 
@@ -25,8 +25,8 @@ should rely on.
 
 | You want | Go to |
 | --- | --- |
-| How the site works, and where to change what | `../3d_portfolio/README.md` |
-| Why something was built the way it is | `../3d_portfolio/docs/DECISIONS.md` |
-| What changed and what was measured | `../3d_portfolio/docs/WORKLOG.md` |
+| How the site works, and where to change what | `../portfolio/README.md` |
+| Why something was built the way it is | `../docs/site/DECISIONS.md` |
+| What changed and what was measured | `../docs/site/WORKLOG.md` |
 | Where work stopped and what is next | `../STATUS.md` |
 | Account-level notes that are not about the site | `../docs/` |

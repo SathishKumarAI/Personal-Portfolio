@@ -50,7 +50,7 @@ the usual shape of a documentation problem.
 how the repo presents on GitHub. Different subject, different owner: that set
 has its own `README.md`. This table governs the SITE's documentation only.
 
-`../../Research_Docs/` is personal working notes that predate the site. Not
+`../../docs/notes/` is personal working notes that predate the site. Not
 maintained to this standard and not a reference; it says so itself.
 
 ## Conventions this set follows

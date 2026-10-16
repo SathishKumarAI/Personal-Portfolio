@@ -5,10 +5,11 @@ six palettes, one lava-red accent and full-bleed scenes. React 18
 on Vite 5, Tailwind for styling, Framer Motion for movement, two 2D canvases for
 the margin diagrams, and three.js for the hero field.
 
-**The folder name stopped being a joke on 2026-09-14.** `3d_portfolio` was left
-over from a forked template whose 3D stack had been removed; there is now a real
-WebGL scene behind the hero — desktop only, in a lazy chunk a phone never
-fetches. See `NeuralField3D.js`.
+**The directory was called `3d_portfolio` until 2026-10-16.** That name came
+from a forked template whose 3D stack had been removed, so for a year it
+described something that was not there. It was renamed once the layout was
+tidied; the WebGL hero it would now have been accurate about lives in
+`NeuralField3D.js` — desktop only, in a lazy chunk a phone never fetches.
 
 ## Where to change what
 

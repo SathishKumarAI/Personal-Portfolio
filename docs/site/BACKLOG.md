@@ -112,7 +112,7 @@ browsing, so these are what that score cannot see.
   production URL that unblocks the tickets below. *Blocked 2026-09-11:
   `npx vercel whoami` returns `Logged out` and `vercel login` is interactive, so
   it has to be run by the owner. Deploy from the subdirectory
-  (`npx vercel --cwd 3d_portfolio`) or set Root Directory to `3d_portfolio` if
+  (`npx vercel --cwd portfolio`) or set Root Directory to `portfolio` if
   importing the repo in the dashboard: the site is not at the repo root.*
 - [x] **(P0, S) ~~Set the real canonical domain.~~** Done 2026-09-11:
   <https://sathishkumarai.github.io/>. The canonical, `og:url`, `og:image`,
@@ -130,7 +130,7 @@ browsing, so these are what that score cannot see.
   refuse force-push and branch deletion and require linear history. 23 private
   repos blocked by plan, 9 forks skipped on purpose. Reasoning, including why an
   enforced PR workflow would lock the owner out on a personal account, is in
-  `../../docs/REPO-SECURITY.md`.
+  `../../docs/repo/REPO-SECURITY.md`.
 - [ ] **(P2, S) Protect the 23 private repos**, which needs GitHub Pro. Or
   decide they do not need it: a private repo is visible only to its owner, so
   the accidental-force-push risk is his alone.
@@ -138,7 +138,7 @@ browsing, so these are what that score cannot see.
   they ever get updated. Skipped because blocking force-push breaks the
   hard-reset-onto-upstream way of syncing one.
 - [x] **(P1, S) ~~`sitemap.xml`~~** Declined 2026-09-11, reasoning recorded in
-  `public/robots.txt`: this is a single page with in-page anchors, so a sitemap
+  `portfolio/public/robots.txt`: this is a single page with in-page anchors, so a sitemap
   would carry exactly one URL and tell a crawler nothing it does not already
   have. Reopen the day the site grows real routes.
 - [~] **(P1, M) Cross-browser + real-device QA.** Partly done 2026-09-12: the
@@ -152,7 +152,7 @@ browsing, so these are what that score cannot see.
 ## Content the owner must supply
 
 - [~] **(P1, M) Real project screenshots / GIFs (option A).** Drop images into
-  `public/`; layer them over the generative covers for the top 1, 2 projects.
+  `portfolio/public/`; layer them over the generative covers for the top 1, 2 projects.
   Highest credibility. *Needs assets from Sathish.*
 - [x] **(P1, S) ~~Add EmailJS keys.~~** Dropped 2026-09-11, the contact form
   was removed in favour of a copyable address and an icon row, so there is
@@ -190,7 +190,7 @@ browsing, so these are what that score cannot see.
   override is placed AFTER the fade, because the global reset near the top of
   index.css is `!important` too and between two equally important, equally
   specific rules the later one wins.
-- [x] **(P2, M) ~~OG / Twitter share image.~~** Done 2026-09-11: `public/og.png`
+- [x] **(P2, M) ~~OG / Twitter share image.~~** Done 2026-09-11: `portfolio/public/og.png`
   at 1200x630 plus 180/192/512 icons. Regenerated later the same day when the
   title changed, and given a source: `docs/og-card.html`. It had none, so the
   card kept saying "ML / AI Engineer" after every string on the site had been
@@ -214,7 +214,7 @@ browsing, so these are what that score cannot see.
   is still wanted, build it as an inline strip in the hero, not a dialog.
 - [x] **(P2, S) ~~Delete `Quote.jsx`.~~** Done 2026-09-12. Dead since the
   interstitial quotations were removed. Confirmed before deleting: no reference
-  anywhere in `src/`, and the built bundle contained zero occurrences of its
+  anywhere in `portfolio/src/`, and the built bundle contained zero occurrences of its
   `figcaption` — Rollup had already tree-shaken it, so the deletion changes the
   shipped output not at all and is purely about the reader of the source.
 - [x] **(P2, S) ~~Section-header treatment.~~** Done 2026-09-12: the eyebrow now
@@ -236,14 +236,14 @@ browsing, so these are what that score cannot see.
   Reopen it if Vercel previews ever land.
 - [ ] **(P1, L) Prerender for AI crawlers.** The site is a client-rendered SPA,
   so ChatGPT-User, GPTBot and most AI crawlers see only the `<noscript>` block:
-  they do not execute JavaScript. `public/llms.txt` is the deliberate answer and
+  they do not execute JavaScript. `portfolio/public/llms.txt` is the deliberate answer and
   covers the content, but the HTML itself is empty to them. A build-time
   prerender (one plugin, one build step) would give them the real page. Weigh
   against the cost of a new dep and a second render path. This is a
   rearchitecture, not a refinement, which is why it was flagged rather than
   started.
 - [ ] **(P2, S) Keep `llms.txt` and the JSON-LD honest.** Both are hand-written
-  copies of facts that live in `src/constants/index.js`, and both now carry a
+  copies of facts that live in `portfolio/src/constants/index.js`, and both now carry a
   comment naming the constant they mirror. A small check that fails when
   `stackGroups` or `education` drifts from them would make the comment
   enforceable instead of aspirational.

@@ -57,7 +57,7 @@ the form falls back to opening the mail client (so it never hard-fails).
 
 ## How it behaves in code
 
-`src/components/Contact.jsx`:
+`portfolio/src/components/Contact.jsx`:
 
 - Reads the three `import.meta.env.VITE_EMAILJS_*` vars; `configured` is true
   only when all three are present.

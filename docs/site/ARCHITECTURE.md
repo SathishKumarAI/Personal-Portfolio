@@ -7,7 +7,7 @@ when someone loads the page, and why is it built this way?"*
 ## Core shape
 
 One React page, statically built, no backend, no API key, no database, no
-analytics. Everything a reader sees is either in `src/constants/index.js` or
+analytics. Everything a reader sees is either in `portfolio/src/constants/index.js` or
 derived from it at module load. That constraint is the reason several things that
 look expensive are cheap: the ask box needs no server because the corpus is the
 page's own copy, and the site survives a network with nothing behind it.
@@ -250,13 +250,13 @@ sequenceDiagram
   Note over PR,IO: a push here triggers NOTHING in the other repo
   Dev->>IO: gh workflow run deploy.yml
   IO->>PR: checkout at SOURCE_REF (main)
-  IO->>IO: build 3d_portfolio/, fail if robots/llms/og/JSON-LD missing
+  IO->>IO: build portfolio/, fail if robots/llms/og/JSON-LD missing
   IO->>GH: publish dist/
   GH-->>Dev: served through a CDN — add ?v= when checking
 ```
 
-- **The site lives in `3d_portfolio/`, not the repo root.** Vercel needs
-  `--cwd 3d_portfolio`; the deploy workflow sets `SOURCE_DIR`.
+- **The site lives in `portfolio/`, not the repo root.** Vercel needs
+  `--cwd portfolio`; the deploy workflow sets `SOURCE_DIR`.
 - **A repo named `<user>.github.io` is served from the domain root**, which is the
   only reason that second repo exists. It keeps Vite's `base` at `/` so one build
   serves both Pages and any future Vercel deploy.
@@ -279,5 +279,5 @@ sequenceDiagram
 
 - [DECISIONS.md](DECISIONS.md) — why each of these is the way it is
 - [LEARNING-NOTES.md](LEARNING-NOTES.md) — the same techniques explained from scratch
-- [../README.md](../README.md) — the change→file table
+- [../../portfolio/README.md](../../portfolio/README.md) — the change→file table
 - [WORKLOG.md](WORKLOG.md) — the measurements behind every claim here
