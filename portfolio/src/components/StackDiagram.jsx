@@ -14,7 +14,7 @@ import TagTerm from "./TagTerm";
 /**
  * Owns, the stack drawn the way it would be drawn on a whiteboard.
  * Does not own: which tools exist, or what any of them means. Those are
- * `systemStages` and `glossary` in `../constants`, and `utils/stages.test.mjs`
+ * `systemPlanes` and `glossary` in `../constants`, and `utils/stages.test.mjs`
  * fails if this diagram and the tool list stop covering the same 47 terms.
  *
  * WHY THE BOXES ARE NOT HIS SKILL AREAS
