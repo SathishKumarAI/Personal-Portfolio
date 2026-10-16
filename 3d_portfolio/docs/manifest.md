@@ -20,6 +20,10 @@ owned, add to that file.
 | `docs/LEARNING-NOTES.md` | **Plain-English explanations** of every technique this repo uses, for someone learning the craft: what it is, where it lives here, what to try next | `docs/TUTORIAL.md`, `docs/GUIDE.md`, `docs/BEGINNERS.md`, `docs/EXPLAINER.md` | P1 |
 | `docs/BACKLOG.md` | **Future work as tickets**, with priority and effort. Everything not yet built goes here | `docs/IMPROVEMENTS.md`, `docs/ROADMAP.md`, `docs/TODO.md`, `docs/FUTURE.md` | P0 |
 | `docs/WORKLOG.md` | **What changed, when, and what was measured.** Newest first, append-only | `docs/CHANGELOG.md`, `docs/HISTORY.md` | P0 |
+| `docs/STACK-TAXONOMY.md` | **Why each tool is in the box it is in.** The rule the Stack's boxes follow, every tool with its reason, the judgement calls worth arguing with, and the claims only the owner can confirm | `docs/TOOLS.md`, `docs/SKILLS.md`, `docs/STACK.md` | P0 |
+| `docs/BUILD-THIS-YOURSELF.md` | **How to build a portfolio this way with a coding agent.** Generalised prompts in the order that makes each phase checkable | `docs/PROMPTS.md`, `docs/RECIPE.md`, `docs/HOWTO.md` | P1 |
+| `../LICENSE` | **What may be reused.** MIT for the code; the written content, CV and likeness are reserved | `COPYING`, `docs/LICENSE.md` | P0 |
+| `src/utils/README.md` | **Which helper owns what**, and the failure each test is named for | `docs/TESTING.md` | P1 |
 | `docs/TYPE-AUDIT.md` | **Type scale and contrast**, measured off the running page | `docs/A11Y.md`, `docs/TYPOGRAPHY.md` | P1 |
 | `docs/EMAIL-SETUP.md` | Historical: a contact form removed 2026-09-11. Kept as history, not live guidance | — | P2 |
 
@@ -33,6 +37,12 @@ work, and within a month nobody would know which was current.
 
 **New improvements are added to `BACKLOG.md`.** That is the whole job of this
 table: catching the duplicate before the file exists, not after.
+
+It nearly happened a second time. A request to "organise the docs" in the
+2026-10-16 session was one step from producing `docs/README.md` — an index of
+the docs, which is this file. The table caught it. What the set actually
+needed was not a new map but two missing rows and four stale ones, which is
+the usual shape of a documentation problem.
 
 ## Conventions this set follows
 

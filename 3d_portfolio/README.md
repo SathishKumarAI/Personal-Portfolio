@@ -31,11 +31,15 @@ Read this table instead of the code.
 | Which tools show a logo, and which slug each uses | `MAP` in `scripts/gen-tool-icons.mjs`, then `npm run icons` |
 | The mark for a term that is an idea, not a product | `src/components/conceptIcons.js` — hand-drawn, never generated |
 | Which tools get the filled chip | `primary` per group in `stackGroups` |
-| A Stack category's colour | `dot` AND `tint` per group in `stackGroups` — same colour, two forms — token in `src/index.css`. **The six are a cool-to-warm ramp along the pipeline; reorder the groups and you must reorder these** |
-| The Stack pipeline rail, card glow, stage numerals | `src/components/Tech.jsx`, `.stack-card` / `.stack-seg` in `src/index.css` |
+| A Stack category's colour | `dot` AND `tint` per group in `stackGroups` — same colour, two forms — token in `src/index.css`. **The six are ONE HUE at six intensities with monotonic luminance, not a palette.** They encode position on the path, so reordering the groups means re-deriving these. See the note above the values in `index.css` |
+| The Stack tool list: header, view toggle, definition strip | `src/components/Tech.jsx` |
+| The Stack system diagram: planes, nodes, flow payloads, `fit to screen` | `src/components/StackDiagram.jsx` |
+| What fills each role on AWS / GCP / Azure | `platformMatrix` in `src/constants/index.js` |
+| **Why a tool is in the box it is in** | `docs/STACK-TAXONOMY.md` — read before moving one |
+| The emoji cursor, hero only | `.hero-cursor` in `src/index.css`, class in `Hero.jsx` |
 | The og:image social card | `docs/og-card.html`, then re-render over `public/og.png` |
 | How big any text is | the named scale in `tailwind.config.js`, never a literal |
-| How much a section is padded | the `py-[clamp(3rem,9vw,8rem)]` on the `<section>` in `src/hoc/SectionWrapper.jsx`. The FLOOR is what a phone gets: 9vw is 35px at 390px wide, so the middle term never wins there |
+| How much a section is padded | the clamp on the `<section>` in `src/hoc/SectionWrapper.jsx`. The FLOOR is what a phone gets: 9vw is 35px at 390px wide, so the middle term never wins there. Stack opts into `{ wide, tight }` — a larger measure and less padding, because it holds a drawing rather than prose |
 | What a phone hides that a desktop shows | `MobileCollapse.jsx`, plus `md:` classes at the call site |
 | How many projects a phone shows before asking | `PHONE_CARDS` in `src/components/Works.jsx`, and the `.projects-grid[data-collapsed]` rule in `src/index.css` — **both, they are one mechanism** |
 | Where a per-project link lands | `id={name}` on the card in `Works.jsx`; About builds `#${project.name}` |
