@@ -15,10 +15,34 @@ for the change-to-file table.
 gh workflow run deploy.yml
 ```
 
-Two things that have each caught someone out:
+Three things that have each caught someone out:
 
-- The CDN serves the previous bundle for 15-60s after a successful run. Poll
-  until the hash matches; do not trust the green tick.
+- The CDN serves the previous bundle for 15-60s after a successful run. Do not
+  trust the green tick; check the live page.
+- **DO NOT VERIFY A DEPLOY BY COMPARING THE LIVE BUNDLE HASH TO A LOCAL BUILD
+  ON THIS MACHINE. It can never match.** Git stores this repo LF and checks it
+  out CRLF on Windows — `git ls-files --eol` reports `i/lf w/crlf`, and there
+  is no `.gitattributes`. Source newlines that reach a chunk therefore differ
+  by a byte each, `NeuralField3D` hashes differently, and because the entry
+  bundle embeds a map of chunk filenames its hash changes too.
+
+  Measured 2026-10-17: CI built `index-B1rDkshV.js` and the same commit built
+  `index-C47QvJ4P.js` here. The only difference in 152,428 bytes was the chunk
+  name at byte 80. A poll that waits for the hashes to agree will spin until it
+  times out and report a failure that did not happen.
+
+  Verify this way instead:
+
+  ```bash
+  gh run list --workflow deploy.yml --limit 1 --json headSha,conclusion
+  # headSha must equal `git rev-parse HEAD`, conclusion must be success
+  curl -s https://sathishkumarai.github.io/ | grep -o 'index-[A-Za-z0-9_-]*\.js'
+  # fetch that bundle, grep it for something the change actually added
+  ```
+
+  Making the hashes agree needs `.gitattributes` with `* text=auto eol=lf`,
+  which renormalises every file in the working tree. A real fix and a noisy
+  one; not done.
 - **The repo name is load-bearing.** Only `<user>.github.io` is served from the
   domain root. Rename this repo and Pages moves the site to a subpath, breaking
   every absolute URL unless Vite's `base` changes with it.
