@@ -366,7 +366,11 @@ const Tech = () => {
         <DefinitionStrip entry={shown} pinned={Boolean(pinned)} />
       </div>
 
-      <div className="mt-6">
+      {/* The gap above the body closes when the reader has asked for less
+          detail. Compact is a request for height, and 24px of air above the
+          drawing is height the drawing can use. The list view keeps its 24px:
+          nobody asked it to shrink. */}
+      <div className={view === "diagram" && compact ? "mt-3" : "mt-6"}>
         {/* phone: six labelled rows of flowing terms, no card and no chips.
             Boxed, this was thirty-three bordered rectangles about 50px tall — a
             form, not a vocabulary, and most of a screen per group. Bare terms

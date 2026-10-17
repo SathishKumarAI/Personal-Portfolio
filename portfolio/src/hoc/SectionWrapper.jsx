@@ -36,7 +36,14 @@ import { staggerContainer } from "../utils/motion";
    SYMMETRIC AGAIN. It was briefly asymmetric because the token ribbon lived
    in the top padding and needed the room; the ribbon has since moved down
    beside the heading, into the band the definition card used to block, so the
-   padding went back to tight and gave 44px back. */
+   padding went back to tight and gave 44px back.
+
+   TIGHTENED AGAIN 2026-10-16, from clamp(2rem,5vw,4.25rem) to this. Measured:
+   the old middle term paid 68px at 1366px wide, 136px of a 768px laptop
+   screen spent on air around a drawing the reader is trying to take in at
+   once. 44px still separates the scenes — they alternate ground colours, so
+   the gap is not the only separator — and gives 48px back to the drawing.
+   The 2rem floor is unchanged, so phones pay exactly what they paid. */
 const SectionWrapper = (Component, idName, { wide = false, tight = false } = {}) =>
   function HOC() {
     return (
@@ -74,7 +81,7 @@ const SectionWrapper = (Component, idName, { wide = false, tight = false } = {})
         // alternate, so the gap is doing real work — and gives 160px back
         // across the five of them. Desktop is untouched: 9vw passes 4rem at
         // 712px wide, well below any screen that reads the clamp differently.
-        className={`scene ${styles.paddingX} ${tight ? "py-[clamp(2rem,5vw,4.25rem)]" : "py-[clamp(3rem,9vw,8rem)]"} relative z-0 isolate`}
+        className={`scene ${styles.paddingX} ${tight ? "py-[clamp(2rem,3.2vw,2.75rem)]" : "py-[clamp(3rem,9vw,8rem)]"} relative z-0 isolate`}
       >
         <span className="hash-span" id={idName}>
           &nbsp;

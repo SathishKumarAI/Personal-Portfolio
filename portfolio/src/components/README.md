@@ -11,7 +11,7 @@ Thirty files. Read the table, not the directory.
 | Portrait, lede, the three proven claims, availability card | `About.jsx` |
 | Roles and degrees, the card deck, date alignment | `Experience.jsx` |
 | Stack: the header, the view toggle, the definition strip, the tool list | `Tech.jsx` |
-| Stack as a system: planes, nodes, flow payloads, the `?`, `fit to screen` | `StackDiagram.jsx` |
+| Stack as a system: planes, nodes, flow payloads, the `?`, `less detail` | `StackDiagram.jsx` |
 | The planes, their nodes, and what flows between them | `systemPlanes` / `systemSubstrate` in `../constants/index.js` |
 | What fills each role on AWS / GCP / Azure | `platformMatrix` in `../constants/index.js` |
 | Why a tool is in the box it is in | `../../docs/STACK-TAXONOMY.md` |
