@@ -83,7 +83,13 @@ const LiveClock = ({ className = "" }) => {
               {zone}
             </abbr>{" "}
             <span>{time}</span>
-            {mine === i && <span className="text-faint"> · yours</span>}
+            {/* ANNOTATION, NOT A LIST ITEM. This marker used to be " · yours",
+                which is the same interpunct that separates one zone from the
+                next — so "CDT 00:13 · yours · EDT 01:13 · IST 10:43" read as
+                four entries, one of them inexplicably called "yours", instead
+                of three with the first one marked. Parentheses say
+                subordinate; the dot said sibling. */}
+            {mine === i && <span className="text-faint"> (yours)</span>}
           </span>
         );
       })}
