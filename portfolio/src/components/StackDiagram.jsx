@@ -379,7 +379,26 @@ export const DiagramControls = ({ why, onWhy, platform, onPlatform, compact, onC
             that would make it fit — the plane descriptions and the per-node
             responsibility lines — are the sentences that make each box a slot
             rather than a label. Cutting them permanently would be trading the
-            point of the view for its height. Offering the trade is not. */}
+            point of the view for its height. Offering the trade is not.
+
+            THE LABEL SAID "fit to screen" AND THAT WAS NOT TRUE. Measured
+            2026-10-16, section height as a multiple of the viewport:
+
+              1920x1080  0.98   fits
+              1440x900   1.28   does not
+              1366x768   1.50   does not
+
+            It fits one screen size. A control whose label is a promise it
+            keeps on a 1080p monitor and breaks on every laptop is worse than
+            an honestly named one, because the reader who clicks it and still
+            has to scroll concludes the page is broken rather than that the
+            drawing is big. The button now says what it does — it removes
+            detail — and makes no claim about the result.
+
+            Making the claim true needs pagination, not a shorter label: four
+            planes at 169px each cannot reach a 768px screen without taking
+            the type below 10px. That is a separate decision about what the
+            diagram says, not about how tall it is. */}
         <button
           type="button"
           onClick={onCompact}
@@ -390,7 +409,7 @@ export const DiagramControls = ({ why, onWhy, platform, onPlatform, compact, onC
               : "border-line text-faint hover:text-white-100"
           }`}
         >
-          {compact ? "↕ full detail" : "↕ fit to screen"}
+          {compact ? "↕ full detail" : "↕ less detail"}
         </button>
         {docs && (
           <a

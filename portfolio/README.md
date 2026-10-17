@@ -66,9 +66,9 @@ Read this table instead of the code.
 | Which tools get the filled chip | `primary` per group in `stackGroups` |
 | A Stack category's colour | `dot` AND `tint` per group in `stackGroups` — same colour, two forms — token in `src/index.css`. **The six are ONE HUE at six intensities with monotonic luminance, not a palette.** They encode position on the path, so reordering the groups means re-deriving these. See the note above the values in `index.css` |
 | The Stack tool list: header, view toggle, definition strip | `src/components/Tech.jsx` |
-| The Stack system diagram: planes, nodes, flow payloads, `fit to screen` | `src/components/StackDiagram.jsx` |
+| The Stack system diagram: planes, nodes, flow payloads, `less detail` | `src/components/StackDiagram.jsx` |
 | What fills each role on AWS / GCP / Azure | `platformMatrix` in `src/constants/index.js` |
-| **Why a tool is in the box it is in** | `docs/STACK-TAXONOMY.md` — read before moving one |
+| **Why a tool is in the box it is in** | `../docs/site/STACK-TAXONOMY.md` — read before moving one |
 | The emoji cursor, hero only | `.hero-cursor` in `src/index.css`, class in `Hero.jsx` |
 | The og:image social card | `docs/og-card.html`, then re-render over `public/og.png` |
 | How big any text is | the named scale in `tailwind.config.js`, never a literal |

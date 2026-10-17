@@ -208,11 +208,11 @@ being measured is not enough; it also has to be one a reader can act on.
 | | |
 |---|---|
 | Tools | **56**, each with a definition and a mark |
-| Views | tool list (default) · system diagram, with a `fit to screen` mode |
+| Views | tool list (default) · system diagram, with a `less detail` mode |
 | Diagram | 3 planes + a substrate, 17 nodes, labelled payloads between planes |
 | Cloud matrix | **38 roles** mapped to AWS, Google Cloud and Azure |
 | Honesty rail | `mine` is the only column that is a claim about him; 10 rows carry an em dash |
-| Reasoning | `docs/STACK-TAXONOMY.md` — every tool, the box it is in, and why |
+| Reasoning | `docs/site/STACK-TAXONOMY.md` — every tool, the box it is in, and why |
 
 **The correction worth remembering:** `Claude` sat in the `Inference` box with
 `vLLM` and `Ollama`. Those are an inference *server*, a local *runtime* and a
@@ -342,9 +342,24 @@ only file affected.
 
 Stack is merged and live, with 56 tools and a 38-role cloud matrix.
 
-- The diagram has a **`fit to screen`** control, which is the answer to its
-  height rather than cutting the lines that make a box a slot. It reaches
-  ~1.1 screens; the full view is ~1.7 with a cloud selected.
+- The diagram has a **`less detail`** control, which is the answer to its
+  height rather than cutting the lines that make a box a slot. It was called
+  `fit to screen` until 2026-10-16, when measuring showed it fits one screen
+  size and no other. Section height as a multiple of the viewport, measured
+  in headless Chrome against `vite preview`:
+
+  | | tool list | diagram | `less detail` |
+  |---|---|---|---|
+  | 1920x1080 | 0.81 | 1.16 | **0.93** |
+  | 1440x900 | **0.99** | 1.52 | 1.22 |
+  | 1366x768 | 1.16 | 1.77 | 1.42 |
+
+  **One slide on a laptop needs pagination, not a smaller label.** The four
+  planes are 169px each and the smallest type in the view is already 10px, so
+  a scale-to-fit transform would reach 0.67 at 1366x768 and render that type
+  at 6.7px. Splitting the four planes across two slides is the only route
+  that fits with the type intact, and it costs the thing the diagram is for:
+  seeing all four layers at once.
 - `COD-327` — cold-loading a section link does not scroll. Still open.
 - The **emoji cursor is live on the hero only**, and nowhere else. Links and
   buttons keep their pointer. To remove: delete the `.hero-cursor` block in
